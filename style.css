@@ -127,10 +127,34 @@ body {
 .main-layout {
     display: flex;
     gap: 24px;
-    align-items: flex-start;
+    align-items: center;
+    /* Changed from flex-start to center for better balance */
     justify-content: center;
     width: 100%;
     transition: all 0.3s ease;
+}
+
+.main-layout.pos-top {
+    flex-direction: column-reverse;
+}
+
+.main-layout.pos-bottom {
+    flex-direction: column;
+}
+
+.main-layout.pos-left {
+    flex-direction: row-reverse;
+}
+
+.main-layout.pos-right {
+    flex-direction: row;
+}
+
+/* Ensure sticky works correctly when vertical */
+.main-layout.pos-top .media-area,
+.main-layout.pos-bottom .media-area {
+    position: static;
+    width: 100%;
 }
 
 /* Calendar Layout */
@@ -138,7 +162,7 @@ body {
     display: flex;
     gap: 24px;
     justify-content: center;
-    flex: 1;
+    /* Removed flex: 1 to allow content-based centering in main-layout */
     /* Default to row but wrapping allowed for responsiveness */
     flex-wrap: wrap;
     min-width: 0;
@@ -342,8 +366,8 @@ body {
     /* Prevent wrapping implies strict horizontal layout */
     overflow-x: auto;
     /* Enable horizontal scroll */
-    justify-content: flex-start;
-    /* Align start to allow scrolling from left */
+    justify-content: center;
+    /* Changed from flex-start to center for better look with 1 or 2 months */
     align-items: flex-start;
     padding-bottom: 20px;
     /* Space for scrollbar */

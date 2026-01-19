@@ -14,6 +14,7 @@ const DEFAULT_SETTINGS = {
     oshiColor: '#3b82f6',
     // Media Settings
     mediaMode: 'none', // 'none', 'single', 'random', 'cycle'
+    mediaPosition: 'right', // 'top', 'bottom', 'left', 'right'
     mediaUrls: ''
 };
 
@@ -206,6 +207,12 @@ function updateView() {
     // Apply Layout Class
     wrapper.className = `calendar-wrapper direction-${appSettings.layoutDirection}`;
 
+    // Apply Media Position Class to Main Layout
+    const mainLayout = document.getElementById('mainLayout');
+    if (mainLayout) {
+        mainLayout.className = `main-layout pos-${appSettings.mediaPosition}`;
+    }
+
     // Loop for Month Count
     let targetDate = new Date(currentRefDate); // Clone
 
@@ -239,6 +246,16 @@ function updateMediaArea() {
     }
 
     area.style.display = 'block';
+
+    // Apply position class to main-layout
+    const mainLayout = document.getElementById('mainLayout');
+    if (mainLayout) {
+        // Remove existing pos- classes
+        mainLayout.classList.remove('pos-top', 'pos-bottom', 'pos-left', 'pos-right');
+        // Add new one
+        mainLayout.classList.add(`pos-${appSettings.mediaPosition || 'right'}`);
+    }
+
     const urls = appSettings.mediaUrls.split(',').map(u => u.trim()).filter(u => u);
 
     if (urls.length === 0) {
@@ -285,6 +302,8 @@ function initSettings() {
 
         // Media
         document.getElementById('mediaMode').value = appSettings.mediaMode;
+        const radiosMediaPos = document.querySelectorAll('input[name="mediaPosition"]');
+        radiosMediaPos.forEach(r => { if (r.value === appSettings.mediaPosition) r.checked = true; });
         document.getElementById('mediaUrls').value = appSettings.mediaUrls;
 
         document.getElementById('settingsModal').showModal();
@@ -328,6 +347,8 @@ function saveSettings() {
 
     // Media
     appSettings.mediaMode = document.getElementById('mediaMode').value;
+    const mediaPosEl = document.querySelector('input[name="mediaPosition"]:checked');
+    if (mediaPosEl) appSettings.mediaPosition = mediaPosEl.value;
     appSettings.mediaUrls = document.getElementById('mediaUrls').value;
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));

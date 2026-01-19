@@ -9,3 +9,6 @@ Thumbs.db
 
 # Local settings
 .oshigoto-calendar-settings
+
+# Node dependencies
+node_modules/

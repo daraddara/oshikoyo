@@ -117,11 +117,29 @@
                     <div class="setting-group">
                         <label>表示モード</label>
                         <select id="mediaMode">
-                            <option value="none">非表示</option>
-                            <option value="single">単一URL</option>
-                            <option value="random">リストからランダム</option>
-                            <option value="cycle">リストを順次（1時間毎）</option>
+                            <option value="none">なし</option>
+                            <option value="single">固定表示</option>
+                            <option value="random">ランダム</option>
+                            <option value="cycle">サイクル</option>
                         </select>
+                    </div>
+                    <div class="setting-group">
+                        <label>表示位置</label>
+                        <select id="mediaPosition">
+                            <option value="right">右側</option>
+                            <option value="left">左側</option>
+                            <option value="top">上側</option>
+                            <option value="bottom">下側</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label>配置</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="mediaPosition" value="top"> 上</label>
+                            <label><input type="radio" name="mediaPosition" value="bottom"> 下</label>
+                            <label><input type="radio" name="mediaPosition" value="left"> 左</label>
+                            <label><input type="radio" name="mediaPosition" value="right" checked> 右</label>
+                        </div>
                     </div>
                     <div class="setting-group">
                         <label>画像URL (コンマ区切りで複数指定可)</label>
