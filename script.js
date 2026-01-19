@@ -7,7 +7,9 @@ const DEFAULT_SETTINGS = {
     startOfWeek: 0, // 0: Sun, 1: Mon
     monthCount: 2,  // 1, 2, 3
     layoutDirection: 'row', // 'row', 'column'
-    // Oshi Settings
+    // Oshi Settings (New List Structure)
+    oshiList: [],
+    // Legacy support (to be migrated)
     oshiName: '',
     oshiBirthday: '',
     oshiDebutDay: '',
@@ -23,8 +25,32 @@ const STORAGE_KEY = 'oshigoto_calendar_settings';
 
 // Helper: Hex to RGB
 function hexToRgb(hex) {
+    // If hex is a named color, return null to fallback or handle otherwise (using CSS var usually)
+    // Simple check for hex format
+    if (!hex || !hex.startsWith('#')) return null;
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
+}
+
+// Helper: Parse Date String to {month, day}
+function parseDateString(str) {
+    if (!str) return null;
+    // Format: "YYYY/MM/DD" or "YYYY-MM-DD"
+    let match = str.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    if (match) {
+        return { month: parseInt(match[2]), day: parseInt(match[3]) };
+    }
+    // Format: "M月D日"
+    match = str.match(/(\d{1,2})月(\d{1,2})日/);
+    if (match) {
+        return { month: parseInt(match[1]), day: parseInt(match[2]) };
+    }
+    // Format: "YYYY-MM-DD" standard date input value
+    match = str.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+        return { month: parseInt(match[2]), day: parseInt(match[3]) };
+    }
+    return null;
 }
 
 // --- Holiday Logic ---
@@ -101,9 +127,8 @@ function getWeekdayHeaderHTML(startOfWeek) {
 }
 
 function renderCalendar(container, year, month) {
-    // Set Custom Property for Oshi Color
-    container.style.setProperty('--oshi-color', appSettings.oshiColor);
-    container.style.setProperty('--oshi-color-rgb', hexToRgb(appSettings.oshiColor));
+    // Note: With multi-oshi, single global RGB doesn't make sense anymore for highlighting.
+    // Use fallback or dominant color if needed, but for now we apply color per item.
 
     // Structure creation if empty
     if (!container.querySelector('.days-grid')) {
@@ -114,7 +139,7 @@ function renderCalendar(container, year, month) {
         `;
     }
 
-    // Update Headers if settings changed (e.g. startOfWeek) but reused container
+    // Update Headers
     const headerEl = container.querySelector('.weekday-header');
     if (headerEl) headerEl.innerHTML = getWeekdayHeaderHTML(appSettings.startOfWeek);
 
@@ -134,10 +159,6 @@ function renderCalendar(container, year, month) {
 
     const totalCellsFilled = startDayIndex + daysInMonth;
     const TOTAL_SLOTS = 42;
-
-    // Days Parsing for Oshi
-    const oshiBD = appSettings.oshiBirthday ? new Date(appSettings.oshiBirthday) : null;
-    const oshiDD = appSettings.oshiDebutDay ? new Date(appSettings.oshiDebutDay) : null;
 
     // Padding Cells
     for (let i = 0; i < startDayIndex; i++) {
@@ -167,25 +188,44 @@ function renderCalendar(container, year, month) {
         const holidayName = getJPHoliday(currentDate);
         if (holidayName) el.classList.add('is-holiday');
 
-        // Oshi Dates Highlight
-        let isOshiDate = false;
-        let oshiLabel = '';
-        if (oshiBD && currentDate.getMonth() === oshiBD.getMonth() && currentDate.getDate() === oshiBD.getDate()) {
-            isOshiDate = true;
-            oshiLabel = appSettings.oshiName ? `${appSettings.oshiName} 誕生日` : '誕生日';
+        // Check Multi-Oshi Events
+        let oshiMarkups = [];
+        // Loop through all oshis
+        (appSettings.oshiList || []).forEach(oshi => {
+            if (!oshi.name) return;
+
+            // Birthday Check
+            const bd = parseDateString(oshi.birthday);
+            if (bd && bd.month === month && bd.day === d) {
+                // Background style
+                const bgStyle = oshi.color ? `style="background-color: ${oshi.color}; color: #fff; text-shadow: 0 0 1px rgba(0,0,0,0.3);"` : '';
+                oshiMarkups.push(`<div class="oshi-event" ${bgStyle} title="誕生日: ${oshi.name}"><span class="oshi-event-icon">🎂</span>${oshi.name}</div>`);
+            }
+
+            // Anniversary Check
+            const dd = parseDateString(oshi.debutDate);
+            if (dd && dd.month === month && dd.day === d) {
+                const bgStyle = oshi.color ? `style="background-color: ${oshi.color}; color: #fff; text-shadow: 0 0 1px rgba(0,0,0,0.3);"` : '';
+                // Changed icon to 🎉 (Party Popper) or 💐 (Bouquet) or 🥂 (Clinking Glasses)
+                // Using 🎉 as it is universally celebratory.
+                oshiMarkups.push(`<div class="oshi-event" ${bgStyle} title="記念日: ${oshi.name}"><span class="oshi-event-icon">🎉</span>${oshi.name}</div>`);
+            }
+        });
+
+        if (oshiMarkups.length > 0) {
+            el.classList.add('is-oshi-date');
         }
-        if (oshiDD && currentDate.getMonth() === oshiDD.getMonth() && currentDate.getDate() === oshiDD.getDate()) {
-            isOshiDate = true;
-            oshiLabel = appSettings.oshiName ? `${appSettings.oshiName} デビュー日` : 'デビュー日';
-        }
-        if (isOshiDate) el.classList.add('is-oshi-date');
 
         let html = `<span class="day-number">${d}</span>`;
         if (holidayName) {
             html += `<span class="holiday-name">${holidayName}</span>`;
-        } else if (oshiLabel) {
-            html += `<span class="holiday-name">${oshiLabel}</span>`;
         }
+
+        // Append Oshi Events
+        if (oshiMarkups.length > 0) {
+            html += `<div class="oshi-events-container">${oshiMarkups.join('')}</div>`;
+        }
+
         el.innerHTML = html;
 
         daysGrid.appendChild(el);
@@ -281,6 +321,111 @@ function updateMediaArea() {
 
 // --- Settings Logic ---
 
+function renderOshiList() {
+    const container = document.getElementById('oshiListContainer');
+    if (!container) return;
+
+    container.innerHTML = '';
+    if (!appSettings.oshiList || appSettings.oshiList.length === 0) {
+        container.innerHTML = '<p class="empty-list-message">まだ登録されていません</p>';
+        return;
+    }
+
+    appSettings.oshiList.forEach((oshi, index) => {
+        const item = document.createElement('div');
+        item.className = 'oshi-item';
+
+        // Ensure color is safe CSS
+        const colorStyle = oshi.color ? `border-left: 4px solid ${oshi.color};` : '';
+
+        item.innerHTML = `
+            <div class="oshi-info" style="${colorStyle} padding-left: 8px;">
+                <span class="oshi-name">${oshi.name}</span>
+                <span class="oshi-source">src: ${oshi.source || 'manual'}</span>
+            </div>
+            <button class="btn-delete" data-index="${index}">削除</button>
+        `;
+        container.appendChild(item);
+    });
+
+    // Add Delete Listeners
+    container.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const idx = parseInt(e.target.dataset.index);
+            appSettings.oshiList.splice(idx, 1);
+            renderOshiList();
+        });
+    });
+}
+
+function handleFileImport() {
+    const fileInput = document.getElementById('importJson');
+    const files = fileInput.files;
+    if (!files || files.length === 0) return;
+
+    let processedCount = 0;
+
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (Array.isArray(data)) {
+                    // Map to internal format
+                    const newItems = data.map(item => ({
+                        name: item['メンバー名'] || item.name || 'Unknown',
+                        birthday: item['誕生日'] || item.birthday,
+                        debutDate: item['周年記念日'] || item.debutDate,
+                        color: item['公式カラー (Hex/系統)'] || item.color,
+                        source: file.name
+                    }));
+
+                    appSettings.oshiList = [...(appSettings.oshiList || []), ...newItems];
+                }
+            } catch (err) {
+                console.error('Failed to parse JSON', err);
+                alert(`${file.name} の読み込みに失敗しました: ${err.message}`);
+            } finally {
+                processedCount++;
+                if (processedCount === files.length) {
+                    renderOshiList();
+                    fileInput.value = ''; // Reset
+                    alert(`${files.length} ファイルのインポートが完了しました`);
+                }
+            }
+        };
+        reader.readAsText(file);
+    });
+}
+
+function addManualOshi() {
+    const name = document.getElementById('newOshiName').value;
+    const birthday = document.getElementById('newOshiBirthday').value;
+    const debut = document.getElementById('newOshiDebutDay').value;
+    const color = document.getElementById('newOshiColor').value;
+
+    if (!name) {
+        alert('名前を入力してください');
+        return;
+    }
+
+    if (!appSettings.oshiList) appSettings.oshiList = [];
+    appSettings.oshiList.push({
+        name: name,
+        birthday: birthday,
+        debutDate: debut,
+        color: color,
+        source: 'manual'
+    });
+
+    renderOshiList();
+
+    // Reset inputs
+    document.getElementById('newOshiName').value = '';
+    document.getElementById('newOshiBirthday').value = '';
+    document.getElementById('newOshiDebutDay').value = '';
+}
+
 function initSettings() {
     // Open Modal
     document.getElementById('btnSettings').addEventListener('click', () => {
@@ -294,17 +439,14 @@ function initSettings() {
         const radiosLayout = document.querySelectorAll('input[name="layout"]');
         radiosLayout.forEach(r => { if (r.value === appSettings.layoutDirection) r.checked = true; });
 
-        // Oshi
-        document.getElementById('oshiName').value = appSettings.oshiName;
-        document.getElementById('oshiBirthday').value = appSettings.oshiBirthday;
-        document.getElementById('oshiDebutDay').value = appSettings.oshiDebutDay;
-        document.getElementById('oshiColor').value = appSettings.oshiColor;
-
         // Media
         document.getElementById('mediaMode').value = appSettings.mediaMode;
         const radiosMediaPos = document.querySelectorAll('input[name="mediaPosition"]');
         radiosMediaPos.forEach(r => { if (r.value === appSettings.mediaPosition) r.checked = true; });
         document.getElementById('mediaUrls').value = appSettings.mediaUrls;
+
+        // Render Oshi List
+        renderOshiList();
 
         document.getElementById('settingsModal').showModal();
     });
@@ -316,13 +458,33 @@ function initSettings() {
 
     // Save Settings
     document.getElementById('btnSave').addEventListener('click', saveSettings);
+
+    // Import Button
+    document.getElementById('btnImport').addEventListener('click', handleFileImport);
+
+    // Add Manual Button
+    document.getElementById('btnAddManual').addEventListener('click', addManualOshi);
 }
 
 function loadSettings() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
         try {
-            appSettings = { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+            const parsed = JSON.parse(saved);
+            appSettings = { ...DEFAULT_SETTINGS, ...parsed };
+
+            // Migration: Logic to move single oshi to list if list is empty but single exists
+            if ((!appSettings.oshiList || appSettings.oshiList.length === 0) && appSettings.oshiName) {
+                appSettings.oshiList = [{
+                    name: appSettings.oshiName,
+                    birthday: appSettings.oshiBirthday,
+                    debutDate: appSettings.oshiDebutDay,
+                    color: appSettings.oshiColor,
+                    source: 'legacy'
+                }];
+                // Clear legacy
+                appSettings.oshiName = '';
+            }
         } catch (e) { }
     }
     updateView();
@@ -339,17 +501,14 @@ function saveSettings() {
     const layoutEl = document.querySelector('input[name="layout"]:checked');
     if (layoutEl) appSettings.layoutDirection = layoutEl.value;
 
-    // Oshi
-    appSettings.oshiName = document.getElementById('oshiName').value;
-    appSettings.oshiBirthday = document.getElementById('oshiBirthday').value;
-    appSettings.oshiDebutDay = document.getElementById('oshiDebutDay').value;
-    appSettings.oshiColor = document.getElementById('oshiColor').value;
-
     // Media
     appSettings.mediaMode = document.getElementById('mediaMode').value;
     const mediaPosEl = document.querySelector('input[name="mediaPosition"]:checked');
     if (mediaPosEl) appSettings.mediaPosition = mediaPosEl.value;
     appSettings.mediaUrls = document.getElementById('mediaUrls').value;
+
+    // Note: oshiList is already updated in memory via adding/deleting buttons.
+    // We just save the current state.
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
     document.getElementById('settingsModal').close();

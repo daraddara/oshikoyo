@@ -68,11 +68,22 @@ body {
     text-align: center;
 }
 
+/* Calendar Section (Controls + Grid) */
+.calendar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    flex: 1;
+    min-width: 0;
+}
+
 .controls {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 20px;
+    /* Removed padding to fit better in flow */
 }
 
 .nav-btn {
@@ -215,10 +226,11 @@ body {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 
     /* Layout Sizing Consistency */
-    flex: 0 0 380px;
-    /* FIXED size: No grow, No shrink. */
-    width: 380px;
-    max-width: 380px;
+    flex: 0 0 550px;
+    /* Increased to 550px for generous spacing */
+    /* FIXED size */
+    width: 550px;
+    max-width: 550px;
     /* Enforce strict size */
 }
 
@@ -273,19 +285,18 @@ body {
 /* Individual Day Cell */
 .day-cell {
     aspect-ratio: 1.1;
-    /* Slightly less square to gain height if needed, or keeping it flexible */
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding-top: 2px;
+    justify-content: flex-end;
+    /* Events at bottom */
+    padding: 0;
+    /* Maximize space */
     font-size: 1rem;
     border-radius: 8px;
     cursor: default;
     position: relative;
     transition: background 0.2s;
     min-width: 0;
-    /* Critical for grid to respect 1fr with long text */
     overflow: hidden;
 }
 
@@ -293,10 +304,53 @@ body {
     background: rgba(125, 125, 125, 0.05);
 }
 
-/* Date Number */
+/* Date Number - Absolute to save space */
 .day-number {
-    z-index: 2;
-    line-height: 1.2;
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    z-index: 5;
+    line-height: 1;
+    pointer-events: none;
+}
+
+/* Oshi Event Styles */
+.oshi-events-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    width: 100%;
+    margin-bottom: 1px;
+    z-index: 10;
+    padding: 0 1px;
+}
+
+.oshi-event {
+    font-size: 8.5px;
+    /* Reduced for better fit */
+    padding: 0 1px;
+    /* Tighter padding */
+    border-radius: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    /* Tighter gap */
+    line-height: 1.25;
+    background: var(--event-bg, #eee);
+    color: var(--event-text, #333);
+    min-height: 12px;
+    cursor: help;
+    /* Indicate tooltip */
+}
+
+.oshi-event-icon {
+    font-size: 8px;
+    flex-shrink: 0;
 }
 
 /* Holiday / Weekend Styling */
@@ -313,20 +367,35 @@ body {
     opacity: 0.3;
 }
 
-/* Holiday Name Label */
+/* Holiday Name Label - Hover Only */
 .holiday-name {
-    font-size: 0.55rem;
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    font-size: 0.6rem;
     color: var(--holiday-color);
     margin-top: 0;
-    line-height: 1.1;
-    width: 100%;
-    padding: 0 1px;
+    line-height: 1;
+    width: auto;
     font-weight: 500;
-    word-break: break-all;
-    /* Allow breaking to fit */
-    white-space: normal;
-    /* Allow wrapping */
-    text-align: center;
+    white-space: nowrap;
+    text-align: right;
+    pointer-events: none;
+    z-index: 5;
+    opacity: 0;
+    /* Hidden by default */
+    transition: opacity 0.2s;
+    background: rgba(255, 255, 255, 0.9);
+    /* Background for readability over events */
+    padding: 1px 4px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.day-cell:hover .holiday-name {
+    opacity: 1;
+    /* Show on hover */
+    z-index: 20;
 }
 
 /* Today Highlight */

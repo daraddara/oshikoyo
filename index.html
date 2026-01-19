@@ -24,36 +24,38 @@
     <div class="app-container">
         <header class="header">
             <h1 class="app-title">おしごとカレンダー</h1>
-            <div class="controls">
-                <button id="btnPrev" class="nav-btn" aria-label="前の月">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                    </svg>
-                </button>
-                <div class="current-date-display" id="currentDateDisplay"></div>
-                <button id="btnNext" class="nav-btn" aria-label="次の月">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                </button>
-                <button id="btnSettings" class="nav-btn" aria-label="設定">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path
-                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                        </path>
-                    </svg>
-                </button>
-            </div>
         </header>
 
         <div class="main-layout" id="mainLayout">
-            <main class="calendar-wrapper" id="calendarWrapper">
-                <!-- カレンダーの内容はJSによって注入されます -->
-            </main>
+            <div class="calendar-section">
+                <div class="controls">
+                    <button id="btnPrev" class="nav-btn" aria-label="前の月">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <div class="current-date-display" id="currentDateDisplay"></div>
+                    <button id="btnNext" class="nav-btn" aria-label="次の月">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                    <button id="btnSettings" class="nav-btn" aria-label="設定">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
+                <main class="calendar-wrapper" id="calendarWrapper">
+                    <!-- カレンダーの内容はJSによって注入されます -->
+                </main>
+            </div>
             <aside class="media-area" id="mediaArea">
                 <div class="media-container" id="mediaContainer">
                     <p class="media-placeholder">設定から画像を追加してください</p>
@@ -94,22 +96,49 @@
 
                 <section class="settings-section">
                     <h3>推し設定</h3>
+
+                    <!-- New: Oshi List -->
                     <div class="setting-group">
-                        <label>推しの名前</label>
-                        <input type="text" id="oshiName" placeholder="例: ○○ちゃん">
+                        <label>登録済みの推し</label>
+                        <div id="oshiListContainer" class="oshi-list-container">
+                            <p class="empty-list-message">まだ登録されていません</p>
+                            <!-- List items will be injected here -->
+                        </div>
                     </div>
+
+                    <!-- Import Area -->
                     <div class="setting-group">
-                        <label>誕生日</label>
-                        <input type="date" id="oshiBirthday">
+                        <label>データインポート (JSON)</label>
+                        <div class="import-controls">
+                            <input type="file" id="importJson" accept=".json" multiple>
+                            <button type="button" id="btnImport" class="btn-secondary">インポート実行</button>
+                        </div>
+                        <p class="help-text">※ 複数のファイルを選択して読み込めます。</p>
                     </div>
-                    <div class="setting-group">
-                        <label>デビュー記念日</label>
-                        <input type="date" id="oshiDebutDay">
-                    </div>
-                    <div class="setting-group">
-                        <label>推しカラー</label>
-                        <input type="color" id="oshiColor" value="#3b82f6">
-                    </div>
+
+                    <details>
+                        <summary>手動で追加する</summary>
+                        <div class="manual-add-form">
+                            <div class="setting-group">
+                                <label>名前</label>
+                                <input type="text" id="newOshiName" placeholder="例: ○○ちゃん">
+                            </div>
+                            <div class="setting-group">
+                                <label>誕生日</label>
+                                <input type="date" id="newOshiBirthday">
+                            </div>
+                            <div class="setting-group">
+                                <label>デビュー記念日 (任意)</label>
+                                <input type="date" id="newOshiDebutDay">
+                            </div>
+                            <div class="setting-group">
+                                <label>推しカラー</label>
+                                <input type="color" id="newOshiColor" value="#3b82f6">
+                            </div>
+                            <button type="button" id="btnAddManual" class="btn-secondary"
+                                style="margin-top: 10px;">追加</button>
+                        </div>
+                    </details>
                 </section>
 
                 <section class="settings-section">
