@@ -32,6 +32,29 @@ function hexToRgb(hex) {
     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
 }
 
+// Helper: Get Contrast Color (Black or White)
+function getContrastColor(hex) {
+    if (!hex || !hex.startsWith('#')) return '#000000';
+    hex = hex.replace('#', '');
+
+    let r, g, b;
+    if (hex.length === 3) {
+        r = parseInt(hex[0] + hex[0], 16);
+        g = parseInt(hex[1] + hex[1], 16);
+        b = parseInt(hex[2] + hex[2], 16);
+    } else if (hex.length === 6) {
+        r = parseInt(hex.substring(0, 2), 16);
+        g = parseInt(hex.substring(2, 4), 16);
+        b = parseInt(hex.substring(4, 6), 16);
+    } else {
+        return '#000000';
+    }
+
+    // YIQ equation
+    var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return (yiq >= 140) ? '#1a1a1a' : '#ffffff'; // 140 threshold, using dark gray for black for softer look
+}
+
 // Helper: Parse Date String to {month, day}
 function parseDateString(str) {
     if (!str) return null;
@@ -127,9 +150,6 @@ function getWeekdayHeaderHTML(startOfWeek) {
 }
 
 function renderCalendar(container, year, month) {
-    // Note: With multi-oshi, single global RGB doesn't make sense anymore for highlighting.
-    // Use fallback or dominant color if needed, but for now we apply color per item.
-
     // Structure creation if empty
     if (!container.querySelector('.days-grid')) {
         container.innerHTML = `
@@ -190,25 +210,26 @@ function renderCalendar(container, year, month) {
 
         // Check Multi-Oshi Events
         let oshiMarkups = [];
+
         // Loop through all oshis
         (appSettings.oshiList || []).forEach(oshi => {
             if (!oshi.name) return;
 
+            const textColor = oshi.color ? getContrastColor(oshi.color) : '#333';
+            const textShadow = textColor === '#ffffff' ? '0 0 1px rgba(0,0,0,0.3)' : 'none';
+            const baseStyle = oshi.color ? `background-color: ${oshi.color}; color: ${textColor}; text-shadow: ${textShadow};` : '';
+
             // Birthday Check
             const bd = parseDateString(oshi.birthday);
             if (bd && bd.month === month && bd.day === d) {
-                // Background style
-                const bgStyle = oshi.color ? `style="background-color: ${oshi.color}; color: #fff; text-shadow: 0 0 1px rgba(0,0,0,0.3);"` : '';
-                oshiMarkups.push(`<div class="oshi-event" ${bgStyle} title="誕生日: ${oshi.name}"><span class="oshi-event-icon">🎂</span>${oshi.name}</div>`);
+                oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="誕生日: ${oshi.name}"><span class="oshi-event-icon">🎂</span>${oshi.name}</div>`);
             }
 
             // Anniversary Check
             const dd = parseDateString(oshi.debutDate);
             if (dd && dd.month === month && dd.day === d) {
-                const bgStyle = oshi.color ? `style="background-color: ${oshi.color}; color: #fff; text-shadow: 0 0 1px rgba(0,0,0,0.3);"` : '';
-                // Changed icon to 🎉 (Party Popper) or 💐 (Bouquet) or 🥂 (Clinking Glasses)
                 // Using 🎉 as it is universally celebratory.
-                oshiMarkups.push(`<div class="oshi-event" ${bgStyle} title="記念日: ${oshi.name}"><span class="oshi-event-icon">🎉</span>${oshi.name}</div>`);
+                oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="記念日: ${oshi.name}"><span class="oshi-event-icon">🎉</span>${oshi.name}</div>`);
             }
         });
 
