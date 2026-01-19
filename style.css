@@ -200,6 +200,105 @@ body {
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    position: relative;
+    /* For absolute positioning of search btn */
+}
+
+/* Quick Search Palette */
+.media-search-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: all 0.2s;
+    z-index: 20;
+    font-size: 1rem;
+}
+
+.media-search-btn:hover {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--accent-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.search-palette {
+    position: absolute;
+    top: 50px;
+    right: 12px;
+    width: 240px;
+    max-height: 300px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(12px);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: fadeIn 0.15s ease-out;
+}
+
+.search-palette.hidden {
+    display: none;
+}
+
+.palette-header {
+    padding: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    background: rgba(var(--accent-color-rgb, 59, 130, 246), 0.05);
+}
+
+.palette-search-input {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.palette-list {
+    overflow-y: auto;
+    flex: 1;
+    padding: 4px;
+}
+
+.palette-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.1s;
+    font-size: 0.9rem;
+}
+
+.palette-item:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .media-container img {
@@ -587,22 +686,8 @@ body {
     color: var(--text-primary);
 }
 
-.btn-search {
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: none;
-    background: #1d9bf0;
-    /* X (Twitter) Blue */
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    transition: opacity 0.2s;
-    font-size: 0.9rem;
-}
-
 .btn-primary:hover,
-.btn-cancel:hover,
-.btn-search:hover {
+.btn-cancel:hover {
     opacity: 0.8;
 }
 

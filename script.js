@@ -319,8 +319,30 @@ function updateMediaArea() {
 
     const urls = appSettings.mediaUrls.split(',').map(u => u.trim()).filter(u => u);
 
+    // Prepare Container Structure (Content Layer + UI Layer)
+    let contentLayer = container.querySelector('.media-content-layer');
+    if (!contentLayer) {
+        container.innerHTML = ''; // Full reset if structure not present
+        contentLayer = document.createElement('div');
+        contentLayer.className = 'media-content-layer';
+        contentLayer.style.width = '100%';
+        contentLayer.style.height = '100%';
+        contentLayer.style.display = 'flex';
+        contentLayer.style.alignItems = 'center';
+        contentLayer.style.justifyContent = 'center';
+        container.appendChild(contentLayer);
+
+        // Append Search UI
+        appendSearchUI(container);
+    }
+
+    // Safety check: if UI is missing (e.g. accidentally cleared), re-append
+    if (!container.querySelector('.media-search-btn')) {
+        appendSearchUI(container);
+    }
+
     if (urls.length === 0) {
-        container.innerHTML = '<p class="media-placeholder">画像URLが設定されていません</p>';
+        contentLayer.innerHTML = '<p class="media-placeholder">画像URLが設定されていません</p>';
         return;
     }
 
@@ -337,9 +359,6 @@ function updateMediaArea() {
 
     if (!targetUrl) return;
 
-    // Clear previous content
-    container.innerHTML = '';
-
     // Check if it is a Twitter/X URL
     const twitterMatch = targetUrl.match(/^https?:\/\/(twitter|x)\.com\/\w+\/status\/(\d+)/);
 
@@ -351,13 +370,13 @@ function updateMediaArea() {
         placeholder.className = 'media-placeholder';
         placeholder.textContent = 'ツイートを読み込み中...';
 
-        // Clear container first
-        container.innerHTML = '';
-        container.appendChild(placeholder);
+        // Clear content layer
+        contentLayer.innerHTML = '';
+        contentLayer.appendChild(placeholder);
 
         // Ensure Widget JS is loaded
         if (window.twttr && window.twttr.widgets) {
-            embedTweet(tweetId, container);
+            embedTweet(tweetId, contentLayer);
         } else {
             if (!document.getElementById('twitter-wjs')) {
                 const script = document.createElement('script');
@@ -371,19 +390,105 @@ function updateMediaArea() {
             const timer = setInterval(() => {
                 if (window.twttr && window.twttr.widgets) {
                     clearInterval(timer);
-                    embedTweet(tweetId, container);
+                    embedTweet(tweetId, contentLayer);
                 }
             }, 100);
         }
     } else {
         // Standard Image
-        container.innerHTML = `<img src="${targetUrl}" alt="Oshi Media" onerror="this.parentElement.innerHTML='<p class=\'media-placeholder\'>画像の読み込みに失敗しました</p>'">`;
+        contentLayer.innerHTML = `<img src="${targetUrl}" alt="Oshi Media" onerror="this.parentElement.innerHTML='<p class=\'media-placeholder\'>画像の読み込みに失敗しました</p>'">`;
     }
+}
+
+// --- Quick Search UI ---
+function appendSearchUI(container) {
+    // Button
+    const btn = document.createElement('div');
+    btn.className = 'media-search-btn';
+    btn.innerHTML = '🔍';
+    btn.title = '推しを探す (Quick Search)';
+
+    // Palette
+    const palette = document.createElement('div');
+    palette.className = 'search-palette hidden';
+
+    // 1. Custom Search Header
+    const header = document.createElement('div');
+    header.className = 'palette-header';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'palette-search-input';
+    input.placeholder = 'キーワードを検索...';
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && input.value.trim()) {
+            const url = `https://x.com/search?q=${encodeURIComponent(input.value.trim())} filter:images&src=typed_query&f=media`;
+            window.open(url, '_blank');
+        }
+    });
+    header.appendChild(input);
+    palette.appendChild(header);
+
+    // 2. Oshi List
+    const list = document.createElement('div');
+    list.className = 'palette-list';
+
+    if (appSettings.oshiList && appSettings.oshiList.length > 0) {
+        appSettings.oshiList.forEach(oshi => {
+            if (!oshi.fanArtTag) return;
+            const item = document.createElement('div');
+            item.className = 'palette-item';
+
+            // Color dot
+            const dot = document.createElement('span');
+            dot.style.width = '10px';
+            dot.style.height = '10px';
+            dot.style.borderRadius = '50%';
+            dot.style.backgroundColor = oshi.color || '#ccc';
+
+            const name = document.createElement('span');
+            name.textContent = `${oshi.name} (${oshi.fanArtTag})`;
+            name.style.fontSize = '0.9rem';
+
+            item.appendChild(dot);
+            item.appendChild(name);
+
+            item.addEventListener('click', () => {
+                const url = `https://x.com/search?q=${encodeURIComponent(oshi.fanArtTag)} filter:images&src=typed_query&f=media`;
+                window.open(url, '_blank');
+            });
+
+            list.appendChild(item);
+        });
+    } else {
+        list.innerHTML = '<div style="padding:8px; font-size:0.8rem; color:#666;">推しが登録されていません</div>';
+    }
+
+    palette.appendChild(list);
+
+    // Toggle Logic
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        palette.classList.toggle('hidden');
+        if (!palette.classList.contains('hidden')) {
+            input.focus();
+        }
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!palette.contains(e.target) && !btn.contains(e.target)) {
+            palette.classList.add('hidden');
+        }
+    });
+
+    container.appendChild(btn);
+    container.appendChild(palette);
 }
 
 function embedTweet(tweetId, container) {
     if (window.twttr && window.twttr.widgets) {
-        // Clear container to prevent duplicates (e.g. if called multiple times rapidly)
+        // Clear content layer specifically
         container.innerHTML = '';
 
         window.twttr.widgets.createTweet(
@@ -421,18 +526,12 @@ function renderOshiList() {
         // Ensure color is safe CSS
         const colorStyle = oshi.color ? `border-left: 4px solid ${oshi.color};` : '';
 
-        // Search Button Logic
-        const searchBtnHtml = oshi.fanArtTag
-            ? `<button class="btn-search" data-tag="${oshi.fanArtTag}" title="Xでファンアートを検索">🔍</button>`
-            : '';
-
         item.innerHTML = `
             <div class="oshi-info" style="${colorStyle} padding-left: 8px;">
                 <span class="oshi-name">${oshi.name}</span>
                 <span class="oshi-source">src: ${oshi.source || 'manual'}</span>
             </div>
             <div class="oshi-actions" style="display:flex; gap:8px;">
-                ${searchBtnHtml}
                 <button class="btn-delete" data-index="${index}">削除</button>
             </div>
         `;
@@ -445,18 +544,6 @@ function renderOshiList() {
             const idx = parseInt(e.target.dataset.index);
             appSettings.oshiList.splice(idx, 1);
             renderOshiList();
-        });
-    });
-
-    // Add Search Listeners
-    container.querySelectorAll('.btn-search').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const tag = e.target.dataset.tag;
-            if (tag) {
-                // Search for images (filter:media) to easily find fan art
-                const url = `https://x.com/search?q=${encodeURIComponent(tag)} filter:images&src=typed_query&f=media`;
-                window.open(url, '_blank');
-            }
         });
     });
 }
@@ -480,6 +567,7 @@ function handleFileImport() {
                         birthday: item['誕生日'] || item.birthday,
                         debutDate: item['周年記念日'] || item.debutDate,
                         color: item['公式カラー (Hex/系統)'] || item.color,
+                        fanArtTag: item['ファンアートタグ'] || item.fanArtTag,
                         source: file.name
                     }));
 
