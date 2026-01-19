@@ -587,8 +587,22 @@ body {
     color: var(--text-primary);
 }
 
+.btn-search {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: none;
+    background: #1d9bf0;
+    /* X (Twitter) Blue */
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    font-size: 0.9rem;
+}
+
 .btn-primary:hover,
-.btn-cancel:hover {
+.btn-cancel:hover,
+.btn-search:hover {
     opacity: 0.8;
 }
 

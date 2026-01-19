@@ -330,13 +330,75 @@ function updateMediaArea() {
     } else if (appSettings.mediaMode === 'random') {
         targetUrl = urls[Math.floor(Math.random() * urls.length)];
     } else if (appSettings.mediaMode === 'cycle') {
-        // Cycle based on current hour
-        const hour = new Date().getHours();
-        targetUrl = urls[hour % urls.length];
+        // Cycle based on current minute (to see changes faster than hour)
+        const timeUnit = new Date().getMinutes();
+        targetUrl = urls[timeUnit % urls.length];
     }
 
-    if (targetUrl) {
+    if (!targetUrl) return;
+
+    // Clear previous content
+    container.innerHTML = '';
+
+    // Check if it is a Twitter/X URL
+    const twitterMatch = targetUrl.match(/^https?:\/\/(twitter|x)\.com\/\w+\/status\/(\d+)/);
+
+    if (twitterMatch) {
+        const tweetId = twitterMatch[2];
+
+        // Improve placeholder while loading
+        const placeholder = document.createElement('div');
+        placeholder.className = 'media-placeholder';
+        placeholder.textContent = 'ツイートを読み込み中...';
+
+        // Clear container first
+        container.innerHTML = '';
+        container.appendChild(placeholder);
+
+        // Ensure Widget JS is loaded
+        if (window.twttr && window.twttr.widgets) {
+            embedTweet(tweetId, container);
+        } else {
+            if (!document.getElementById('twitter-wjs')) {
+                const script = document.createElement('script');
+                script.id = 'twitter-wjs';
+                script.src = "https://platform.twitter.com/widgets.js";
+                script.async = true;
+                document.body.appendChild(script);
+            }
+
+            // Poll for readiness (robust against parallel loads)
+            const timer = setInterval(() => {
+                if (window.twttr && window.twttr.widgets) {
+                    clearInterval(timer);
+                    embedTweet(tweetId, container);
+                }
+            }, 100);
+        }
+    } else {
+        // Standard Image
         container.innerHTML = `<img src="${targetUrl}" alt="Oshi Media" onerror="this.parentElement.innerHTML='<p class=\'media-placeholder\'>画像の読み込みに失敗しました</p>'">`;
+    }
+}
+
+function embedTweet(tweetId, container) {
+    if (window.twttr && window.twttr.widgets) {
+        // Clear container to prevent duplicates (e.g. if called multiple times rapidly)
+        container.innerHTML = '';
+
+        window.twttr.widgets.createTweet(
+            tweetId,
+            container,
+            {
+                theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+                lang: 'ja',
+                dnt: true
+            }
+        ).then(el => {
+            if (!el) {
+                container.innerHTML = '<p class="media-placeholder">ツイートの表示に失敗しました</p>';
+            }
+        });
     }
 }
 
@@ -359,12 +421,20 @@ function renderOshiList() {
         // Ensure color is safe CSS
         const colorStyle = oshi.color ? `border-left: 4px solid ${oshi.color};` : '';
 
+        // Search Button Logic
+        const searchBtnHtml = oshi.fanArtTag
+            ? `<button class="btn-search" data-tag="${oshi.fanArtTag}" title="Xでファンアートを検索">🔍</button>`
+            : '';
+
         item.innerHTML = `
             <div class="oshi-info" style="${colorStyle} padding-left: 8px;">
                 <span class="oshi-name">${oshi.name}</span>
                 <span class="oshi-source">src: ${oshi.source || 'manual'}</span>
             </div>
-            <button class="btn-delete" data-index="${index}">削除</button>
+            <div class="oshi-actions" style="display:flex; gap:8px;">
+                ${searchBtnHtml}
+                <button class="btn-delete" data-index="${index}">削除</button>
+            </div>
         `;
         container.appendChild(item);
     });
@@ -375,6 +445,18 @@ function renderOshiList() {
             const idx = parseInt(e.target.dataset.index);
             appSettings.oshiList.splice(idx, 1);
             renderOshiList();
+        });
+    });
+
+    // Add Search Listeners
+    container.querySelectorAll('.btn-search').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const tag = e.target.dataset.tag;
+            if (tag) {
+                // Search for images (filter:media) to easily find fan art
+                const url = `https://x.com/search?q=${encodeURIComponent(tag)} filter:images&src=typed_query&f=media`;
+                window.open(url, '_blank');
+            }
         });
     });
 }
@@ -508,7 +590,7 @@ function loadSettings() {
             }
         } catch (e) { }
     }
-    updateView();
+    // updateView(); // Removed to prevent double rendering on init
 }
 
 function saveSettings() {
