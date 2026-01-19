@@ -1,0 +1,12 @@
+{
+    "name": "oshigoto-calendar",
+    "version": "1.0.0",
+    "description": "おしごとカレンダー",
+    "scripts": {
+        "test": "vitest run"
+    },
+    "devDependencies": {
+        "vitest": "^1.0.0",
+        "jsdom": "^23.0.0"
+    }
+}

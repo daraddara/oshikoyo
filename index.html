@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>おしごとカレンダー</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <!-- Icon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📅</text></svg>">
+    <link rel="stylesheet" href="style.css">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3b82f6">
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1 class="app-title">おしごとカレンダー</h1>
+            <div class="controls">
+                <button id="btnPrev" class="nav-btn" aria-label="前の月">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+                <div class="current-date-display" id="currentDateDisplay"></div>
+                <button id="btnNext" class="nav-btn" aria-label="次の月">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+                <button id="btnSettings" class="nav-btn" aria-label="設定">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <div class="main-layout" id="mainLayout">
+            <main class="calendar-wrapper" id="calendarWrapper">
+                <!-- カレンダーの内容はJSによって注入されます -->
+            </main>
+            <aside class="media-area" id="mediaArea">
+                <div class="media-container" id="mediaContainer">
+                    <p class="media-placeholder">設定から画像を追加してください</p>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- 設定モーダル -->
+    <dialog id="settingsModal" class="settings-modal">
+        <form method="dialog" class="settings-form">
+            <div class="settings-scroll-area">
+                <section class="settings-section">
+                    <h3>基本設定</h3>
+                    <div class="setting-group">
+                        <label>週の開始日</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="startOfWeek" value="0" checked> 日曜日</label>
+                            <label><input type="radio" name="startOfWeek" value="1"> 月曜日</label>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label>表示月数</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="displayMonths" value="1"> 1ヶ月</label>
+                            <label><input type="radio" name="displayMonths" value="2" checked> 2ヶ月</label>
+                            <label><input type="radio" name="displayMonths" value="3"> 3ヶ月</label>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label>レイアウト</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="layout" value="row" checked> 横並び</label>
+                            <label><input type="radio" name="layout" value="column"> 縦並び</label>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <h3>推し設定</h3>
+                    <div class="setting-group">
+                        <label>推しの名前</label>
+                        <input type="text" id="oshiName" placeholder="例: ○○ちゃん">
+                    </div>
+                    <div class="setting-group">
+                        <label>誕生日</label>
+                        <input type="date" id="oshiBirthday">
+                    </div>
+                    <div class="setting-group">
+                        <label>デビュー記念日</label>
+                        <input type="date" id="oshiDebutDay">
+                    </div>
+                    <div class="setting-group">
+                        <label>推しカラー</label>
+                        <input type="color" id="oshiColor" value="#3b82f6">
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <h3>メディア表示設定</h3>
+                    <div class="setting-group">
+                        <label>表示モード</label>
+                        <select id="mediaMode">
+                            <option value="none">非表示</option>
+                            <option value="single">単一URL</option>
+                            <option value="random">リストからランダム</option>
+                            <option value="cycle">リストを順次（1時間毎）</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label>画像URL (コンマ区切りで複数指定可)</label>
+                        <textarea id="mediaUrls" placeholder="https://example.com/image.jpg, ..."></textarea>
+                    </div>
+                </section>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" id="btnCancel" class="btn-cancel">キャンセル</button>
+                <button type="button" id="btnSave" class="btn-primary">保存して反映</button>
+            </div>
+        </form>
+    </dialog>
+    <script src="script.js"></script>
+    <script>
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registered.'))
+                    .catch(err => console.log('Service Worker registration failed.', err));
+            });
+        }
+    </script>
+</body>
+
+</html>
