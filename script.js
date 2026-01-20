@@ -406,11 +406,31 @@ function appendSearchUI(container) {
     const btn = document.createElement('div');
     btn.className = 'media-search-btn';
     btn.innerHTML = '🔍';
-    btn.title = '推しを探す (Quick Search)';
+    btn.title = '推しを探す / 登録する';
 
     // Palette
     const palette = document.createElement('div');
     palette.className = 'search-palette hidden';
+
+    // --- Tabs ---
+    const tabsContainer = document.createElement('div');
+    tabsContainer.className = 'palette-tabs';
+
+    const tabSearch = document.createElement('div');
+    tabSearch.className = 'palette-tab active';
+    tabSearch.textContent = '検索';
+
+    const tabRegister = document.createElement('div');
+    tabRegister.className = 'palette-tab';
+    tabRegister.textContent = '登録';
+
+    tabsContainer.appendChild(tabSearch);
+    tabsContainer.appendChild(tabRegister);
+    palette.appendChild(tabsContainer);
+
+    // --- Content: Search ---
+    const contentSearch = document.createElement('div');
+    contentSearch.className = 'palette-content active';
 
     // 1. Custom Search Header
     const header = document.createElement('div');
@@ -427,7 +447,7 @@ function appendSearchUI(container) {
         }
     });
     header.appendChild(input);
-    palette.appendChild(header);
+    contentSearch.appendChild(header);
 
     // 2. Oshi List
     const list = document.createElement('div');
@@ -463,15 +483,106 @@ function appendSearchUI(container) {
     } else {
         list.innerHTML = '<div style="padding:8px; font-size:0.8rem; color:#666;">推しが登録されていません</div>';
     }
+    contentSearch.appendChild(list);
+    palette.appendChild(contentSearch);
 
-    palette.appendChild(list);
+    // --- Content: Register ---
+    const contentRegister = document.createElement('div');
+    contentRegister.className = 'palette-content';
+
+    const regForm = document.createElement('div');
+    regForm.className = 'register-form';
+
+    // Input Group
+    const regInputGroup = document.createElement('div');
+    regInputGroup.className = 'register-input-group';
+
+    const urlInput = document.createElement('input');
+    urlInput.type = 'text';
+    urlInput.className = 'palette-search-input'; // Reuse style
+    urlInput.placeholder = 'URLを貼り付け...';
+
+    const btnPaste = document.createElement('button');
+    btnPaste.className = 'btn-paste';
+    btnPaste.innerHTML = '📋';
+    btnPaste.title = 'クリップボードから貼り付け';
+    btnPaste.onclick = async () => {
+        try {
+            const text = await navigator.clipboard.readText();
+            if (text) urlInput.value = text;
+        } catch (err) {
+            console.error('Failed to read clipboard', err);
+            alert('クリップボードの読み取りに失敗しました (権限が必要です)');
+        }
+    };
+
+    regInputGroup.appendChild(urlInput);
+    regInputGroup.appendChild(btnPaste);
+
+    // Action Button
+    const btnAdd = document.createElement('button');
+    btnAdd.className = 'btn-register-action';
+    btnAdd.textContent = 'この画像を登録する';
+
+    btnAdd.onclick = () => {
+        const url = urlInput.value.trim();
+        if (!url) return;
+
+        // Add to settings
+        const currentUrls = appSettings.mediaUrls.split(',').map(u => u.trim()).filter(u => u);
+        if (!currentUrls.includes(url)) {
+            currentUrls.push(url);
+            appSettings.mediaUrls = currentUrls.join(',');
+
+            // Save & Update
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+            updateView(); // This will re-render media area
+
+            // Feedback
+            const toast = document.createElement('div');
+            toast.className = 'success-toast';
+            toast.textContent = '登録しました！';
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+
+            // Clear input
+            urlInput.value = '';
+        } else {
+            alert('すでに登録されています');
+        }
+    };
+
+    regForm.appendChild(regInputGroup);
+    regForm.appendChild(btnAdd);
+    contentRegister.appendChild(regForm);
+    palette.appendChild(contentRegister);
+
+    // --- Tab Logic ---
+    const switchTab = (mode) => {
+        if (mode === 'search') {
+            tabSearch.classList.add('active');
+            tabRegister.classList.remove('active');
+            contentSearch.classList.add('active');
+            contentRegister.classList.remove('active');
+        } else {
+            tabSearch.classList.remove('active');
+            tabRegister.classList.add('active');
+            contentSearch.classList.remove('active');
+            contentRegister.classList.add('active');
+        }
+    };
+
+    tabSearch.addEventListener('click', (e) => { e.stopPropagation(); switchTab('search'); });
+    tabRegister.addEventListener('click', (e) => { e.stopPropagation(); switchTab('register'); });
 
     // Toggle Logic
     btn.addEventListener('click', (e) => {
         e.stopPropagation();
         palette.classList.toggle('hidden');
         if (!palette.classList.contains('hidden')) {
-            input.focus();
+            // Focus appropriate input
+            if (tabSearch.classList.contains('active')) input.focus();
+            else urlInput.focus();
         }
     });
 
@@ -497,7 +608,8 @@ function embedTweet(tweetId, container) {
             {
                 theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
                 lang: 'ja',
-                dnt: true
+                dnt: true,
+                conversation: 'none'
             }
         ).then(el => {
             if (!el) {
