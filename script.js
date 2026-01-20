@@ -17,8 +17,6 @@ const DEFAULT_SETTINGS = {
     // Media Settings
     mediaMode: 'none', // 'none', 'single', 'random', 'cycle'
     mediaPosition: 'right', // 'top', 'bottom', 'left', 'right'
-    mediaSource: 'url', // 'url', 'local'
-    mediaUrls: ''
 };
 
 // --- IndexedDB Management ---
@@ -476,329 +474,6 @@ function updateView() {
 }
 
 // --- Media Logic ---
-function updateMediaArea() {
-    const area = document.getElementById('mediaArea');
-    const container = document.getElementById('mediaContainer');
-    if (!area || !container) return;
-
-    if (appSettings.mediaMode === 'none') {
-        area.style.display = 'none';
-        return;
-    }
-
-    area.style.display = 'block';
-
-    // Apply position class to main-layout
-    const mainLayout = document.getElementById('mainLayout');
-    if (mainLayout) {
-        // Remove existing pos- classes
-        mainLayout.classList.remove('pos-top', 'pos-bottom', 'pos-left', 'pos-right');
-        // Add new one
-        mainLayout.classList.add(`pos-${appSettings.mediaPosition || 'right'}`);
-    }
-
-    const urls = appSettings.mediaUrls.split(',').map(u => u.trim()).filter(u => u);
-
-    // Prepare Container Structure (Content Layer + UI Layer)
-    let contentLayer = container.querySelector('.media-content-layer');
-    if (!contentLayer) {
-        container.innerHTML = ''; // Full reset if structure not present
-        contentLayer = document.createElement('div');
-        contentLayer.className = 'media-content-layer';
-        contentLayer.style.width = '100%';
-        contentLayer.style.height = '100%';
-        contentLayer.style.display = 'flex';
-        contentLayer.style.alignItems = 'center';
-        contentLayer.style.justifyContent = 'center';
-        container.appendChild(contentLayer);
-
-        // Append Search UI
-        appendSearchUI(container);
-    }
-
-    // Safety check: if UI is missing (e.g. accidentally cleared), re-append
-    if (!container.querySelector('.media-search-btn')) {
-        appendSearchUI(container);
-    }
-
-    if (urls.length === 0) {
-        contentLayer.innerHTML = '<p class="media-placeholder">画像URLが設定されていません</p>';
-        return;
-    }
-
-    let targetUrl = '';
-    if (appSettings.mediaMode === 'single') {
-        targetUrl = urls[0];
-    } else if (appSettings.mediaMode === 'random') {
-        targetUrl = urls[Math.floor(Math.random() * urls.length)];
-    } else if (appSettings.mediaMode === 'cycle') {
-        // Cycle based on current minute (to see changes faster than hour)
-        const timeUnit = new Date().getMinutes();
-        targetUrl = urls[timeUnit % urls.length];
-    }
-
-    if (!targetUrl) return;
-
-    // Check if it is a Twitter/X URL
-    const twitterMatch = targetUrl.match(/^https?:\/\/(twitter|x)\.com\/\w+\/status\/(\d+)/);
-
-    if (twitterMatch) {
-        const tweetId = twitterMatch[2];
-
-        // Improve placeholder while loading
-        const placeholder = document.createElement('div');
-        placeholder.className = 'media-placeholder';
-        placeholder.textContent = 'ツイートを読み込み中...';
-
-        // Clear content layer
-        contentLayer.innerHTML = '';
-        contentLayer.appendChild(placeholder);
-
-        // Ensure Widget JS is loaded
-        if (window.twttr && window.twttr.widgets) {
-            embedTweet(tweetId, contentLayer);
-        } else {
-            if (!document.getElementById('twitter-wjs')) {
-                const script = document.createElement('script');
-                script.id = 'twitter-wjs';
-                script.src = "https://platform.twitter.com/widgets.js";
-                script.async = true;
-                document.body.appendChild(script);
-            }
-
-            // Poll for readiness (robust against parallel loads)
-            const timer = setInterval(() => {
-                if (window.twttr && window.twttr.widgets) {
-                    clearInterval(timer);
-                    embedTweet(tweetId, contentLayer);
-                }
-            }, 100);
-        }
-    } else {
-        // Standard Image
-        contentLayer.innerHTML = `<img src="${targetUrl}" alt="Oshi Media" onerror="this.parentElement.innerHTML='<p class=\'media-placeholder\'>画像の読み込みに失敗しました</p>'">`;
-    }
-}
-
-// --- Quick Search UI ---
-function appendSearchUI(container) {
-    // Button
-    const btn = document.createElement('div');
-    btn.className = 'media-search-btn';
-    btn.innerHTML = '🔍';
-    btn.title = '推しを探す / 登録する';
-
-    // Palette
-    const palette = document.createElement('div');
-    palette.className = 'search-palette hidden';
-
-    // --- Tabs ---
-    const tabsContainer = document.createElement('div');
-    tabsContainer.className = 'palette-tabs';
-
-    const tabSearch = document.createElement('div');
-    tabSearch.className = 'palette-tab active';
-    tabSearch.textContent = '検索';
-
-    const tabRegister = document.createElement('div');
-    tabRegister.className = 'palette-tab';
-    tabRegister.textContent = '登録';
-
-    tabsContainer.appendChild(tabSearch);
-    tabsContainer.appendChild(tabRegister);
-    palette.appendChild(tabsContainer);
-
-    // --- Content: Search ---
-    const contentSearch = document.createElement('div');
-    contentSearch.className = 'palette-content active';
-
-    // 1. Custom Search Header
-    const header = document.createElement('div');
-    header.className = 'palette-header';
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'palette-search-input';
-    input.placeholder = 'キーワードを検索...';
-
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && input.value.trim()) {
-            const url = `https://x.com/search?q=${encodeURIComponent(input.value.trim())} filter:images&src=typed_query&f=media`;
-            window.open(url, '_blank');
-        }
-    });
-    header.appendChild(input);
-    contentSearch.appendChild(header);
-
-    // 2. Oshi List
-    const list = document.createElement('div');
-    list.className = 'palette-list';
-
-    if (appSettings.oshiList && appSettings.oshiList.length > 0) {
-        appSettings.oshiList.forEach(oshi => {
-            if (!oshi.fanArtTag) return;
-            const item = document.createElement('div');
-            item.className = 'palette-item';
-
-            // Color dot
-            const dot = document.createElement('span');
-            dot.style.width = '10px';
-            dot.style.height = '10px';
-            dot.style.borderRadius = '50%';
-            dot.style.backgroundColor = oshi.color || '#ccc';
-
-            const name = document.createElement('span');
-            name.textContent = `${oshi.name} (${oshi.fanArtTag})`;
-            name.style.fontSize = '0.9rem';
-
-            item.appendChild(dot);
-            item.appendChild(name);
-
-            item.addEventListener('click', () => {
-                const url = `https://x.com/search?q=${encodeURIComponent(oshi.fanArtTag)} filter:images&src=typed_query&f=media`;
-                window.open(url, '_blank');
-            });
-
-            list.appendChild(item);
-        });
-    } else {
-        list.innerHTML = '<div style="padding:8px; font-size:0.8rem; color:#666;">推しが登録されていません</div>';
-    }
-    contentSearch.appendChild(list);
-    palette.appendChild(contentSearch);
-
-    // --- Content: Register ---
-    const contentRegister = document.createElement('div');
-    contentRegister.className = 'palette-content';
-
-    const regForm = document.createElement('div');
-    regForm.className = 'register-form';
-
-    // Input Group
-    const regInputGroup = document.createElement('div');
-    regInputGroup.className = 'register-input-group';
-
-    const urlInput = document.createElement('input');
-    urlInput.type = 'text';
-    urlInput.className = 'palette-search-input'; // Reuse style
-    urlInput.placeholder = 'URLを貼り付け...';
-
-    const btnPaste = document.createElement('button');
-    btnPaste.className = 'btn-paste';
-    btnPaste.innerHTML = '📋';
-    btnPaste.title = 'クリップボードから貼り付け';
-    btnPaste.onclick = async () => {
-        try {
-            const text = await navigator.clipboard.readText();
-            if (text) urlInput.value = text;
-        } catch (err) {
-            console.error('Failed to read clipboard', err);
-            alert('クリップボードの読み取りに失敗しました (権限が必要です)');
-        }
-    };
-
-    regInputGroup.appendChild(urlInput);
-    regInputGroup.appendChild(btnPaste);
-
-    // Action Button
-    const btnAdd = document.createElement('button');
-    btnAdd.className = 'btn-register-action';
-    btnAdd.textContent = 'この画像を登録する';
-
-    btnAdd.onclick = () => {
-        const url = urlInput.value.trim();
-        if (!url) return;
-
-        // Add to settings
-        const currentUrls = appSettings.mediaUrls.split(',').map(u => u.trim()).filter(u => u);
-        if (!currentUrls.includes(url)) {
-            currentUrls.push(url);
-            appSettings.mediaUrls = currentUrls.join(',');
-
-            // Save & Update
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
-            updateView(); // This will re-render media area
-
-            // Feedback
-            const toast = document.createElement('div');
-            toast.className = 'success-toast';
-            toast.textContent = '登録しました！';
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 2500);
-
-            // Clear input
-            urlInput.value = '';
-        } else {
-            alert('すでに登録されています');
-        }
-    };
-
-    regForm.appendChild(regInputGroup);
-    regForm.appendChild(btnAdd);
-    contentRegister.appendChild(regForm);
-    palette.appendChild(contentRegister);
-
-    // --- Tab Logic ---
-    const switchTab = (mode) => {
-        if (mode === 'search') {
-            tabSearch.classList.add('active');
-            tabRegister.classList.remove('active');
-            contentSearch.classList.add('active');
-            contentRegister.classList.remove('active');
-        } else {
-            tabSearch.classList.remove('active');
-            tabRegister.classList.add('active');
-            contentSearch.classList.remove('active');
-            contentRegister.classList.add('active');
-        }
-    };
-
-    tabSearch.addEventListener('click', (e) => { e.stopPropagation(); switchTab('search'); });
-    tabRegister.addEventListener('click', (e) => { e.stopPropagation(); switchTab('register'); });
-
-    // Toggle Logic
-    btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        palette.classList.toggle('hidden');
-        if (!palette.classList.contains('hidden')) {
-            // Focus appropriate input
-            if (tabSearch.classList.contains('active')) input.focus();
-            else urlInput.focus();
-        }
-    });
-
-    // Close when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!palette.contains(e.target) && !btn.contains(e.target)) {
-            palette.classList.add('hidden');
-        }
-    });
-
-    container.appendChild(btn);
-    container.appendChild(palette);
-}
-
-function embedTweet(tweetId, container) {
-    if (window.twttr && window.twttr.widgets) {
-        // Clear content layer specifically
-        container.innerHTML = '';
-
-        window.twttr.widgets.createTweet(
-            tweetId,
-            container,
-            {
-                theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
-                lang: 'ja',
-                dnt: true,
-                conversation: 'none'
-            }
-        ).then(el => {
-            if (!el) {
-                container.innerHTML = '<p class="media-placeholder">ツイートの表示に失敗しました</p>';
-            }
-        });
-    }
-}
-
 // --- Settings Logic ---
 
 function renderOshiList() {
@@ -935,18 +610,6 @@ async function updateLocalMediaUI() {
     if (countEl) {
         const keys = await localImageDB.getAllKeys();
         countEl.textContent = keys.length;
-    }
-
-    const source = document.querySelector('input[name="mediaSource"]:checked').value;
-    const urlSettings = document.getElementById('urlMediaSettings');
-    const localSettings = document.getElementById('localMediaSettings');
-
-    if (source === 'local') {
-        urlSettings.style.display = 'none';
-        localSettings.style.display = 'block';
-    } else {
-        urlSettings.style.display = 'block';
-        localSettings.style.display = 'none';
     }
 }
 
@@ -1088,13 +751,6 @@ function initSettings() {
         document.getElementById('mediaMode').value = appSettings.mediaMode;
         const radiosMediaPos = document.querySelectorAll('input[name="mediaPosition"]');
         radiosMediaPos.forEach(r => { if (r.value === appSettings.mediaPosition) r.checked = true; });
-        document.getElementById('mediaUrls').value = appSettings.mediaUrls;
-
-        // Media Source
-        const radiosSource = document.querySelectorAll('input[name="mediaSource"]');
-        radiosSource.forEach(r => {
-            if (r.value === (appSettings.mediaSource || 'url')) r.checked = true;
-        });
 
         // Initialize Local UI visibility
         updateLocalMediaUI();
@@ -1120,11 +776,6 @@ function initSettings() {
     document.getElementById('btnAddManual').addEventListener('click', addManualOshi);
 
     // --- New Media & Data Handlers ---
-
-    // Toggle Source
-    document.querySelectorAll('input[name="mediaSource"]').forEach(r => {
-        r.addEventListener('change', updateLocalMediaUI);
-    });
 
     // Local Import (Folder)
     const inputFolder = document.getElementById('inputLocalFolder');
@@ -1200,11 +851,6 @@ function saveSettings() {
     appSettings.mediaMode = document.getElementById('mediaMode').value;
     const mediaPosEl = document.querySelector('input[name="mediaPosition"]:checked');
     if (mediaPosEl) appSettings.mediaPosition = mediaPosEl.value;
-
-    const mediaSourceEl = document.querySelector('input[name="mediaSource"]:checked');
-    if (mediaSourceEl) appSettings.mediaSource = mediaSourceEl.value;
-
-    appSettings.mediaUrls = document.getElementById('mediaUrls').value;
 
     // Note: oshiList is already updated in memory via adding/deleting buttons.
     // We just save the current state.
@@ -1295,109 +941,41 @@ async function updateMediaArea() {
         contentLayer.style.justifyContent = 'center';
         container.appendChild(contentLayer);
 
-        // Append Search UI
-        appendSearchUI(container);
+
     }
 
-    // Safety check: if UI is missing (e.g. accidentally cleared), re-append
-    if (!container.querySelector('.media-search-btn')) {
-        appendSearchUI(container);
-    }
 
-    // --- Logic Branching: Local vs URL ---
-    if (appSettings.mediaSource === 'local') {
-        try {
-            const keys = await localImageDB.getAllKeys();
-            if (keys.length === 0) {
-                contentLayer.innerHTML = '<p class="media-placeholder">画像が登録されていません<br>設定から追加してください</p>';
-                return;
-            }
 
-            let targetKey = null;
-            if (appSettings.mediaMode === 'single') {
-                targetKey = keys[0];
-            } else if (appSettings.mediaMode === 'random') {
-                targetKey = keys[Math.floor(Math.random() * keys.length)];
-            } else if (appSettings.mediaMode === 'cycle') {
-                const timeUnit = new Date().getMinutes();
-                targetKey = keys[timeUnit % keys.length];
-            }
-
-            if (targetKey) {
-                const record = await localImageDB.getImage(targetKey);
-                if (record) { // Access directly as file is stored
-                    // Depending on implementation addImage(file) stores file directly.
-                    // getImage returns that file.
-                    currentMediaObjectURL = URL.createObjectURL(record);
-                    contentLayer.innerHTML = `<img src="${currentMediaObjectURL}" alt="Local Media" style="width:100%; height:100%; object-fit:contain;">`;
-                }
-            }
-        } catch (e) {
-            console.error(e);
-            contentLayer.innerHTML = '<p class="media-placeholder">画像の読み込みエラー</p>';
+    // --- Logic: Local Only ---
+    try {
+        const keys = await localImageDB.getAllKeys();
+        if (keys.length === 0) {
+            contentLayer.innerHTML = '<p class="media-placeholder">画像が登録されていません<br>設定から追加してください</p>';
+            return;
         }
-        return;
-    }
 
-    // --- URL Logic ---
-    const urls = appSettings.mediaUrls.split(',').map(u => u.trim()).filter(u => u);
-
-    if (urls.length === 0) {
-        contentLayer.innerHTML = '<p class="media-placeholder">画像URLが設定されていません</p>';
-        return;
-    }
-
-    let targetUrl = '';
-    if (appSettings.mediaMode === 'single') {
-        targetUrl = urls[0];
-    } else if (appSettings.mediaMode === 'random') {
-        targetUrl = urls[Math.floor(Math.random() * urls.length)];
-    } else if (appSettings.mediaMode === 'cycle') {
-        // Cycle based on current minute (to see changes faster than hour)
-        const timeUnit = new Date().getMinutes();
-        targetUrl = urls[timeUnit % urls.length];
-    }
-
-    if (!targetUrl) return;
-
-    // Check if it is a Twitter/X URL
-    const twitterMatch = targetUrl.match(/^https?:\/\/(twitter|x)\.com\/\w+\/status\/(\d+)/);
-
-    if (twitterMatch) {
-        const tweetId = twitterMatch[2];
-
-        // Improve placeholder while loading
-        const placeholder = document.createElement('div');
-        placeholder.className = 'media-placeholder';
-        placeholder.textContent = 'ツイートを読み込み中...';
-
-        // Clear content layer
-        contentLayer.innerHTML = '';
-        contentLayer.appendChild(placeholder);
-
-        // Ensure Widget JS is loaded
-        if (window.twttr && window.twttr.widgets) {
-            embedTweet(tweetId, contentLayer);
-        } else {
-            if (!document.getElementById('twitter-wjs')) {
-                const script = document.createElement('script');
-                script.id = 'twitter-wjs';
-                script.src = "https://platform.twitter.com/widgets.js";
-                script.async = true;
-                document.body.appendChild(script);
-            }
-
-            // Poll for readiness (robust against parallel loads)
-            const timer = setInterval(() => {
-                if (window.twttr && window.twttr.widgets) {
-                    clearInterval(timer);
-                    embedTweet(tweetId, contentLayer);
-                }
-            }, 100);
+        let targetKey = null;
+        if (appSettings.mediaMode === 'single') {
+            targetKey = keys[0];
+        } else if (appSettings.mediaMode === 'random') {
+            targetKey = keys[Math.floor(Math.random() * keys.length)];
+        } else if (appSettings.mediaMode === 'cycle') {
+            const timeUnit = new Date().getMinutes();
+            targetKey = keys[timeUnit % keys.length];
         }
-    } else {
-        // Standard Image
-        contentLayer.innerHTML = `<img src="${targetUrl}" alt="Oshi Media" onerror="this.parentElement.innerHTML='<p class=\'media-placeholder\'>画像の読み込みに失敗しました</p>'">`;
+
+        if (targetKey) {
+            const record = await localImageDB.getImage(targetKey);
+            if (record) { // Access directly as file is stored
+                // Depending on implementation addImage(file) stores file directly.
+                // getImage returns that file.
+                currentMediaObjectURL = URL.createObjectURL(record);
+                contentLayer.innerHTML = `<img src="${currentMediaObjectURL}" alt="Local Media" style="width:100%; height:100%; object-fit:contain;">`;
+            }
+        }
+    } catch (e) {
+        console.error(e);
+        contentLayer.innerHTML = '<p class="media-placeholder">画像の読み込みエラー</p>';
     }
 }
 
@@ -1474,5 +1052,7 @@ function adjustMediaLayout() {
         }
     }
 }
+
+
 
 window.addEventListener('resize', adjustMediaLayout);
