@@ -17,8 +17,122 @@ const DEFAULT_SETTINGS = {
     // Media Settings
     mediaMode: 'none', // 'none', 'single', 'random', 'cycle'
     mediaPosition: 'right', // 'top', 'bottom', 'left', 'right'
+    mediaSource: 'url', // 'url', 'local'
     mediaUrls: ''
 };
+
+// --- IndexedDB Management ---
+class LocalImageDB {
+    constructor(dbName = 'OshigotoCalendarDB', storeName = 'images') {
+        this.dbName = dbName;
+        this.storeName = storeName;
+        this.db = null;
+    }
+
+    async open() {
+        if (this.db) return this.db;
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(this.dbName, 1);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(this.storeName)) {
+                    db.createObjectStore(this.storeName, { autoIncrement: true });
+                }
+            };
+            request.onsuccess = (e) => {
+                this.db = e.target.result;
+                resolve(this.db);
+            };
+            request.onerror = (e) => reject(e.target.error);
+        });
+    }
+
+    async addImage(file) {
+        await this.open();
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            const request = store.add(file);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async getAllImages() {
+        await this.open();
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(this.storeName, 'readonly');
+            const store = tx.objectStore(this.storeName);
+            const request = store.getAll();
+            const keyRequest = store.getAllKeys();
+
+            let images = [];
+            let keys = [];
+
+            request.onsuccess = () => {
+                images = request.result;
+                if (keys.length > 0) resolve(this.combineKeysAndValues(keys, images));
+            };
+            keyRequest.onsuccess = () => {
+                keys = keyRequest.result;
+                if (images.length > 0) resolve(this.combineKeysAndValues(keys, images));
+            };
+            request.onerror = () => reject(request.error);
+            keyRequest.onerror = () => reject(keyRequest.error);
+        });
+    }
+
+    async getAllKeys() {
+        await this.open();
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(this.storeName, 'readonly');
+            const store = tx.objectStore(this.storeName);
+            const request = store.getAllKeys();
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async getImage(key) {
+        await this.open();
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(this.storeName, 'readonly');
+            const store = tx.objectStore(this.storeName);
+            const request = store.get(key);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async deleteImage(key) {
+        await this.open();
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            const request = store.delete(key);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async clearAll() {
+        await this.open();
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            const request = store.clear();
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    combineKeysAndValues(keys, values) {
+        return values.map((val, i) => ({ id: keys[i], file: val }));
+    }
+}
+
+const localImageDB = new LocalImageDB();
+
 
 let appSettings = { ...DEFAULT_SETTINGS };
 const STORAGE_KEY = 'oshigoto_calendar_settings';
@@ -748,6 +862,149 @@ function addManualOshi() {
     document.getElementById('newOshiDebutDay').value = '';
 }
 
+// --- Local Media UI Handlers ---
+
+async function updateLocalMediaUI() {
+    const countEl = document.getElementById('localImageCount');
+    if (countEl) {
+        const keys = await localImageDB.getAllKeys();
+        countEl.textContent = keys.length;
+    }
+
+    const source = document.querySelector('input[name="mediaSource"]:checked').value;
+    const urlSettings = document.getElementById('urlMediaSettings');
+    const localSettings = document.getElementById('localMediaSettings');
+
+    if (source === 'local') {
+        urlSettings.style.display = 'none';
+        localSettings.style.display = 'block';
+    } else {
+        urlSettings.style.display = 'block';
+        localSettings.style.display = 'none';
+    }
+}
+
+async function renderLocalImageManager() {
+    const list = document.getElementById('localImageList');
+    if (!list) return;
+
+    // Simple clear & loading
+    list.innerHTML = '<p style="grid-column: 1/-1;">読み込み中...</p>';
+
+    // Get all keys (lighter than getting all blobs)
+    // To show thumbnails, we actually need blobs. 
+    // If there are many, we should implement pagination.
+    // For now, let's limit to recent 50 or just show all if < 100.
+    // Let's grab all data for now (assuming users won't upload 1000s immediately).
+
+    const allImages = await localImageDB.getAllImages();
+    list.innerHTML = '';
+
+    if (allImages.length === 0) {
+        list.innerHTML = '<p style="grid-column: 1/-1; color:#888;">画像がありません</p>';
+        return;
+    }
+
+    allImages.forEach(item => {
+        const div = document.createElement('div');
+        div.style.position = 'relative';
+        div.style.aspectRatio = '1/1';
+        div.style.border = '1px solid #ddd';
+        div.style.borderRadius = '4px';
+        div.style.overflow = 'hidden';
+
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(item.file);
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+
+        // Clean up URL object when removed (simplified here, ideally intersection observer)
+
+        const btnDel = document.createElement('button');
+        btnDel.textContent = '×';
+        btnDel.style.position = 'absolute';
+        btnDel.style.top = '2px';
+        btnDel.style.right = '2px';
+        btnDel.style.background = 'rgba(0,0,0,0.5)';
+        btnDel.style.color = '#fff';
+        btnDel.style.border = 'none';
+        btnDel.style.borderRadius = '50%';
+        btnDel.style.width = '20px';
+        btnDel.style.height = '20px';
+        btnDel.style.fontSize = '14px';
+        btnDel.style.cursor = 'pointer';
+        btnDel.title = '削除';
+
+        btnDel.onclick = async () => {
+            if (confirm('この画像を削除しますか？')) {
+                await localImageDB.deleteImage(item.id);
+                URL.revokeObjectURL(img.src);
+                renderLocalImageManager();
+                updateLocalMediaUI();
+            }
+        };
+
+        div.appendChild(img);
+        div.appendChild(btnDel);
+        list.appendChild(div);
+    });
+}
+
+async function handleLocalImageImport(files) {
+    if (!files || files.length === 0) return;
+
+    let addedCount = 0;
+
+    for (const file of Array.from(files)) {
+        if (!file.type.startsWith('image/')) continue;
+        await localImageDB.addImage(file);
+        addedCount++;
+    }
+
+    alert(`${addedCount} 枚の画像を追加しました`);
+    updateLocalMediaUI();
+    renderLocalImageManager();
+}
+
+function handleExportSettings() {
+    const dataStr = JSON.stringify(appSettings, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `oshigoto_calendar_settings_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function handleImportSettings(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            // Basic validation
+            if (data.oshiList) {
+                if (confirm('現在の設定を上書きします。よろしいですか？')) {
+                    appSettings = { ...DEFAULT_SETTINGS, ...data };
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+                    alert('設定を復元しました。画面を更新します。');
+                    location.reload();
+                }
+            } else {
+                alert('無効な設定ファイルです。');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('ファイルの読み込みに失敗しました。');
+        }
+    };
+    reader.readAsText(file);
+}
+
 function initSettings() {
     // Open Modal
     document.getElementById('btnSettings').addEventListener('click', () => {
@@ -767,6 +1024,15 @@ function initSettings() {
         radiosMediaPos.forEach(r => { if (r.value === appSettings.mediaPosition) r.checked = true; });
         document.getElementById('mediaUrls').value = appSettings.mediaUrls;
 
+        // Media Source
+        const radiosSource = document.querySelectorAll('input[name="mediaSource"]');
+        radiosSource.forEach(r => {
+            if (r.value === (appSettings.mediaSource || 'url')) r.checked = true;
+        });
+
+        // Initialize Local UI visibility
+        updateLocalMediaUI();
+
         // Render Oshi List
         renderOshiList();
 
@@ -781,11 +1047,52 @@ function initSettings() {
     // Save Settings
     document.getElementById('btnSave').addEventListener('click', saveSettings);
 
-    // Import Button
+    // Import Button (Oshi)
     document.getElementById('btnImport').addEventListener('click', handleFileImport);
 
     // Add Manual Button
     document.getElementById('btnAddManual').addEventListener('click', addManualOshi);
+
+    // --- New Media & Data Handlers ---
+
+    // Toggle Source
+    document.querySelectorAll('input[name="mediaSource"]').forEach(r => {
+        r.addEventListener('change', updateLocalMediaUI);
+    });
+
+    // Local Import (Folder)
+    const inputFolder = document.getElementById('inputLocalFolder');
+    document.getElementById('btnLocalFolder').addEventListener('click', () => inputFolder.click());
+    inputFolder.addEventListener('change', (e) => handleLocalImageImport(e.target.files));
+
+    // Local Import (Files)
+    const inputFiles = document.getElementById('inputLocalFiles');
+    document.getElementById('btnLocalFiles').addEventListener('click', () => inputFiles.click());
+    inputFiles.addEventListener('change', (e) => handleLocalImageImport(e.target.files));
+
+    // Clear Local
+    document.getElementById('btnClearLocal').addEventListener('click', async () => {
+        if (confirm('登録済みの画像をすべて削除します。よろしいですか？')) {
+            await localImageDB.clearAll();
+            updateLocalMediaUI();
+            renderLocalImageManager();
+        }
+    });
+
+    // Toggle Details (Load images only when opened)
+    document.querySelector('.local-image-manager').addEventListener('toggle', (e) => {
+        if (e.target.open) renderLocalImageManager();
+    });
+
+    // Export Settings
+    document.getElementById('btnExportSettings').addEventListener('click', handleExportSettings);
+
+    // Import Settings
+    const inputImport = document.getElementById('inputImportSettings');
+    document.getElementById('btnImportSettings').addEventListener('click', () => inputImport.click());
+    inputImport.addEventListener('change', (e) => {
+        if (e.target.files[0]) handleImportSettings(e.target.files[0]);
+    });
 }
 
 function loadSettings() {
@@ -827,6 +1134,10 @@ function saveSettings() {
     appSettings.mediaMode = document.getElementById('mediaMode').value;
     const mediaPosEl = document.querySelector('input[name="mediaPosition"]:checked');
     if (mediaPosEl) appSettings.mediaPosition = mediaPosEl.value;
+
+    const mediaSourceEl = document.querySelector('input[name="mediaSource"]:checked');
+    if (mediaSourceEl) appSettings.mediaSource = mediaSourceEl.value;
+
     appSettings.mediaUrls = document.getElementById('mediaUrls').value;
 
     // Note: oshiList is already updated in memory via adding/deleting buttons.
@@ -872,3 +1183,230 @@ function init() {
 
 document.addEventListener('DOMContentLoaded', init);
 
+
+// --- Media Logic ---
+let currentMediaObjectURL = null;
+
+async function updateMediaArea() {
+    const area = document.getElementById('mediaArea');
+    const container = document.getElementById('mediaContainer');
+    if (!area || !container) return;
+
+    if (appSettings.mediaMode === 'none') {
+        area.style.display = 'none';
+        return;
+    }
+
+    area.style.display = 'block';
+
+    // Apply position class to main-layout
+    const mainLayout = document.getElementById('mainLayout');
+    if (mainLayout) {
+        // Remove existing pos- classes
+        mainLayout.classList.remove('pos-top', 'pos-bottom', 'pos-left', 'pos-right');
+        // Add new one
+        mainLayout.classList.add(`pos-${appSettings.mediaPosition || 'right'}`);
+    }
+
+    adjustMediaLayout();
+
+    // Clean up previous ObjectURL if exists
+    if (currentMediaObjectURL) {
+        URL.revokeObjectURL(currentMediaObjectURL);
+        currentMediaObjectURL = null;
+    }
+
+    // Prepare Container Structure (Content Layer + UI Layer)
+    let contentLayer = container.querySelector('.media-content-layer');
+    if (!contentLayer) {
+        container.innerHTML = ''; // Full reset if structure not present
+        contentLayer = document.createElement('div');
+        contentLayer.className = 'media-content-layer';
+        contentLayer.style.width = '100%';
+        contentLayer.style.height = '100%';
+        contentLayer.style.display = 'flex';
+        contentLayer.style.alignItems = 'center';
+        contentLayer.style.justifyContent = 'center';
+        container.appendChild(contentLayer);
+
+        // Append Search UI
+        appendSearchUI(container);
+    }
+
+    // Safety check: if UI is missing (e.g. accidentally cleared), re-append
+    if (!container.querySelector('.media-search-btn')) {
+        appendSearchUI(container);
+    }
+
+    // --- Logic Branching: Local vs URL ---
+    if (appSettings.mediaSource === 'local') {
+        try {
+            const keys = await localImageDB.getAllKeys();
+            if (keys.length === 0) {
+                contentLayer.innerHTML = '<p class="media-placeholder">画像が登録されていません<br>設定から追加してください</p>';
+                return;
+            }
+
+            let targetKey = null;
+            if (appSettings.mediaMode === 'single') {
+                targetKey = keys[0];
+            } else if (appSettings.mediaMode === 'random') {
+                targetKey = keys[Math.floor(Math.random() * keys.length)];
+            } else if (appSettings.mediaMode === 'cycle') {
+                const timeUnit = new Date().getMinutes();
+                targetKey = keys[timeUnit % keys.length];
+            }
+
+            if (targetKey) {
+                const record = await localImageDB.getImage(targetKey);
+                if (record) { // Access directly as file is stored
+                    // Depending on implementation addImage(file) stores file directly.
+                    // getImage returns that file.
+                    currentMediaObjectURL = URL.createObjectURL(record);
+                    contentLayer.innerHTML = `<img src="${currentMediaObjectURL}" alt="Local Media" style="width:100%; height:100%; object-fit:contain;">`;
+                }
+            }
+        } catch (e) {
+            console.error(e);
+            contentLayer.innerHTML = '<p class="media-placeholder">画像の読み込みエラー</p>';
+        }
+        return;
+    }
+
+    // --- URL Logic ---
+    const urls = appSettings.mediaUrls.split(',').map(u => u.trim()).filter(u => u);
+
+    if (urls.length === 0) {
+        contentLayer.innerHTML = '<p class="media-placeholder">画像URLが設定されていません</p>';
+        return;
+    }
+
+    let targetUrl = '';
+    if (appSettings.mediaMode === 'single') {
+        targetUrl = urls[0];
+    } else if (appSettings.mediaMode === 'random') {
+        targetUrl = urls[Math.floor(Math.random() * urls.length)];
+    } else if (appSettings.mediaMode === 'cycle') {
+        // Cycle based on current minute (to see changes faster than hour)
+        const timeUnit = new Date().getMinutes();
+        targetUrl = urls[timeUnit % urls.length];
+    }
+
+    if (!targetUrl) return;
+
+    // Check if it is a Twitter/X URL
+    const twitterMatch = targetUrl.match(/^https?:\/\/(twitter|x)\.com\/\w+\/status\/(\d+)/);
+
+    if (twitterMatch) {
+        const tweetId = twitterMatch[2];
+
+        // Improve placeholder while loading
+        const placeholder = document.createElement('div');
+        placeholder.className = 'media-placeholder';
+        placeholder.textContent = 'ツイートを読み込み中...';
+
+        // Clear content layer
+        contentLayer.innerHTML = '';
+        contentLayer.appendChild(placeholder);
+
+        // Ensure Widget JS is loaded
+        if (window.twttr && window.twttr.widgets) {
+            embedTweet(tweetId, contentLayer);
+        } else {
+            if (!document.getElementById('twitter-wjs')) {
+                const script = document.createElement('script');
+                script.id = 'twitter-wjs';
+                script.src = "https://platform.twitter.com/widgets.js";
+                script.async = true;
+                document.body.appendChild(script);
+            }
+
+            // Poll for readiness (robust against parallel loads)
+            const timer = setInterval(() => {
+                if (window.twttr && window.twttr.widgets) {
+                    clearInterval(timer);
+                    embedTweet(tweetId, contentLayer);
+                }
+            }, 100);
+        }
+    } else {
+        // Standard Image
+        contentLayer.innerHTML = `<img src="${targetUrl}" alt="Oshi Media" onerror="this.parentElement.innerHTML='<p class=\'media-placeholder\'>画像の読み込みに失敗しました</p>'">`;
+    }
+}
+
+function adjustMediaLayout() {
+    const area = document.getElementById('mediaArea');
+    const container = document.getElementById('mediaContainer');
+    if (!area || !container) return;
+
+    if (appSettings.mediaMode === 'none') {
+        area.style.display = 'none';
+        return;
+    }
+
+    // Reset manual styles first
+    area.style.width = '';
+    area.style.maxWidth = '';
+    container.style.height = '';
+
+    const pos = appSettings.mediaPosition || 'right';
+    const header = document.querySelector('.header');
+
+    // Gaps estimate: Header Margin (24) + Layout Gap (24) + Padding (40) + Safety (20)
+    // Adjusted to ensure bottom margin
+    const gaps = 110;
+
+    if (pos === 'top' || pos === 'bottom') {
+        // --- Top/Bottom: Dynamic Width & Height ---
+
+        // Width: Match Calendar
+        const monthWidth = 550;
+        const gap = 24;
+        const count = appSettings.monthCount || 2;
+        const targetWidth = (count * monthWidth) + ((count - 1) * gap);
+
+        area.style.width = `${targetWidth}px`;
+        area.style.maxWidth = '95vw';
+
+        // Height: Fit to Remaining Window
+        const calendarSection = document.querySelector('.calendar-section');
+        if (header && calendarSection) {
+            const headerH = header.offsetHeight;
+            const calendarH = calendarSection.offsetHeight;
+            const availableH = window.innerHeight - headerH - calendarH - gaps;
+
+            // Minimum 250px
+            container.style.height = `${Math.max(250, availableH)}px`;
+        }
+    } else {
+        // --- Left/Right: Fixed 550px Width & Match Calendar Height ---
+
+        // Width: Fixed 550px
+        area.style.width = '550px';
+        area.style.maxWidth = '550px';
+
+        // Height: Match Calendar Section Height
+        // This ensures "Unified Vertical Spec" - just as Top/Bottom matches Calendar Width
+        const calendarSection = document.querySelector('.calendar-section');
+        if (calendarSection) {
+            // Wait for render/layout if needed? usually called after render
+            const calH = calendarSection.offsetHeight;
+
+            // If calendar is smaller than window height (e.g. 1 month row), maybe use window height?
+            // User query: "Vertical size doesn't follow calendar vertical width".
+            // Interpretation: If calendar is tall, image should use that height.
+            // If calendar is short, should image shorten? Or stay max window?
+            // Safer to use "Max of (Window-Header, Calendar)" to avoid shrinking too much?
+            // But strict implementation of "Follow Calendar" means match height.
+
+            // Let's match Calendar Height exactly (plus maybe some safety).
+            // But add a minimum to avoid super small images if calendar is empty/small.
+
+            // Wait, if calendar is huge (Vertical 3 months), we want huge image.
+            container.style.height = `${Math.max(400, calH)}px`;
+        }
+    }
+}
+
+window.addEventListener('resize', adjustMediaLayout);

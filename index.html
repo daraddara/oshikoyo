@@ -162,8 +162,59 @@
                         </div>
                     </div>
                     <div class="setting-group">
+                        <label>画像ソース</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="mediaSource" value="url" checked> URL指定</label>
+                            <label><input type="radio" name="mediaSource" value="local"> ローカル保存 (DB)</label>
+                        </div>
+                    </div>
+
+                    <div id="urlMediaSettings" class="setting-group">
                         <label>画像URL (コンマ区切りで複数指定可)</label>
                         <textarea id="mediaUrls" placeholder="https://example.com/image.jpg, ..."></textarea>
+                    </div>
+
+                    <div id="localMediaSettings" class="setting-group" style="display:none;">
+                        <label>ローカル画像管理</label>
+                        <div class="local-media-controls">
+                            <div class="import-buttons" style="margin-bottom: 10px; display: flex; gap: 8px;">
+                                <button type="button" id="btnLocalFolder" class="btn-secondary">📂 フォルダから一括登録</button>
+                                <input type="file" id="inputLocalFolder" webkitdirectory style="display:none">
+
+                                <button type="button" id="btnLocalFiles" class="btn-secondary">📄 ファイルを追加</button>
+                                <input type="file" id="inputLocalFiles" multiple accept="image/*" style="display:none">
+                            </div>
+                            <div class="local-status-bar"
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <span>登録済み: <strong id="localImageCount">0</strong> 枚</span>
+                                <button type="button" id="btnClearLocal" class="btn-danger-text"
+                                    style="color: #ef4444; background: none; border: none; cursor: pointer; text-decoration: underline;">全削除</button>
+                            </div>
+
+                            <details class="local-image-manager">
+                                <summary style="cursor: pointer; margin-bottom: 8px;">登録済み画像一覧を確認</summary>
+                                <div id="localImageList" class="local-image-grid"
+                                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; max-height: 300px; overflow-y: auto;">
+                                    <!-- Images injected here -->
+                                </div>
+                            </details>
+                        </div>
+                        <p class="help-text" style="font-size: 0.8rem; color: #666; margin-top: 8px;">※
+                            画像はブラウザ内に保存されます。元のファイルを移動しても表示は消えません。</p>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <h3>データ管理</h3>
+                    <div class="setting-group">
+                        <label>設定のバックアップと復元</label>
+                        <div class="backup-controls" style="display: flex; gap: 8px;">
+                            <button type="button" id="btnExportSettings" class="btn-secondary">設定を書き出し (保存)</button>
+                            <button type="button" id="btnImportSettings" class="btn-secondary">設定を読み込み (復元)</button>
+                            <input type="file" id="inputImportSettings" accept=".json" style="display:none">
+                        </div>
+                        <p class="help-text" style="font-size: 0.8rem; color: #666; margin-top: 5px;">※
+                            画像データ自体はバックアップに含まれません。</p>
                     </div>
                 </section>
             </div>
