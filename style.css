@@ -1395,3 +1395,78 @@ details>summary::before {
 details[open]>summary::before {
     transform: rotate(90deg);
 }
+
+/* --- Date Hover Popup --- */
+#date-hover-popup {
+    position: fixed;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    min-width: 220px;
+    max-width: 300px;
+    pointer-events: none;
+    /* See through clicks */
+    display: none;
+    animation: fadeIn 0.15s ease-out;
+    color: var(--text-primary);
+}
+
+.popup-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.popup-date {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.popup-holiday {
+    color: var(--holiday-color);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.popup-events-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.popup-event-row {
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.03);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.4;
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    #date-hover-popup {
+        background: rgba(30, 41, 59, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+    }
+
+    .popup-event-row {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .popup-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+}

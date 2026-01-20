@@ -263,7 +263,51 @@ function getWeekdayHeaderHTML(startOfWeek) {
     return orderedDays.map(d => `<span class="${d.cls}">${d.label}</span>`).join('');
 }
 
+// --- Popup Logic ---
+function createPopup() {
+    if (!document.getElementById('date-hover-popup')) {
+        const p = document.createElement('div');
+        p.id = 'date-hover-popup';
+        document.body.appendChild(p);
+    }
+}
+
+function showPopup(e, html) {
+    const popup = document.getElementById('date-hover-popup');
+    if (!popup) return;
+    popup.innerHTML = html;
+    popup.style.display = 'block';
+
+    const rect = e.target.getBoundingClientRect();
+    const popupRect = popup.getBoundingClientRect();
+
+    // Initial Position: Top-Center of cell
+    let top = rect.top - popupRect.height - 10;
+    let left = rect.left + (rect.width / 2) - (popupRect.width / 2);
+
+    // Boundary Checks
+    if (top < 10) {
+        top = rect.bottom + 10; // Flip to bottom if clipping top
+    }
+    if (left < 10) {
+        left = 10;
+    } else if (left + popupRect.width > window.innerWidth - 10) {
+        left = window.innerWidth - popupRect.width - 10;
+    }
+
+    popup.style.top = `${top}px`;
+    popup.style.left = `${left}px`;
+}
+
+function hidePopup() {
+    const popup = document.getElementById('date-hover-popup');
+    if (popup) popup.style.display = 'none';
+}
+
 function renderCalendar(container, year, month) {
+    // Ensure popup exists
+    createPopup();
+
     // Structure creation if empty
     if (!container.querySelector('.days-grid')) {
         container.innerHTML = `
@@ -304,7 +348,7 @@ function renderCalendar(container, year, month) {
     // Days
     for (let d = 1; d <= daysInMonth; d++) {
         const currentDate = new Date(year, month - 1, d);
-        const dayOfWeek = currentDate.getDay();
+        const dayOfWeek = currentDate.getDay(); // 0=Sun, 6=Sat
         const el = document.createElement('div');
         el.className = 'day-cell';
 
@@ -324,6 +368,7 @@ function renderCalendar(container, year, month) {
 
         // Check Multi-Oshi Events
         let oshiMarkups = [];
+        let oshiPopupEvents = [];
 
         // Loop through all oshis
         (appSettings.oshiList || []).forEach(oshi => {
@@ -332,11 +377,13 @@ function renderCalendar(container, year, month) {
             const textColor = oshi.color ? getContrastColor(oshi.color) : '#333';
             const textShadow = textColor === '#ffffff' ? '0 0 1px rgba(0,0,0,0.3)' : 'none';
             const baseStyle = oshi.color ? `background-color: ${oshi.color}; color: ${textColor}; text-shadow: ${textShadow};` : '';
+            const borderStyle = oshi.color ? `border-left: 3px solid ${oshi.color};` : 'border-left: 3px solid #ccc;';
 
             // Birthday Check
             const bd = parseDateString(oshi.birthday);
             if (bd && bd.month === month && bd.day === d) {
                 oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="誕生日: ${oshi.name}"><span class="oshi-event-icon">🎂</span>${oshi.name}</div>`);
+                oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">🎂 ${oshi.name} 誕生日</div>`);
             }
 
             // Anniversary Check
@@ -344,6 +391,7 @@ function renderCalendar(container, year, month) {
             if (dd && dd.month === month && dd.day === d) {
                 // Using 🎉 as it is universally celebratory.
                 oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="記念日: ${oshi.name}"><span class="oshi-event-icon">🎉</span>${oshi.name}</div>`);
+                oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">🎉 ${oshi.name} 記念日</div>`);
             }
         });
 
@@ -362,6 +410,24 @@ function renderCalendar(container, year, month) {
         }
 
         el.innerHTML = html;
+
+        // --- Popup Content Generation ---
+        const dayLabels = ['日', '月', '火', '水', '木', '金', '土'];
+        const dayLabel = dayLabels[dayOfWeek];
+
+        let popupHtml = `<div class="popup-header"><span class="popup-date">${month}月${d}日 (${dayLabel})</span>`;
+        if (holidayName) {
+            popupHtml += `<span class="popup-holiday">${holidayName}</span>`;
+        }
+        popupHtml += `</div>`;
+
+        if (oshiPopupEvents.length > 0) {
+            popupHtml += `<div class="popup-events-container">${oshiPopupEvents.join('')}</div>`;
+        }
+
+        // Attach Hover Logic
+        el.addEventListener('mouseenter', (e) => showPopup(e, popupHtml));
+        el.addEventListener('mouseleave', hidePopup);
 
         daysGrid.appendChild(el);
     }
