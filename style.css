@@ -1470,3 +1470,28 @@ details[open]>summary::before {
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 }
+
+/* Input styling for manual add */
+.manual-add-form {
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+/* Interval Settings Config */
+.interval-row input[type="number"] {
+    padding: 4px;
+    background: rgba(255, 255, 255, 0.5);
+    /* Semi-transparent like other inputs */
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    text-align: right;
+}
+
+.interval-row span {
+    font-size: 0.9em;
+    color: var(--text-primary);
+    margin-right: 8px;
+    margin-left: 2px;
+}

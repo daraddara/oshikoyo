@@ -152,6 +152,44 @@
                             <option value="cycle">サイクル</option>
                         </select>
                     </div>
+
+                    <!-- New: Interval Settings (DHMS) -->
+                    <div class="setting-group" id="mediaIntervalSettings">
+                        <label>切り替え間隔設定</label>
+
+                        <!-- Random Interval -->
+                        <div class="interval-row"
+                            style="margin-bottom: 12px; padding: 8px; border: 1px solid #eee; border-radius: 4px;">
+                            <label style="font-size: 0.9em; display:block; margin-bottom: 4px;">ランダムモード間隔</label>
+                            <div style="display: flex; flex-wrap: wrap; gap: 4px; align-items: center;">
+                                <input type="number" id="randD" min="0" placeholder="0"
+                                    style="width: 50px;"><span>日</span>
+                                <input type="number" id="randH" min="0" max="23" placeholder="0"
+                                    style="width: 50px;"><span>時</span>
+                                <input type="number" id="randM" min="0" max="59" placeholder="0"
+                                    style="width: 50px;"><span>分</span>
+                                <input type="number" id="randS" min="0" max="59" placeholder="0"
+                                    style="width: 50px;"><span>秒</span>
+                            </div>
+                        </div>
+
+                        <!-- Cycle Interval -->
+                        <div class="interval-row"
+                            style="margin-bottom: 0; padding: 8px; border: 1px solid #eee; border-radius: 4px;">
+                            <label style="font-size: 0.9em; display:block; margin-bottom: 4px;">サイクルモード間隔</label>
+                            <div style="display: flex; flex-wrap: wrap; gap: 4px; align-items: center;">
+                                <input type="number" id="cycD" min="0" placeholder="0"
+                                    style="width: 50px;"><span>日</span>
+                                <input type="number" id="cycH" min="0" max="23" placeholder="0"
+                                    style="width: 50px;"><span>時</span>
+                                <input type="number" id="cycM" min="0" max="59" placeholder="0"
+                                    style="width: 50px;"><span>分</span>
+                                <input type="number" id="cycS" min="0" max="59" placeholder="0"
+                                    style="width: 50px;"><span>秒</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="setting-group">
                         <label>表示位置</label>
                         <div class="radio-group">

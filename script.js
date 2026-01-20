@@ -17,6 +17,8 @@ const DEFAULT_SETTINGS = {
     // Media Settings
     mediaMode: 'none', // 'none', 'single', 'random', 'cycle'
     mediaPosition: 'right', // 'top', 'bottom', 'left', 'right'
+    mediaIntervalRandom: 60, // seconds
+    mediaIntervalCycle: 60, // seconds
 };
 
 // --- IndexedDB Management ---
@@ -137,11 +139,44 @@ const STORAGE_KEY = 'oshigoto_calendar_settings';
 
 // Helper: Hex to RGB
 function hexToRgb(hex) {
-    // If hex is a named color, return null to fallback or handle otherwise (using CSS var usually)
-    // Simple check for hex format
     if (!hex || !hex.startsWith('#')) return null;
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
+}
+
+// Helper: Seconds <-> DHMS
+function secondsToDHMS(seconds) {
+    const d = Math.floor(seconds / (3600 * 24));
+    seconds %= 3600 * 24;
+    const h = Math.floor(seconds / 3600);
+    seconds %= 3600;
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return { d, h, m, s };
+}
+
+function dhmsToSeconds(d, h, m, s) {
+    return (d * 86400) + (h * 3600) + (m * 60) + s;
+}
+
+// --- State Persistence (Separate from Settings) ---
+const STATE_KEY = 'oshigoto_calendar_state';
+let appState = {
+    lastMediaKey: null,
+    // Cycle mode specific state
+};
+
+function loadState() {
+    try {
+        const saved = localStorage.getItem(STATE_KEY);
+        if (saved) appState = JSON.parse(saved);
+    } catch (e) { console.error('Failed to load state', e); }
+}
+
+function saveState() {
+    try {
+        localStorage.setItem(STATE_KEY, JSON.stringify(appState));
+    } catch (e) { console.error('Failed to save state', e); }
 }
 
 // Helper: Get Contrast Color (Black or White)
@@ -752,6 +787,19 @@ function initSettings() {
         const radiosMediaPos = document.querySelectorAll('input[name="mediaPosition"]');
         radiosMediaPos.forEach(r => { if (r.value === appSettings.mediaPosition) r.checked = true; });
 
+        // Interval Settings (DHMS)
+        const randTime = secondsToDHMS(appSettings.mediaIntervalRandom || 60);
+        document.getElementById('randD').value = randTime.d;
+        document.getElementById('randH').value = randTime.h;
+        document.getElementById('randM').value = randTime.m;
+        document.getElementById('randS').value = randTime.s;
+
+        const cycTime = secondsToDHMS(appSettings.mediaIntervalCycle || 60);
+        document.getElementById('cycD').value = cycTime.d;
+        document.getElementById('cycH').value = cycTime.h;
+        document.getElementById('cycM').value = cycTime.m;
+        document.getElementById('cycS').value = cycTime.s;
+
         // Initialize Local UI visibility
         updateLocalMediaUI();
 
@@ -852,16 +900,33 @@ function saveSettings() {
     const mediaPosEl = document.querySelector('input[name="mediaPosition"]:checked');
     if (mediaPosEl) appSettings.mediaPosition = mediaPosEl.value;
 
+    // Save Intervals
+    const rD = parseInt(document.getElementById('randD').value) || 0;
+    const rH = parseInt(document.getElementById('randH').value) || 0;
+    const rM = parseInt(document.getElementById('randM').value) || 0;
+    const rS = parseInt(document.getElementById('randS').value) || 0;
+    appSettings.mediaIntervalRandom = dhmsToSeconds(rD, rH, rM, rS);
+    if (appSettings.mediaIntervalRandom < 5) appSettings.mediaIntervalRandom = 5; // Min 5s safety
+
+    const cD = parseInt(document.getElementById('cycD').value) || 0;
+    const cH = parseInt(document.getElementById('cycH').value) || 0;
+    const cM = parseInt(document.getElementById('cycM').value) || 0;
+    const cS = parseInt(document.getElementById('cycS').value) || 0;
+    appSettings.mediaIntervalCycle = dhmsToSeconds(cD, cH, cM, cS);
+    if (appSettings.mediaIntervalCycle < 5) appSettings.mediaIntervalCycle = 5;
+
     // Note: oshiList is already updated in memory via adding/deleting buttons.
     // We just save the current state.
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
     document.getElementById('settingsModal').close();
+    setupMediaTimer(); // Reset timer with new settings
     updateView();
 }
 
 function init() {
     loadSettings();
+    loadState(); // Restore last state
     initSettings();
 
     const dateDisplay = document.getElementById('currentDateDisplay');
@@ -887,10 +952,37 @@ function init() {
         updateView();
     });
 
-    // Cycle check
-    setInterval(() => {
-        if (appSettings.mediaMode === 'cycle') updateMediaArea();
-    }, 60000); // Every minute check (could be hour but minute is safer for immediate changes)
+    // Cycle check (Refactored to dynamic timer)
+    setupMediaTimer(true);
+}
+
+let mediaTimer = null;
+let currentCycleIndex = -1;
+
+function setupMediaTimer(isInit = false) {
+    if (mediaTimer) clearInterval(mediaTimer);
+
+    if (isInit) {
+        updateMediaArea(true);
+    }
+
+    if (appSettings.mediaMode === 'none' || appSettings.mediaMode === 'single') return;
+
+    let interval = 60;
+    if (appSettings.mediaMode === 'random') interval = appSettings.mediaIntervalRandom || 60;
+    if (appSettings.mediaMode === 'cycle') interval = appSettings.mediaIntervalCycle || 60;
+
+    // Minimum safety
+    if (interval < 5) interval = 5;
+
+    // Helper for correct execution
+    const tick = () => {
+        if (appSettings.mediaMode === 'cycle' || appSettings.mediaMode === 'random') {
+            updateMediaArea(false);
+        }
+    };
+
+    mediaTimer = setInterval(tick, interval * 1000);
 }
 
 document.addEventListener('DOMContentLoaded', init);
@@ -899,7 +991,7 @@ document.addEventListener('DOMContentLoaded', init);
 // --- Media Logic ---
 let currentMediaObjectURL = null;
 
-async function updateMediaArea() {
+async function updateMediaArea(isInit = false) { // Added isInit flag
     const area = document.getElementById('mediaArea');
     const container = document.getElementById('mediaContainer');
     if (!area || !container) return;
@@ -955,20 +1047,41 @@ async function updateMediaArea() {
         }
 
         let targetKey = null;
-        if (appSettings.mediaMode === 'single') {
-            targetKey = keys[0];
-        } else if (appSettings.mediaMode === 'random') {
-            targetKey = keys[Math.floor(Math.random() * keys.length)];
-        } else if (appSettings.mediaMode === 'cycle') {
-            const timeUnit = new Date().getMinutes();
-            targetKey = keys[timeUnit % keys.length];
+
+        if (isInit && appState.lastMediaKey && keys.includes(appState.lastMediaKey)) {
+            // Restore last state on boot
+            targetKey = appState.lastMediaKey;
+
+            // Sync index if in cycle mode
+            if (appSettings.mediaMode === 'cycle') {
+                currentCycleIndex = keys.indexOf(targetKey);
+            }
+        } else {
+            // Normal Rotation or First Run
+            if (appSettings.mediaMode === 'single') {
+                targetKey = keys[0];
+            } else if (appSettings.mediaMode === 'random') {
+                targetKey = keys[Math.floor(Math.random() * keys.length)];
+            } else if (appSettings.mediaMode === 'cycle') {
+                // State-based rotation
+                if (currentCycleIndex === -1) {
+                    // Start from 0 if undefined
+                    currentCycleIndex = 0;
+                } else {
+                    // Next frame
+                    currentCycleIndex = (currentCycleIndex + 1) % keys.length;
+                }
+                targetKey = keys[currentCycleIndex];
+            }
         }
 
+        // Save State
         if (targetKey) {
+            appState.lastMediaKey = targetKey;
+            saveState();
+
             const record = await localImageDB.getImage(targetKey);
-            if (record) { // Access directly as file is stored
-                // Depending on implementation addImage(file) stores file directly.
-                // getImage returns that file.
+            if (record) {
                 currentMediaObjectURL = URL.createObjectURL(record);
                 contentLayer.innerHTML = `<img src="${currentMediaObjectURL}" alt="Local Media" style="width:100%; height:100%; object-fit:contain;">`;
             }
