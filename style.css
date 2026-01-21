@@ -129,26 +129,57 @@ body {
     display: flex;
     gap: 24px;
     align-items: center;
-    /* Changed from flex-start to center for better balance */
-    justify-content: center;
+    /* Center horizontally in column mode */
+    /* justify-content: center; REMOVED to prevent top clipping in vertical mode */
     width: 100%;
+    height: calc(100vh - 40px);
+    /* Viewport height minus body padding */
+    padding-bottom: 40px;
+    /* Ensure bottom scroll clearance */
+    overflow-y: auto;
+    overflow-x: hidden;
     transition: all 0.3s ease;
 }
 
 .main-layout.pos-top {
-    flex-direction: column-reverse;
+    flex-direction: column;
+}
+
+/* Safe Centering for Top Layout */
+.main-layout.pos-top .media-area {
+    order: -1;
+    margin-top: auto;
+    /* Push down to center */
+}
+
+.main-layout.pos-top .calendar-section {
+    margin-bottom: auto;
+    /* Push up to center */
 }
 
 .main-layout.pos-bottom {
     flex-direction: column;
 }
 
+/* Safe Centering for Bottom Layout */
+.main-layout.pos-bottom .calendar-section {
+    margin-top: auto;
+}
+
+.main-layout.pos-bottom .media-area {
+    margin-bottom: auto;
+}
+
 .main-layout.pos-left {
     flex-direction: row-reverse;
+    justify-content: center;
+    /* Safe for horizontal */
 }
 
 .main-layout.pos-right {
     flex-direction: row;
+    justify-content: center;
+    /* Safe for horizontal */
 }
 
 /* Ensure sticky works correctly when vertical */
@@ -156,6 +187,14 @@ body {
 .main-layout.pos-bottom .media-area {
     position: static;
     width: 100%;
+    flex: 1;
+    /* Grow to fill space */
+    min-height: 250px;
+    /* Ensure image doesn't disappear */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
 }
 
 /* Calendar Layout */
@@ -164,7 +203,8 @@ body {
     flex-direction: column;
     align-items: center;
     width: fit-content;
-    flex: none;
+    flex: 0 0 auto;
+    /* Don't shrink/grow */
     /* Prevent growing to fill space */
 }
 
@@ -184,6 +224,17 @@ body {
     flex-shrink: 0;
     position: sticky;
     top: 20px;
+    /* Default for side layout */
+}
+
+/* For side layouts, ensure height is managed */
+.main-layout.pos-left .media-area,
+.main-layout.pos-right .media-area {
+    height: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .media-container {
@@ -195,8 +246,11 @@ body {
     border-radius: var(--border-radius);
     padding: 12px;
 
-    /* Dynamic Height via JS */
-    min-height: 300px;
+    /* Dynamic Height via JS removed, handled by flex now */
+    width: 100%;
+    height: 100%;
+    /* Fill media-area */
+    min-height: 200px;
 
     display: flex;
     align-items: center;
@@ -705,7 +759,14 @@ body {
     /* Base style for sticky sidebar (left/right) */
     width: 550px;
     max-width: 550px;
-    position: static;
+    position: sticky;
+}
+
+/* Reset width for vertical layouts */
+.main-layout.pos-top .media-area,
+.main-layout.pos-bottom .media-area {
+    width: 100%;
+    max-width: none;
 }
 
 /* Quick Search Palette */
