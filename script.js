@@ -367,12 +367,22 @@ const STATE_KEY = 'oshigoto_calendar_state';
 let appState = {
     lastMediaKey: null,
     // Cycle mode specific state
+    // mediaHistory: [] // Runtime only, or persistent? Let's make it persistent for better UX on refresh
+    mediaHistory: [],
+    mediaHistoryIndex: -1 // Point to current position in history
 };
 
 function loadState() {
     try {
         const saved = localStorage.getItem(STATE_KEY);
-        if (saved) appState = JSON.parse(saved);
+        if (saved) {
+            const loaded = JSON.parse(saved);
+            appState = { ...appState, ...loaded };
+
+            // Safety checks for new properties
+            if (!appState.mediaHistory) appState.mediaHistory = [];
+            if (typeof appState.mediaHistoryIndex === 'undefined') appState.mediaHistoryIndex = -1;
+        }
     } catch (e) { console.error('Failed to load state', e); }
 }
 
@@ -1515,6 +1525,34 @@ async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'
 
     area.style.display = 'block';
 
+
+    // --- Manual Navigation Logic ---
+    const handleNavigation = async (direction) => { // 'next' or 'prev'
+        await updateMediaArea(direction === 'next' ? 'next' : 'prev');
+    };
+
+    // Render Navigation Buttons (if not present)
+    if (appSettings.mediaMode === 'random' || appSettings.mediaMode === 'cycle') {
+        if (!container.querySelector('.media-nav-btn.prev')) {
+            const btnPrev = document.createElement('div');
+            btnPrev.className = 'media-nav-btn prev';
+            btnPrev.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>';
+            btnPrev.onclick = (e) => { e.stopPropagation(); handleNavigation('prev'); };
+            container.appendChild(btnPrev);
+        }
+        if (!container.querySelector('.media-nav-btn.next')) {
+            const btnNext = document.createElement('div');
+            btnNext.className = 'media-nav-btn next';
+            btnNext.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+            btnNext.onclick = (e) => { e.stopPropagation(); handleNavigation('next'); };
+            container.appendChild(btnNext);
+        }
+    } else {
+        // Remove valid buttons if mode changed to single/none
+        const existing = container.querySelectorAll('.media-nav-btn');
+        existing.forEach(el => el.remove());
+    }
+
     // Apply position class to main-layout
     const mainLayout = document.getElementById('mainLayout');
     if (mainLayout) {
@@ -1570,34 +1608,102 @@ async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'
             if (appSettings.mediaMode === 'cycle') {
                 currentCycleIndex = keys.indexOf(targetKey);
             }
-        } else {
-            // Normal Rotation or First Run
-            if (appSettings.mediaMode === 'single') {
-                targetKey = keys[0];
-            } else if (appSettings.mediaMode === 'random') {
-                targetKey = keys[Math.floor(Math.random() * keys.length)];
+
+            // Re-initialize history if empty but we have a restore key
+            if (appState.mediaHistory.length === 0) {
+                appState.mediaHistory = [targetKey];
+                appState.mediaHistoryIndex = 0;
+            } else {
+                // If history exists, ensure index is valid
+                if (appState.mediaHistoryIndex === -1 || appState.mediaHistoryIndex >= appState.mediaHistory.length) {
+                    appState.mediaHistoryIndex = appState.mediaHistory.length - 1;
+                }
+            }
+
+        } else if (mode === 'prev') {
+            // --- Previous Action ---
+            if (appSettings.mediaMode === 'random') {
+                if (appState.mediaHistoryIndex > 0) {
+                    appState.mediaHistoryIndex--;
+                    targetKey = appState.mediaHistory[appState.mediaHistoryIndex];
+                } else {
+                    // Start of history
+                    targetKey = appState.mediaHistory[0];
+                }
+            } else if (appSettings.mediaMode === 'cycle') {
+                // Simple decrement
+                if (currentCycleIndex === -1) currentCycleIndex = 0;
+                currentCycleIndex = (currentCycleIndex - 1 + keys.length) % keys.length;
+                targetKey = keys[currentCycleIndex];
+            }
+
+        } else if (mode === 'next' || mode === 'advance') {
+            // --- Next/Advance Action ---
+
+            if (appSettings.mediaMode === 'random') {
+                // Check if we are browsing history
+                if (appState.mediaHistoryIndex < appState.mediaHistory.length - 1) {
+                    // Move forward in history
+                    appState.mediaHistoryIndex++;
+                    targetKey = appState.mediaHistory[appState.mediaHistoryIndex];
+                } else {
+                    // Generate NEW random
+                    let nextKey;
+                    let attempts = 0;
+                    do {
+                        nextKey = keys[Math.floor(Math.random() * keys.length)];
+                        attempts++;
+                    } while (nextKey === appState.lastMediaKey && keys.length > 1 && attempts < 5);
+
+                    targetKey = nextKey;
+
+                    // Push to history
+                    appState.mediaHistory.push(targetKey);
+                    appState.mediaHistoryIndex = appState.mediaHistory.length - 1;
+
+                    // Limit history size
+                    if (appState.mediaHistory.length > 50) {
+                        appState.mediaHistory.shift();
+                        appState.mediaHistoryIndex--;
+                    }
+                }
+
             } else if (appSettings.mediaMode === 'cycle') {
                 // State-based rotation
                 if (currentCycleIndex === -1) {
-                    // Start from 0 if undefined
                     currentCycleIndex = 0;
                 } else {
-                    // Next frame
                     currentCycleIndex = (currentCycleIndex + 1) % keys.length;
                 }
                 targetKey = keys[currentCycleIndex];
+            } else if (appSettings.mediaMode === 'single') {
+                targetKey = keys[0];
             }
+        } else {
+            // Fallback/Default
+            if (keys.length > 0) targetKey = keys[0];
         }
 
         // Save State
         if (targetKey) {
             appState.lastMediaKey = targetKey;
+
             saveState();
 
             const record = await localImageDB.getImage(targetKey);
             if (record) {
-                currentMediaObjectURL = URL.createObjectURL(record);
-                contentLayer.innerHTML = `<img src="${currentMediaObjectURL}" alt="Local Media" style="width:100%; height:100%; object-fit:contain;">`;
+                currentMediaObjectURL = URL.createObjectURL(record.file || record); // Handle File object safely
+
+                // Determine content type
+                const mime = (record.file ? record.file.type : record.type) || 'image/png';
+                let html = '';
+                if (mime.startsWith('image/')) {
+                    html = `<img src="${currentMediaObjectURL}" alt="Oshi Media" style="width:100%; height:100%; object-fit:contain;">`;
+                } else if (mime.startsWith('video/')) {
+                    html = `<video src="${currentMediaObjectURL}" autoplay muted loop playsinline style="width:100%; height:100%; object-fit:contain;"></video>`;
+                }
+
+                contentLayer.innerHTML = html;
             }
         }
     } catch (e) {

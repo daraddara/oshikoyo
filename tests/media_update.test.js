@@ -32,7 +32,9 @@ global.appSettings = {
     mediaPosition: 'right',
 };
 global.appState = {
-    lastMediaKey: 'key1'
+    lastMediaKey: 'key1',
+    mediaHistory: [],
+    mediaHistoryIndex: -1
 };
 global.saveState = vi.fn();
 
@@ -116,7 +118,7 @@ describe('updateMediaArea Logic', () => {
 
         // Reset Global State
         global.appSettings = { mediaMode: 'random', mediaPosition: 'right' };
-        global.appState = { lastMediaKey: 'key1' };
+        global.appState = { lastMediaKey: 'key1', mediaHistory: [], mediaHistoryIndex: -1 };
         global.currentMediaObjectURL = null; // simulate global var
 
         // Mock container with querySelector for content layer
