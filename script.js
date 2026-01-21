@@ -708,7 +708,7 @@ function updateView() {
         targetDate.setMonth(targetDate.getMonth() + 1);
     }
 
-    updateMediaArea();
+    updateMediaArea('layout');
 }
 
 // --- Media Logic ---
@@ -1216,7 +1216,7 @@ function setupPreviewModal() {
             if (lastKey) {
                 appState.lastMediaKey = lastKey;
                 saveState();
-                updateMediaArea(true);
+                updateMediaArea('restore');
             }
         }
 
@@ -1429,7 +1429,7 @@ function saveSettings() {
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
     document.getElementById('settingsModal').close();
-    setupMediaTimer(); // Reset timer with new settings
+    setupMediaTimer(true); // Reset timer with new settings and refresh image
     updateView();
 }
 
@@ -1475,7 +1475,7 @@ function setupMediaTimer(isInit = false) {
     if (mediaTimer) clearInterval(mediaTimer);
 
     if (isInit) {
-        updateMediaArea(true);
+        updateMediaArea('restore');
     }
 
     if (appSettings.mediaMode === 'none' || appSettings.mediaMode === 'single') return;
@@ -1490,7 +1490,7 @@ function setupMediaTimer(isInit = false) {
     // Helper for correct execution
     const tick = () => {
         if (appSettings.mediaMode === 'cycle' || appSettings.mediaMode === 'random') {
-            updateMediaArea(false);
+            updateMediaArea('advance');
         }
     };
 
@@ -1503,7 +1503,7 @@ document.addEventListener('DOMContentLoaded', init);
 // --- Media Logic ---
 let currentMediaObjectURL = null;
 
-async function updateMediaArea(isInit = false) { // Added isInit flag
+async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'|'restore'|'layout'
     const area = document.getElementById('mediaArea');
     const container = document.getElementById('mediaContainer');
     if (!area || !container) return;
@@ -1525,6 +1525,8 @@ async function updateMediaArea(isInit = false) { // Added isInit flag
     }
 
     adjustMediaLayout();
+
+    if (mode === 'layout') return; // Stop here if only layout update is requested
 
     // Clean up previous ObjectURL if exists
     if (currentMediaObjectURL) {
@@ -1560,7 +1562,7 @@ async function updateMediaArea(isInit = false) { // Added isInit flag
 
         let targetKey = null;
 
-        if (isInit && appState.lastMediaKey && keys.includes(appState.lastMediaKey)) {
+        if (mode === 'restore' && appState.lastMediaKey && keys.includes(appState.lastMediaKey)) {
             // Restore last state on boot
             targetKey = appState.lastMediaKey;
 
