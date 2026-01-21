@@ -837,9 +837,21 @@ function setupDragAndDrop() {
     });
 
     // Handle Drop
+    // Detect Internal Drag
+    container.addEventListener('dragstart', (e) => {
+        if (e.target.tagName === 'IMG') {
+            e.dataTransfer.setData('application/x-oshigoto-internal', 'true');
+        }
+    });
+
     container.addEventListener('drop', handleDrop, false);
 
     async function handleDrop(e) {
+        // Ignore internal drops
+        if (e.dataTransfer.getData('application/x-oshigoto-internal') === 'true') {
+            return;
+        }
+
         const dt = e.dataTransfer;
         const files = dt.files;
         await handleFiles(files);
