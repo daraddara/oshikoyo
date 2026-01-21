@@ -1,6 +1,6 @@
 {
-    "name": "おしごとカレンダー",
-    "short_name": "おしごと",
+    "name": "Oshikoyo",
+    "short_name": "Oshikoyo",
     "description": "お仕事や推し事の予定を管理するための、美しく機能的なカレンダー。",
     "start_url": "index.html",
     "display": "standalone",

@@ -1,7 +1,7 @@
 {
-    "name": "oshigoto-calendar",
+    "name": "oshikoyo",
     "version": "1.0.0",
-    "description": "おしごとカレンダー",
+    "description": "Oshikoyo",
     "scripts": {
         "test": "vitest run"
     },
