@@ -66,16 +66,22 @@ class LocalImageDB {
             const request = store.getAll();
             const keyRequest = store.getAllKeys();
 
-            let images = [];
-            let keys = [];
+            let images = null;
+            let keys = null;
+
+            const checkDone = () => {
+                if (images !== null && keys !== null) {
+                    resolve(this.combineKeysAndValues(keys, images));
+                }
+            };
 
             request.onsuccess = () => {
                 images = request.result;
-                if (keys.length > 0) resolve(this.combineKeysAndValues(keys, images));
+                checkDone();
             };
             keyRequest.onsuccess = () => {
                 keys = keyRequest.result;
-                if (images.length > 0) resolve(this.combineKeysAndValues(keys, images));
+                checkDone();
             };
             request.onerror = () => reject(request.error);
             keyRequest.onerror = () => reject(keyRequest.error);
@@ -126,6 +132,123 @@ class LocalImageDB {
         });
     }
 
+    async exportData(chunkSizeLimit = 50 * 1024 * 1024) {
+        await this.open();
+        const allImages = await this.getAllImages();
+        const chunks = [];
+        let currentChunk = {
+            version: 1,
+            timestamp: new Date().toISOString(),
+            images: []
+        };
+        let currentSize = 0;
+        let chunkIndex = 1;
+
+        for (const item of allImages) {
+            const base64 = await blobToBase64(item.file);
+            const imageData = {
+                id: item.id, // Keep original ID if possible, though re-import will assign new ID usually
+                name: item.file.name,
+                type: item.file.type,
+                lastModified: item.file.lastModified,
+                data: base64
+            };
+
+            const itemSize = base64.length; // Approximate size in chars (bytes is less, but string len matters for JSON)
+
+            if (currentSize + itemSize > chunkSizeLimit && currentChunk.images.length > 0) {
+                // Finalize current chunk
+                chunks.push({
+                    filename: `oshikoyo_images_backup_${currentChunk.timestamp.slice(0, 10)}_part${chunkIndex}.json`,
+                    data: currentChunk
+                });
+                chunkIndex++;
+                currentChunk = {
+                    version: 1,
+                    timestamp: new Date().toISOString(),
+                    images: []
+                };
+                currentSize = 0;
+            }
+
+            currentChunk.images.push(imageData);
+            currentSize += itemSize;
+        }
+
+        // Add last chunk
+        if (currentChunk.images.length > 0) {
+            chunks.push({
+                filename: `oshikoyo_images_backup_${currentChunk.timestamp.slice(0, 10)}${chunks.length > 0 ? '_part' + chunkIndex : ''}.json`,
+                data: currentChunk
+            });
+        }
+
+        return chunks;
+    }
+
+    async importData(jsonData) {
+        await this.open();
+        // Validation
+        if (!jsonData || !jsonData.images || !Array.isArray(jsonData.images)) {
+            throw new Error('Invalid backup file format');
+        }
+
+        const existingImages = await this.getAllImages();
+        let addedCount = 0;
+        let skippedCount = 0;
+
+        // Pre-fetch all existing blobs to compare (might be heavy if many images, but necessary for dedup)
+        // Optimization: Create a signature map (size + type) to reduce comparisons
+        const existingSignatures = new Map();
+        for (const img of existingImages) {
+            const size = img.file.size;
+            const type = img.file.type;
+            const key = `${size}-${type}`;
+            if (!existingSignatures.has(key)) {
+                existingSignatures.set(key, []);
+            }
+            existingSignatures.get(key).push(img.file);
+        }
+
+        for (const item of jsonData.images) {
+            const blob = base64ToBlob(item.data, item.type);
+
+            // Deduplication Check
+            let isDuplicate = false;
+            const key = `${blob.size}-${blob.type}`;
+            if (existingSignatures.has(key)) {
+                const candidates = existingSignatures.get(key);
+                for (const candidate of candidates) {
+                    if (await areBlobsEqual(candidate, blob)) {
+                        isDuplicate = true;
+                        break;
+                    }
+                }
+            }
+
+            if (isDuplicate) {
+                skippedCount++;
+                continue;
+            }
+
+            // Restore metadata if possible (File constructor)
+            const file = new File([blob], item.name || 'imported_image', {
+                type: item.type,
+                lastModified: item.lastModified || Date.now()
+            });
+
+            await this.addImage(file);
+
+            // Add to ephemeral signature list to prevent duplicates within the same import batch
+            if (!existingSignatures.has(key)) existingSignatures.set(key, []);
+            existingSignatures.get(key).push(file);
+
+            addedCount++;
+        }
+
+        return { added: addedCount, skipped: skippedCount };
+    }
+
     combineKeysAndValues(keys, values) {
         return values.map((val, i) => ({ id: keys[i], file: val }));
     }
@@ -136,6 +259,86 @@ const localImageDB = new LocalImageDB();
 
 let appSettings = { ...DEFAULT_SETTINGS };
 const STORAGE_KEY = 'oshigoto_calendar_settings';
+
+// Helper: Blob to Base64
+function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            // result looks like "data:image/png;base64,....."
+            // We just want the comma onwards, or keep it all? 
+            // Usually keeping it all is easier for img.src, but for clean data we might strip.
+            // But base64ToBlob needs to know what to do. Let's keep it simple: keep the whole string.
+            resolve(reader.result);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+
+// Helper: Base64 to Blob
+function base64ToBlob(base64, mimeType) {
+    // Basic validation
+    if (typeof base64 !== 'string' || base64.length === 0) {
+        throw new Error('Invalid base64 data');
+    }
+
+    base64 = base64.trim(); // Ensure no surrounding whitespace
+
+    // If it contains data URI prefix, strip it (or fetch it)
+    if (base64.startsWith('data:')) {
+        const commaIndex = base64.indexOf(',');
+        if (commaIndex === -1) {
+            throw new Error('Invalid Data URI: no comma found');
+        }
+
+        const metadata = base64.substring(0, commaIndex);
+        const data = base64.substring(commaIndex + 1);
+
+        const mimeMatch = metadata.match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : mimeType; // Fallback if regex fails, though unlikely for valid Data URI
+
+        const bstr = atob(data);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], { type: mime });
+    } else {
+        // Raw base64
+        try {
+            const byteCharacters = atob(base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            return new Blob([byteArray], { type: mimeType });
+        } catch (e) {
+            console.error("atob failure:", e);
+            throw new Error('Failed to decode base64 string');
+        }
+    }
+}
+
+// Helper: Compare Blobs
+async function areBlobsEqual(blob1, blob2) {
+    if (blob1.size !== blob2.size) return false;
+    if (blob1.type !== blob2.type) return false;
+
+    const buf1 = await blob1.arrayBuffer();
+    const buf2 = await blob2.arrayBuffer();
+
+    const arr1 = new Uint8Array(buf1);
+    const arr2 = new Uint8Array(buf2);
+
+    for (let i = 0; i < arr1.length; i++) {
+        if (arr1[i] !== arr2[i]) return false;
+    }
+
+    return true;
+}
 
 // Helper: Hex to RGB
 function hexToRgb(hex) {
@@ -813,6 +1016,85 @@ function handleImportSettings(file) {
     reader.readAsText(file);
 }
 
+async function handleExportImages() {
+    try {
+        const chunks = await localImageDB.exportData(); // Default limit 50MB
+        if (chunks.length === 0) {
+            alert('エクスポートする画像がありません。');
+            return;
+        }
+
+        let msg = `${chunks.length}個のファイルに分割してダウンロードします。`;
+        if (chunks.length > 1) {
+            msg += '\nブラウザが複数ファイルのダウンロードをブロックする場合があります。「許可」してください。';
+        }
+
+        // Use a small delay between downloads to try and satisfy browser throttles
+        for (const chunk of chunks) {
+            const dataStr = JSON.stringify(chunk.data); // Minify? No, standard.
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = chunk.filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            // Short delay
+            await new Promise(r => setTimeout(r, 1000));
+            URL.revokeObjectURL(url);
+        }
+
+        // Only show message after triggering
+        // alert('エクスポートを開始しました'); 
+    } catch (e) {
+        console.error(e);
+        alert('エクスポートに失敗しました: ' + e.message);
+    }
+}
+
+async function handleImportImages(files) {
+    if (!files || files.length === 0) {
+        return;
+    }
+
+    let totalAdded = 0;
+    let totalSkipped = 0;
+    let errorCount = 0;
+
+    let lastError = null;
+
+    for (const file of Array.from(files)) {
+        try {
+            const text = await file.text();
+            const json = JSON.parse(text);
+            const result = await localImageDB.importData(json);
+            totalAdded += result.added;
+            totalSkipped += result.skipped;
+        } catch (e) {
+            console.error("Import failed for file:", file.name, e);
+            errorCount++;
+            lastError = e;
+        }
+    }
+
+    let msg = `インポート完了: \n追加: ${totalAdded} 件\n重複スキップ: ${totalSkipped} 件`;
+    if (errorCount > 0) {
+        msg += `\nエラー: ${errorCount} ファイル`;
+        if (lastError) {
+            msg += `\n詳細: ${lastError.message} `;
+        }
+    }
+
+    alert(msg);
+    if (totalAdded > 0) {
+        updateLocalMediaUI();
+        renderLocalImageManager();
+    }
+}
+
 // --- Drag & Drop / Paste Logic ---
 function setupDragAndDrop() {
     const container = document.getElementById('mediaContainer');
@@ -1054,6 +1336,16 @@ function initSettings() {
     document.getElementById('btnImportSettings').addEventListener('click', () => inputImport.click());
     inputImport.addEventListener('change', (e) => {
         if (e.target.files[0]) handleImportSettings(e.target.files[0]);
+    });
+
+    // --- New: Image Backup/Restore Listeners ---
+    document.getElementById('btnExportImages').addEventListener('click', handleExportImages);
+
+    const inputImportImages = document.getElementById('inputImportImages');
+    document.getElementById('btnImportImages').addEventListener('click', () => inputImportImages.click());
+    inputImportImages.addEventListener('change', (e) => {
+        handleImportImages(e.target.files);
+        e.target.value = ''; // Reset for re-selection
     });
 }
 
@@ -1343,7 +1635,7 @@ function adjustMediaLayout() {
         const count = appSettings.monthCount || 2;
         const targetWidth = (count * monthWidth) + ((count - 1) * gap);
 
-        area.style.width = `${targetWidth}px`;
+        area.style.width = `${targetWidth} px`;
         area.style.maxWidth = '95vw';
 
         // Height: Fit to Remaining Window
@@ -1354,7 +1646,7 @@ function adjustMediaLayout() {
             const availableH = window.innerHeight - headerH - calendarH - gaps;
 
             // Minimum 250px
-            container.style.height = `${Math.max(250, availableH)}px`;
+            container.style.height = `${Math.max(250, availableH)} px`;
         }
     } else {
         // --- Left/Right: Fixed 550px Width & Match Calendar Height ---
@@ -1381,7 +1673,7 @@ function adjustMediaLayout() {
             // But add a minimum to avoid super small images if calendar is empty/small.
 
             // Wait, if calendar is huge (Vertical 3 months), we want huge image.
-            container.style.height = `${Math.max(400, calH)}px`;
+            container.style.height = `${Math.max(400, calH)} px`;
         }
     }
 }

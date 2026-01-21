@@ -200,6 +200,7 @@
                     <div id="localMediaSettings" class="setting-group">
                         <label>ローカル画像管理</label>
                         <div class="local-media-controls">
+                            <!-- Existing Folder/File Import Buttons -->
                             <div class="import-buttons" style="margin-bottom: 10px; display: flex; gap: 8px;">
                                 <button type="button" id="btnLocalFolder" class="btn-secondary">📂 フォルダから一括登録</button>
                                 <input type="file" id="inputLocalFolder" webkitdirectory style="display:none">
@@ -207,6 +208,17 @@
                                 <button type="button" id="btnLocalFiles" class="btn-secondary">📄 ファイルを追加</button>
                                 <input type="file" id="inputLocalFiles" multiple accept="image/*" style="display:none">
                             </div>
+
+                            <!-- New: Export/Import Buttons -->
+                            <div class="backup-buttons"
+                                style="margin-bottom: 10px; display: flex; gap: 8px; border-top: 1px dashed #eee; padding-top: 8px;">
+                                <button type="button" id="btnExportImages" class="btn-secondary"
+                                    style="font-size: 0.9em;">📤 画像データを書き出し</button>
+                                <button type="button" id="btnImportImages" class="btn-secondary"
+                                    style="font-size: 0.9em;">📥 画像データを読み込み</button>
+                                <input type="file" id="inputImportImages" accept=".json" multiple style="display:none">
+                            </div>
+
                             <div class="local-status-bar"
                                 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                 <span>登録済み: <strong id="localImageCount">0</strong> 枚</span>
@@ -223,7 +235,7 @@
                             </details>
                         </div>
                         <p class="help-text" style="font-size: 0.8rem; color: #666; margin-top: 8px;">※
-                            画像はブラウザ内に保存されます。元のファイルを移動しても表示は消えません。</p>
+                            画像はブラウザ内に保存されます。バックアップや移行の際は「画像データを書き出し」をご利用ください。</p>
                     </div>
                 </section>
 
