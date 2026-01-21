@@ -686,6 +686,7 @@ async function renderLocalImageManager() {
         // Clean up URL object when removed (simplified here, ideally intersection observer)
 
         const btnDel = document.createElement('button');
+        btnDel.type = 'button'; // Prevent form submission
         btnDel.textContent = '×';
         btnDel.style.position = 'absolute';
         btnDel.style.top = '2px';
@@ -700,13 +701,48 @@ async function renderLocalImageManager() {
         btnDel.style.cursor = 'pointer';
         btnDel.title = '削除';
 
-        btnDel.onclick = async () => {
-            if (confirm('この画像を削除しますか？')) {
+        btnDel.onclick = async (e) => {
+            // Check if overlay already exists
+            if (div.querySelector('.delete-confirm-overlay')) return;
+
+            // Add Visual State
+            div.classList.add('local-image-item'); // Ensure class presence for styling
+            div.classList.add('is-deleting');
+
+            // Create Overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'delete-confirm-overlay';
+
+            overlay.innerHTML = `
+                <div class="delete-confirm-text">削除?</div>
+                <div class="delete-confirm-actions">
+                    <button class="btn-confirm-delete" type="button">はい</button>
+                    <button class="btn-cancel-delete" type="button">いいえ</button>
+                </div>
+            `;
+
+            // stopPropagation to prevent other clicks if any
+            overlay.addEventListener('click', (ev) => ev.stopPropagation());
+
+            // Handle Yes
+            const btnYes = overlay.querySelector('.btn-confirm-delete');
+            btnYes.addEventListener('click', async (ev) => {
+                ev.stopPropagation(); // Prevent bubbling
                 await localImageDB.deleteImage(item.id);
                 URL.revokeObjectURL(img.src);
                 renderLocalImageManager();
                 updateLocalMediaUI();
-            }
+            });
+
+            // Handle No
+            const btnNo = overlay.querySelector('.btn-cancel-delete');
+            btnNo.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                div.removeChild(overlay);
+                div.classList.remove('is-deleting');
+            });
+
+            div.appendChild(overlay);
         };
 
         div.appendChild(img);
@@ -769,6 +805,93 @@ function handleImportSettings(file) {
     reader.readAsText(file);
 }
 
+// --- Drag & Drop / Paste Logic ---
+function setupDragAndDrop() {
+    const container = document.getElementById('mediaContainer');
+    if (!container) return;
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        container.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // Visual indicators
+    ['dragenter', 'dragover'].forEach(eventName => {
+        container.addEventListener(eventName, () => container.classList.add('drag-active'), false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        container.addEventListener(eventName, () => container.classList.remove('drag-active'), false);
+    });
+
+    // Handle Drop
+    container.addEventListener('drop', handleDrop, false);
+
+    async function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        await handleFiles(files);
+    }
+}
+
+function setupClipboardPaste() {
+    window.addEventListener('paste', async (e) => {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        const files = [];
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].kind === 'file' && items[i].type.startsWith('image/')) {
+                const blob = items[i].getAsFile();
+                if (blob) files.push(blob);
+            }
+        }
+        if (files.length > 0) {
+            e.preventDefault(); // Prevent default paste behavior
+            await handleFiles(files);
+        }
+    });
+}
+let hasNewLocalImages = false;
+
+async function handleFiles(files) {
+    if (!files || files.length === 0) return;
+
+    let count = 0;
+    let lastKey = null;
+
+    // Iterate and add
+    for (const file of Array.from(files)) {
+        if (file.type.startsWith('image/')) {
+            lastKey = await localImageDB.addImage(file);
+            count++;
+        }
+    }
+
+    if (count > 0) {
+        hasNewLocalImages = true;
+
+        // Refresh UI
+        updateLocalMediaUI();
+        // If settings modal is open, refresh that too
+        if (document.getElementById('settingsModal').open) {
+            renderLocalImageManager();
+        }
+
+        // Show immediate feedback
+        alert(`${count} 枚の画像を追加しました！`);
+
+        // Immediately display the added image
+        if (lastKey) {
+            appState.lastMediaKey = lastKey;
+            saveState();
+            updateMediaArea(true); // Force display as if "init" with this key
+        }
+    }
+}
+
 function initSettings() {
     // Open Modal
     document.getElementById('btnSettings').addEventListener('click', () => {
@@ -802,6 +925,23 @@ function initSettings() {
 
         // Initialize Local UI visibility
         updateLocalMediaUI();
+
+        // Use querySelector to find the details element we bound the event to
+        const details = document.querySelector('.local-image-manager');
+        if (details && (details.open || hasNewLocalImages)) {
+            // If open OR we have new images (dirty), force render
+            renderLocalImageManager();
+            hasNewLocalImages = false;
+
+            // If dirty, also ensure it is open so user sees it? 
+            // User query: "Once I collapse and open it is displayed".
+            // If it was open, we refresh. 
+            // If it was closed, we refresh (so when they open it is ready) or rely on toggle?
+            // "Toggle" event fires when opening. So if closed -> open, toggle handles it.
+            // The issue is ONLY when it IS open (or appears so).
+            // So (details.open || hasNewLocalImages) covers it. 
+            // If dirty, we render even if closed (pre-load) or if open (refresh).
+        }
 
         // Render Oshi List
         renderOshiList();
@@ -928,6 +1068,8 @@ function init() {
     loadSettings();
     loadState(); // Restore last state
     initSettings();
+    setupDragAndDrop();
+    setupClipboardPaste();
 
     const dateDisplay = document.getElementById('currentDateDisplay');
     if (dateDisplay) {

@@ -309,6 +309,13 @@ body {
     object-fit: contain;
 }
 
+.media-container.drag-active {
+    border: 2px dashed var(--accent-color);
+    background: rgba(59, 130, 246, 0.1);
+    transform: scale(1.02);
+    transition: all 0.2s ease;
+}
+
 .media-placeholder {
     color: var(--text-secondary);
     font-size: 0.9rem;
@@ -1471,13 +1478,68 @@ details[open]>summary::before {
 }
 
 /* Interval Settings Config */
-.interval-row input[type="number"] {
-    padding: 4px;
-    background: rgba(255, 255, 255, 0.5);
-    /* Semi-transparent like other inputs */
-    border: 1px solid rgba(0, 0, 0, 0.1);
+border-radius: 4px;
+text-align: right;
+}
+
+/* Local Image Delete Overlay */
+.local-image-item {
+    position: relative;
+    /* ensure overlay positioning */
+}
+
+.local-image-item.is-deleting img {
+    opacity: 0.5;
+    filter: grayscale(100%);
+}
+
+.delete-confirm-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    animation: fadeIn 0.1s;
     border-radius: 4px;
-    text-align: right;
+    /* Match container */
+}
+
+.delete-confirm-text {
+    color: #fff;
+    font-size: 0.75rem;
+    margin-bottom: 4px;
+    font-weight: bold;
+}
+
+.delete-confirm-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.btn-confirm-delete {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    cursor: pointer;
+}
+
+.btn-cancel-delete {
+    background: #666;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    cursor: pointer;
 }
 
 .interval-row span {
