@@ -248,6 +248,25 @@
             </div>
         </form>
     </dialog>
+
+    <!-- Preview Modal -->
+    <dialog id="previewModal" class="settings-modal preview-modal">
+        <form method="dialog" class="settings-form">
+            <h2>画像の追加確認</h2>
+            <p>以下の画像を追加しますか？</p>
+            <div class="settings-scroll-area">
+                <div id="previewGrid" class="preview-grid">
+                    <!-- Previews injected here -->
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" id="btnCancelPreview" class="btn-cancel">キャンセル</button>
+                <button type="button" id="btnAddPreview" class="btn-primary">追加する</button>
+            </div>
+        </form>
+    </dialog>
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
     <script src="script.js"></script>
     <script>
         // PWA Service Worker Registration

@@ -762,7 +762,7 @@ async function handleLocalImageImport(files) {
         addedCount++;
     }
 
-    alert(`${addedCount} 枚の画像を追加しました`);
+    showToast(`${addedCount} 枚の画像を追加しました`);
     updateLocalMediaUI();
     renderLocalImageManager();
 }
@@ -854,43 +854,79 @@ function setupClipboardPaste() {
         }
     });
 }
-let hasNewLocalImages = false;
+// --- Preview Logic ---
+let pendingPreviewFiles = [];
 
 async function handleFiles(files) {
     if (!files || files.length === 0) return;
 
-    let count = 0;
-    let lastKey = null;
+    // Store files and show preview instead of immediate save
+    pendingPreviewFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
 
-    // Iterate and add
-    for (const file of Array.from(files)) {
-        if (file.type.startsWith('image/')) {
+    if (pendingPreviewFiles.length > 0) {
+        renderPreview();
+        document.getElementById('previewModal').showModal();
+    }
+}
+
+function renderPreview() {
+    const grid = document.getElementById('previewGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    pendingPreviewFiles.forEach(file => {
+        const item = document.createElement('div');
+        item.className = 'preview-item';
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        // clean up object url later? for preview it's short lived
+        item.appendChild(img);
+        grid.appendChild(item);
+    });
+}
+
+function setupPreviewModal() {
+    // Add Confirm Add Button
+    document.getElementById('btnAddPreview').addEventListener('click', async () => {
+        const modal = document.getElementById('previewModal');
+        modal.close(); // Close first
+
+        // Actually save
+        let count = 0;
+        let lastKey = null;
+
+        for (const file of pendingPreviewFiles) {
             lastKey = await localImageDB.addImage(file);
             count++;
         }
-    }
 
-    if (count > 0) {
-        hasNewLocalImages = true;
+        if (count > 0) {
+            hasNewLocalImages = true;
+            updateLocalMediaUI();
 
-        // Refresh UI
-        updateLocalMediaUI();
-        // If settings modal is open, refresh that too
-        if (document.getElementById('settingsModal').open) {
-            renderLocalImageManager();
+            if (document.getElementById('settingsModal').open) {
+                renderLocalImageManager();
+            }
+
+            showToast(`${count} 枚の画像を追加しました！`);
+
+            if (lastKey) {
+                appState.lastMediaKey = lastKey;
+                saveState();
+                updateMediaArea(true);
+            }
         }
 
-        // Show immediate feedback
-        alert(`${count} 枚の画像を追加しました！`);
+        pendingPreviewFiles = []; // Clear
+    });
 
-        // Immediately display the added image
-        if (lastKey) {
-            appState.lastMediaKey = lastKey;
-            saveState();
-            updateMediaArea(true); // Force display as if "init" with this key
-        }
-    }
+    // Cancel Button
+    document.getElementById('btnCancelPreview').addEventListener('click', () => {
+        pendingPreviewFiles = [];
+        document.getElementById('previewModal').close();
+    });
 }
+
 
 function initSettings() {
     // Open Modal
@@ -1024,6 +1060,26 @@ function loadSettings() {
     // updateView(); // Removed to prevent double rendering on init
 }
 
+function showToast(message, duration = 3000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'toast-message';
+    toast.textContent = message;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('hiding');
+        toast.addEventListener('animationend', () => {
+            if (container.contains(toast)) {
+                container.removeChild(toast);
+            }
+        });
+    }, duration);
+}
+
 function saveSettings() {
     // Basic
     const startOfWeekEl = document.querySelector('input[name="startOfWeek"]:checked');
@@ -1070,6 +1126,7 @@ function init() {
     initSettings();
     setupDragAndDrop();
     setupClipboardPaste();
+    setupPreviewModal();
 
     const dateDisplay = document.getElementById('currentDateDisplay');
     if (dateDisplay) {
