@@ -60,10 +60,7 @@ body {
     /* Allow wide content */
 }
 
-.header {
-    margin-bottom: 24px;
-    text-align: center;
-}
+
 
 /* Calendar Section (Controls + Grid) */
 .calendar-section {
@@ -108,13 +105,7 @@ body {
     transform: scale(0.95);
 }
 
-.app-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.02em;
-    opacity: 0.9;
-}
+
 
 .current-date-display {
     font-size: 1rem;
