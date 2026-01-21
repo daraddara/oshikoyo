@@ -652,6 +652,13 @@ async function renderLocalImageManager() {
     const list = document.getElementById('localImageList');
     if (!list) return;
 
+    // Check keys first to avoid unnecessary loading state
+    const keys = await localImageDB.getAllKeys();
+    if (keys.length === 0) {
+        list.innerHTML = '<p style="grid-column: 1/-1; color:#888;">画像がありません</p>';
+        return;
+    }
+
     // Simple clear & loading
     list.innerHTML = '<p style="grid-column: 1/-1;">読み込み中...</p>';
 
@@ -665,6 +672,7 @@ async function renderLocalImageManager() {
     list.innerHTML = '';
 
     if (allImages.length === 0) {
+        // Should be covered by keys check, but safety net
         list.innerHTML = '<p style="grid-column: 1/-1; color:#888;">画像がありません</p>';
         return;
     }
@@ -856,6 +864,7 @@ function setupClipboardPaste() {
 }
 // --- Preview Logic ---
 let pendingPreviewFiles = [];
+let hasNewLocalImages = false;
 
 async function handleFiles(files) {
     if (!files || files.length === 0) return;
@@ -1241,7 +1250,7 @@ async function updateMediaArea(isInit = false) { // Added isInit flag
     try {
         const keys = await localImageDB.getAllKeys();
         if (keys.length === 0) {
-            contentLayer.innerHTML = '<p class="media-placeholder">画像が登録されていません<br>設定から追加してください</p>';
+            contentLayer.innerHTML = '<img src="assets/default_image.png" alt="Default Image" style="width:100%; height:100%; object-fit:contain;">';
             return;
         }
 

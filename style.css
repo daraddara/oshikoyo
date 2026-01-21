@@ -77,6 +77,8 @@ body {
     align-items: center;
     justify-content: center;
     gap: 20px;
+    position: relative;
+    z-index: 100;
     /* Removed padding to fit better in flow */
 }
 
