@@ -1320,7 +1320,6 @@ body {
     max-width: 500px;
     position: static;
 }
-}
 
 /* --- Search Palette Tabs --- */
 .palette-tabs {
@@ -1599,10 +1598,6 @@ details[open]>summary::before {
     margin-top: 10px;
 }
 
-/* Interval Settings Config */
-border-radius: 4px;
-text-align: right;
-}
 
 /* Local Image Delete Overlay */
 .local-image-item {
@@ -1696,15 +1691,35 @@ text-align: right;
 
 /* Toast Notification */
 .toast-container {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1000;
+    /* Base styles */
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 8px;
     pointer-events: none;
+    z-index: 1000;
+}
+
+/* Popover positioning - use inset shorthand to override browser defaults */
+.toast-container:popover-open {
+    /* inset: top right bottom left */
+    inset: 24px 0 auto 0 !important;
+    position: fixed !important;
+    margin: 0 auto !important;
+    width: fit-content !important;
+    max-width: 90vw !important;
+
+    /* Reset other properties */
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    overflow: visible !important;
+
+    /* Layout */
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 8px !important;
 }
 
 .toast-message {
@@ -1747,4 +1762,112 @@ text-align: right;
         opacity: 0;
         transform: translateY(20px);
     }
+}
+
+/* --- Oshi Manager Modal --- */
+.oshi-manager-modal {
+    max-width: 800px;
+    width: 95%;
+}
+
+.oshi-manager-scroll-area {
+    max-height: 60vh;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.oshi-summary-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.oshi-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.oshi-table th,
+.oshi-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.oshi-table th {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    background: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.oshi-table tbody tr:hover {
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.oshi-table td:first-child {
+    width: 50px;
+    text-align: center;
+}
+
+.oshi-color-swatch {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.oshi-table .btn-delete-row {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.oshi-table .btn-delete-row:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* Oshi Manager Toolbar */
+.oshi-manager-toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    flex-wrap: wrap;
+}
+
+.oshi-table .btn-edit-row {
+    background: none;
+    border: none;
+    color: var(--accent-color);
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
+    margin-right: 4px;
+}
+
+.oshi-table .btn-edit-row:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+/* Oshi Edit Modal */
+.oshi-edit-modal {
+    max-width: 400px;
 }

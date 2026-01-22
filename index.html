@@ -95,48 +95,14 @@
                 <section class="settings-section">
                     <h3>推し設定</h3>
 
-                    <!-- New: Oshi List -->
                     <div class="setting-group">
                         <label>登録済みの推し</label>
-                        <div id="oshiListContainer" class="oshi-list-container">
-                            <p class="empty-list-message">まだ登録されていません</p>
-                            <!-- List items will be injected here -->
+                        <div class="oshi-summary-bar">
+                            <span>登録数: <strong id="oshiCount">0</strong> 人</span>
+                            <button type="button" id="btnOpenOshiManager" class="btn-secondary">一覧を管理</button>
                         </div>
+                        <p class="help-text">※ 追加・編集・インポート・エクスポートは「一覧を管理」から行えます。</p>
                     </div>
-
-                    <!-- Import Area -->
-                    <div class="setting-group">
-                        <label>データインポート (JSON)</label>
-                        <div class="import-controls">
-                            <input type="file" id="importJson" accept=".json" multiple>
-                            <button type="button" id="btnImport" class="btn-secondary">インポート実行</button>
-                        </div>
-                        <p class="help-text">※ 複数のファイルを選択して読み込めます。</p>
-                    </div>
-
-                    <details>
-                        <summary>手動で追加する</summary>
-                        <div class="manual-add-form">
-                            <div class="setting-group">
-                                <label>名前</label>
-                                <input type="text" id="newOshiName" placeholder="例: ○○ちゃん">
-                            </div>
-                            <div class="setting-group">
-                                <label>誕生日</label>
-                                <input type="date" id="newOshiBirthday">
-                            </div>
-                            <div class="setting-group">
-                                <label>デビュー記念日 (任意)</label>
-                                <input type="date" id="newOshiDebutDay">
-                            </div>
-                            <div class="setting-group">
-                                <label>推しカラー</label>
-                                <input type="color" id="newOshiColor" value="#3b82f6">
-                            </div>
-                            <button type="button" id="btnAddManual" class="btn-secondary"
-                                style="margin-top: 10px;">追加</button>
-                        </div>
-                    </details>
                 </section>
 
                 <section class="settings-section">
@@ -277,8 +243,71 @@
             </div>
         </form>
     </dialog>
+
+    <dialog id="oshiManagementModal" class="settings-modal oshi-manager-modal">
+        <form method="dialog" class="settings-form">
+            <h2>登録済みの推し一覧</h2>
+            <div class="oshi-manager-toolbar">
+                <button type="button" id="btnOshiAdd" class="btn-secondary">+ 新規追加</button>
+                <button type="button" id="btnOshiImport" class="btn-secondary">📥 インポート</button>
+                <input type="file" id="inputOshiImport" accept=".json" multiple style="display:none">
+                <button type="button" id="btnOshiExport" class="btn-secondary">📤 エクスポート</button>
+            </div>
+            <div class="oshi-manager-scroll-area">
+                <table class="oshi-table">
+                    <thead>
+                        <tr>
+                            <th>カラー</th>
+                            <th>名前</th>
+                            <th>誕生日</th>
+                            <th>記念日</th>
+                            <th>ソース</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="oshiTableBody">
+                        <!-- Rows injected by JS -->
+                    </tbody>
+                </table>
+                <p id="oshiTableEmpty" class="empty-list-message"
+                    style="display:none; text-align:center; padding: 20px;">まだ登録されていません</p>
+            </div>
+            <div class="form-actions">
+                <button type="button" id="btnCloseOshiManager" class="btn-cancel">閉じる</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Oshi Edit Popup -->
+    <dialog id="oshiEditModal" class="settings-modal oshi-edit-modal">
+        <form method="dialog" class="settings-form">
+            <h2 id="oshiEditTitle">新規追加</h2>
+            <input type="hidden" id="oshiEditIndex" value="-1">
+            <div class="setting-group">
+                <label>名前 <span style="color:#ef4444">*</span></label>
+                <input type="text" id="oshiEditName" placeholder="例: ○○ちゃん" required>
+            </div>
+            <div class="setting-group">
+                <label>推しカラー</label>
+                <input type="color" id="oshiEditColor" value="#3b82f6">
+            </div>
+            <div class="setting-group">
+                <label>誕生日 <span class="help-text">(例: 1/15 または 2000/1/15)</span></label>
+                <input type="text" id="oshiEditBirthday" placeholder="M/D または YYYY/M/D">
+            </div>
+            <div class="setting-group">
+                <label>記念日 <span class="help-text">(例: 4/1 または 2020/4/1)</span></label>
+                <input type="text" id="oshiEditDebutDay" placeholder="M/D または YYYY/M/D">
+            </div>
+            <div class="form-actions">
+                <button type="button" id="btnOshiEditCancel" class="btn-cancel">キャンセル</button>
+                <button type="button" id="btnOshiEditSave" class="btn-primary">保存</button>
+            </div>
+        </form>
+    </dialog>
+
     <!-- Toast Container -->
-    <div id="toastContainer" class="toast-container"></div>
+    <div id="toastContainer" class="toast-container" popover="manual"></div>
     <script src="script.js"></script>
     <script>
         // PWA Service Worker Registration

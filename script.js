@@ -418,21 +418,32 @@ function getContrastColor(hex) {
 // Helper: Parse Date String to {month, day}
 function parseDateString(str) {
     if (!str) return null;
+    str = str.trim();
+
     // Format: "YYYY/MM/DD" or "YYYY-MM-DD"
-    let match = str.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    let match = str.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
     if (match) {
         return { month: parseInt(match[2]), day: parseInt(match[3]) };
     }
-    // Format: "M月D日"
-    match = str.match(/(\d{1,2})月(\d{1,2})日/);
+
+    // Format: "M/D" (year-less, e.g., 1/15)
+    match = str.match(/^(\d{1,2})\/(\d{1,2})$/);
     if (match) {
         return { month: parseInt(match[1]), day: parseInt(match[2]) };
     }
+
+    // Format: "M月D日"
+    match = str.match(/^(\d{1,2})月(\d{1,2})日$/);
+    if (match) {
+        return { month: parseInt(match[1]), day: parseInt(match[2]) };
+    }
+
     // Format: "YYYY-MM-DD" standard date input value
-    match = str.match(/(\d{4})-(\d{2})-(\d{2})/);
+    match = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (match) {
         return { month: parseInt(match[2]), day: parseInt(match[3]) };
     }
+
     return null;
 }
 
@@ -725,42 +736,292 @@ function updateView() {
 // --- Settings Logic ---
 
 function renderOshiList() {
-    const container = document.getElementById('oshiListContainer');
-    if (!container) return;
+    // Now only updates the count display in the main settings modal
+    const countEl = document.getElementById('oshiCount');
+    if (countEl) {
+        countEl.textContent = (appSettings.oshiList || []).length;
+    }
+}
 
-    container.innerHTML = '';
+function openOshiManager() {
+    renderOshiTable();
+    document.getElementById('oshiManagementModal').showModal();
+}
+
+function renderOshiTable() {
+    const tbody = document.getElementById('oshiTableBody');
+    const emptyMsg = document.getElementById('oshiTableEmpty');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
     if (!appSettings.oshiList || appSettings.oshiList.length === 0) {
-        container.innerHTML = '<p class="empty-list-message">まだ登録されていません</p>';
+        if (emptyMsg) emptyMsg.style.display = 'block';
         return;
     }
 
+    if (emptyMsg) emptyMsg.style.display = 'none';
+
     appSettings.oshiList.forEach((oshi, index) => {
-        const item = document.createElement('div');
-        item.className = 'oshi-item';
+        const row = document.createElement('tr');
 
-        // Ensure color is safe CSS
-        const colorStyle = oshi.color ? `border-left: 4px solid ${oshi.color};` : '';
+        // Color swatch
+        const colorCell = document.createElement('td');
+        const swatch = document.createElement('span');
+        swatch.className = 'oshi-color-swatch';
+        swatch.style.backgroundColor = oshi.color || '#ccc';
+        colorCell.appendChild(swatch);
+        row.appendChild(colorCell);
 
-        item.innerHTML = `
-            <div class="oshi-info" style="${colorStyle} padding-left: 8px;">
-                <span class="oshi-name">${oshi.name}</span>
-                <span class="oshi-source">src: ${oshi.source || 'manual'}</span>
-            </div>
-            <div class="oshi-actions" style="display:flex; gap:8px;">
-                <button class="btn-delete" data-index="${index}">削除</button>
-            </div>
-        `;
-        container.appendChild(item);
-    });
+        // Name
+        const nameCell = document.createElement('td');
+        nameCell.textContent = oshi.name || '-';
+        row.appendChild(nameCell);
 
-    // Add Delete Listeners
-    container.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const idx = parseInt(e.target.dataset.index);
-            appSettings.oshiList.splice(idx, 1);
-            renderOshiList();
+        // Birthday
+        const bdCell = document.createElement('td');
+        bdCell.textContent = oshi.birthday || '-';
+        row.appendChild(bdCell);
+
+        // Debut Date
+        const ddCell = document.createElement('td');
+        ddCell.textContent = oshi.debutDate || '-';
+        row.appendChild(ddCell);
+
+        // Source
+        const srcCell = document.createElement('td');
+        srcCell.textContent = oshi.source || 'manual';
+        srcCell.style.fontSize = '0.8rem';
+        srcCell.style.color = '#888';
+        row.appendChild(srcCell);
+
+        // Actions
+        const actCell = document.createElement('td');
+
+        // Edit Button
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'btn-edit-row';
+        editBtn.textContent = '編集';
+        editBtn.addEventListener('click', () => openOshiEditForm(index));
+        actCell.appendChild(editBtn);
+
+        // Delete Button
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'btn-delete-row';
+        delBtn.textContent = '削除';
+        delBtn.addEventListener('click', () => {
+            if (confirm(`「${oshi.name}」を削除しますか？`)) {
+                appSettings.oshiList.splice(index, 1);
+                renderOshiTable();
+                renderOshiList(); // Update count in main settings
+            }
         });
+        actCell.appendChild(delBtn);
+        row.appendChild(actCell);
+
+        tbody.appendChild(row);
     });
+}
+
+// --- Oshi Edit Form ---
+function openOshiEditForm(index = -1) {
+    const titleEl = document.getElementById('oshiEditTitle');
+    const indexEl = document.getElementById('oshiEditIndex');
+    const nameEl = document.getElementById('oshiEditName');
+    const colorEl = document.getElementById('oshiEditColor');
+    const bdEl = document.getElementById('oshiEditBirthday');
+    const ddEl = document.getElementById('oshiEditDebutDay');
+
+    indexEl.value = index;
+
+    if (index >= 0 && appSettings.oshiList && appSettings.oshiList[index]) {
+        // Edit mode
+        const oshi = appSettings.oshiList[index];
+        titleEl.textContent = '編集';
+        nameEl.value = oshi.name || '';
+        colorEl.value = oshi.color || '#3b82f6';
+        bdEl.value = oshi.birthday || '';
+        ddEl.value = oshi.debutDate || '';
+    } else {
+        // Add mode
+        titleEl.textContent = '新規追加';
+        nameEl.value = '';
+        colorEl.value = '#3b82f6';
+        bdEl.value = '';
+        ddEl.value = '';
+    }
+
+    document.getElementById('oshiEditModal').showModal();
+}
+
+function saveOshiFromForm() {
+    const index = parseInt(document.getElementById('oshiEditIndex').value);
+    const name = document.getElementById('oshiEditName').value.trim();
+    const color = document.getElementById('oshiEditColor').value;
+    const birthday = document.getElementById('oshiEditBirthday').value;
+    const debutDate = document.getElementById('oshiEditDebutDay').value;
+
+    if (!name) {
+        alert('名前を入力してください');
+        return;
+    }
+
+    if (!appSettings.oshiList) appSettings.oshiList = [];
+
+    const oshiData = {
+        name,
+        color,
+        birthday,
+        debutDate,
+        source: index >= 0 ? (appSettings.oshiList[index]?.source || 'manual') : 'manual'
+    };
+
+    if (index >= 0) {
+        // Update existing
+        appSettings.oshiList[index] = oshiData;
+    } else {
+        // Add new
+        appSettings.oshiList.push(oshiData);
+    }
+
+    document.getElementById('oshiEditModal').close();
+    renderOshiTable();
+    renderOshiList();
+}
+
+// --- Oshi Export ---
+function handleOshiExport() {
+    if (!appSettings.oshiList || appSettings.oshiList.length === 0) {
+        showToast('エクスポートするデータがありません。');
+        return;
+    }
+
+    const count = appSettings.oshiList.length;
+    const dataStr = JSON.stringify(appSettings.oshiList, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `oshi_list_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast(`${count}件のデータをエクスポートしました`);
+}
+
+// --- Oshi Import (for modal) ---
+function handleOshiImportFromModal(files) {
+    if (!files || files.length === 0) return;
+
+    let addedCount = 0;
+    let skippedCount = 0;
+    let errorCount = 0;
+    const totalFiles = files.length;
+    let processedCount = 0;
+    let errorMessages = [];
+
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+
+                // Validate data structure
+                if (!Array.isArray(data)) {
+                    errorCount++;
+                    errorMessages.push(`${file.name}: 配列形式ではありません`);
+                    processedCount++;
+                    checkComplete();
+                    return;
+                }
+
+                if (data.length === 0) {
+                    errorCount++;
+                    errorMessages.push(`${file.name}: データが空です`);
+                    processedCount++;
+                    checkComplete();
+                    return;
+                }
+
+                const rawItems = data.map(item => ({
+                    name: item['メンバー名'] || item.name || '',
+                    birthday: item['誕生日'] || item.birthday || '',
+                    debutDate: item['周年記念日'] || item.debutDate || '',
+                    color: item['公式カラー (Hex/系統)'] || item.color || '',
+                    fanArtTag: item['ファンアートタグ'] || item.fanArtTag || '',
+                    source: file.name
+                })).filter(item => item.name); // Filter out items without names
+
+                if (rawItems.length === 0) {
+                    errorCount++;
+                    errorMessages.push(`${file.name}: 有効なデータがありません（名前が必須）`);
+                    processedCount++;
+                    checkComplete();
+                    return;
+                }
+
+                const existingNames = new Set((appSettings.oshiList || []).map(o => o.name));
+                const newItems = rawItems.filter(item => {
+                    if (existingNames.has(item.name)) {
+                        skippedCount++;
+                        return false;
+                    }
+                    existingNames.add(item.name);
+                    return true;
+                });
+
+                if (!appSettings.oshiList) appSettings.oshiList = [];
+                appSettings.oshiList.push(...newItems);
+                addedCount += newItems.length;
+
+            } catch (err) {
+                console.error('Import error:', err);
+                errorCount++;
+                errorMessages.push(`${file.name}: JSONの解析に失敗しました`);
+            }
+
+            processedCount++;
+            checkComplete();
+        };
+
+        reader.onerror = () => {
+            errorCount++;
+            errorMessages.push(`${file.name}: ファイルの読み込みに失敗しました`);
+            processedCount++;
+            checkComplete();
+        };
+
+        reader.readAsText(file);
+    });
+
+    function checkComplete() {
+        if (processedCount === totalFiles) {
+            renderOshiTable();
+            renderOshiList();
+
+            let message = `インポート完了: ${addedCount}件追加`;
+            if (skippedCount > 0) {
+                message += `, ${skippedCount}件スキップ（重複）`;
+            }
+            if (errorCount > 0) {
+                message += `\nエラー: ${errorCount}件`;
+                if (errorMessages.length > 0) {
+                    message += '\n' + errorMessages.slice(0, 3).join('\n');
+                    if (errorMessages.length > 3) {
+                        message += `\n...他${errorMessages.length - 3}件`;
+                    }
+                }
+                showToast(message, 5000); // Longer display for errors
+            } else {
+                showToast(message);
+            }
+        }
+    }
 }
 
 function handleFileImport() {
@@ -1306,11 +1567,28 @@ function initSettings() {
     // Save Settings
     document.getElementById('btnSave').addEventListener('click', saveSettings);
 
-    // Import Button (Oshi)
-    document.getElementById('btnImport').addEventListener('click', handleFileImport);
+    // --- Oshi Management Modal ---
+    document.getElementById('btnOpenOshiManager').addEventListener('click', openOshiManager);
+    document.getElementById('btnCloseOshiManager').addEventListener('click', () => {
+        document.getElementById('oshiManagementModal').close();
+    });
 
-    // Add Manual Button
-    document.getElementById('btnAddManual').addEventListener('click', addManualOshi);
+    // --- Oshi Management Toolbar ---
+    document.getElementById('btnOshiAdd').addEventListener('click', () => openOshiEditForm(-1));
+    document.getElementById('btnOshiExport').addEventListener('click', handleOshiExport);
+
+    const inputOshiImport = document.getElementById('inputOshiImport');
+    document.getElementById('btnOshiImport').addEventListener('click', () => inputOshiImport.click());
+    inputOshiImport.addEventListener('change', (e) => {
+        handleOshiImportFromModal(e.target.files);
+        e.target.value = ''; // Reset for re-selection
+    });
+
+    // --- Oshi Edit Form ---
+    document.getElementById('btnOshiEditSave').addEventListener('click', saveOshiFromForm);
+    document.getElementById('btnOshiEditCancel').addEventListener('click', () => {
+        document.getElementById('oshiEditModal').close();
+    });
 
     // --- New Media & Data Handlers ---
 
@@ -1386,6 +1664,20 @@ function loadSettings() {
 function showToast(message, duration = 3000) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
+
+    // Ensure toast container is on top of any open modals using Popover API
+    if (container.showPopover) {
+        try {
+            // Re-stack: hide then show to bring to top of Top Layer
+            if (container.matches(':popover-open')) {
+                container.hidePopover();
+            }
+            container.showPopover();
+        } catch (e) {
+            // Fallback: popover API not supported or error
+            console.warn('Popover API not fully supported:', e);
+        }
+    }
 
     const toast = document.createElement('div');
     toast.className = 'toast-message';
