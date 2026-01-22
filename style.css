@@ -605,6 +605,23 @@ body {
     /* Space for scrollbar */
 }
 
+/* --- Targeted Fix: Image Left/Right + Calendar Vertical --- */
+/* This prevents calendar top clipping when combining side image position with vertical calendar layout */
+.main-layout.pos-left:has(.calendar-wrapper.direction-column),
+.main-layout.pos-right:has(.calendar-wrapper.direction-column) {
+    align-items: flex-start;
+    /* Override default center alignment to prevent top clipping */
+}
+
+/* Apply safe centering: centers when space allows, top-aligns when space is insufficient */
+.main-layout.pos-left:has(.calendar-wrapper.direction-column) .calendar-section,
+.main-layout.pos-left:has(.calendar-wrapper.direction-column) .media-area,
+.main-layout.pos-right:has(.calendar-wrapper.direction-column) .calendar-section,
+.main-layout.pos-right:has(.calendar-wrapper.direction-column) .media-area {
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
 /* --- Settings Modal --- */
 .settings-modal {
     border: none;
