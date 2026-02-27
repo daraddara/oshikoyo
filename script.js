@@ -15,8 +15,8 @@ const DEFAULT_SETTINGS = {
     oshiDebutDay: '',
     oshiColor: '#3b82f6',
     // Media Settings
-    mediaMode: 'none', // 'none', 'single', 'random', 'cycle'
-    mediaPosition: 'right', // 'top', 'bottom', 'left', 'right'
+    mediaMode: 'single', // 'none', 'single', 'random', 'cycle'
+    mediaPosition: 'top', // 'top', 'bottom', 'left', 'right'
     mediaIntervalRandom: 60, // seconds
     mediaIntervalCycle: 60, // seconds
 };
