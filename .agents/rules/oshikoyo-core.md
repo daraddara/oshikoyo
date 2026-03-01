@@ -1,0 +1,21 @@
+---
+trigger: always_on
+---
+
+---
+description: 推しカレの基本開発規約（JS/CSS）
+---
+# プロジェクト概要
+- プロジェクト名: 推しカレ
+- 技術スタック: 純粋なJavaScript (Vanilla JS), CSS3, HTML5
+
+# JavaScript 規約
+- モダンなES6+の構文（const/let, アロー関数, 分割代入など）を使用してください。
+- DOM操作は ID 指定（getElementById）を基本とし、複雑な場合は querySelector を使用してください。
+- 各関数には必ず JSDoc 形式で説明と引数、戻り値を記述してください。
+- 外部ライブラリを導入する場合は必ず事前に提案してください。
+
+# CSS 規約
+- 命名規則は BEM 形式（block__element--modifier）を推奨します。
+- 色やサイズなどの共通値は `:root` で CSS 変数として定義し、再利用してください。
+- レスポンシブ対応を前提とし、マジックナンバー（固定値）の多用を避けてください。
