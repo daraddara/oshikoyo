@@ -22,13 +22,24 @@ const DEFAULT_SETTINGS = {
 };
 
 // --- IndexedDB Management ---
+/**
+ * IndexedDB management for local image storage.
+ */
 class LocalImageDB {
+    /**
+     * @param {string} dbName - The name of the IndexedDB.
+     * @param {string} storeName - The name of the object store.
+     */
     constructor(dbName = 'OshigotoCalendarDB', storeName = 'images') {
         this.dbName = dbName;
         this.storeName = storeName;
         this.db = null;
     }
 
+    /**
+     * Opens the IndexedDB connection.
+     * @returns {Promise<IDBDatabase>}
+     */
     async open() {
         if (this.db) return this.db;
         return new Promise((resolve, reject) => {
@@ -47,6 +58,11 @@ class LocalImageDB {
         });
     }
 
+    /**
+     * Adds an image file to the database.
+     * @param {File} file - The image file to add.
+     * @returns {Promise<number>} The key of the added image.
+     */
     async addImage(file) {
         await this.open();
         return new Promise((resolve, reject) => {
@@ -58,6 +74,10 @@ class LocalImageDB {
         });
     }
 
+    /**
+     * Retrieves all images and their keys from the database.
+     * @returns {Promise<Array<{id: number, file: File}>>}
+     */
     async getAllImages() {
         await this.open();
         return new Promise((resolve, reject) => {
@@ -88,6 +108,10 @@ class LocalImageDB {
         });
     }
 
+    /**
+     * Retrieves all keys from the image store.
+     * @returns {Promise<Array<number>>}
+     */
     async getAllKeys() {
         await this.open();
         return new Promise((resolve, reject) => {
@@ -99,6 +123,11 @@ class LocalImageDB {
         });
     }
 
+    /**
+     * Retrieves a single image by its key.
+     * @param {number} key - The key of the image.
+     * @returns {Promise<File>}
+     */
     async getImage(key) {
         await this.open();
         return new Promise((resolve, reject) => {
@@ -110,6 +139,11 @@ class LocalImageDB {
         });
     }
 
+    /**
+     * Deletes an image by its key.
+     * @param {number} key - The key of the image to delete.
+     * @returns {Promise<void>}
+     */
     async deleteImage(key) {
         await this.open();
         return new Promise((resolve, reject) => {
@@ -121,6 +155,10 @@ class LocalImageDB {
         });
     }
 
+    /**
+     * Clears all images from the database.
+     * @returns {Promise<void>}
+     */
     async clearAll() {
         await this.open();
         return new Promise((resolve, reject) => {
@@ -132,6 +170,11 @@ class LocalImageDB {
         });
     }
 
+    /**
+     * Exports all image data as JSON chunks.
+     * @param {number} [chunkSizeLimit=52428800] - Limit for each chunk in characters.
+     * @returns {Promise<Array<{filename: string, data: object}>>}
+     */
     async exportData(chunkSizeLimit = 50 * 1024 * 1024) {
         await this.open();
         const allImages = await this.getAllImages();
@@ -186,6 +229,11 @@ class LocalImageDB {
         return chunks;
     }
 
+    /**
+     * Imports image data from a JSON object.
+     * @param {object} jsonData - The imported JSON data.
+     * @returns {Promise<{added: number, skipped: number}>}
+     */
     async importData(jsonData) {
         await this.open();
         // Validation
@@ -249,6 +297,12 @@ class LocalImageDB {
         return { added: addedCount, skipped: skippedCount };
     }
 
+    /**
+     * Helper to combine keys and values into objects.
+     * @param {Array<number>} keys - Array of keys.
+     * @param {Array<File>} values - Array of image files.
+     * @returns {Array<{id: number, file: File}>}
+     */
     combineKeysAndValues(keys, values) {
         return values.map((val, i) => ({ id: keys[i], file: val }));
     }
@@ -261,6 +315,11 @@ let appSettings = { ...DEFAULT_SETTINGS };
 const STORAGE_KEY = 'oshigoto_calendar_settings';
 
 // Helper: Blob to Base64
+/**
+ * Converts a Blob to a Base64 string.
+ * @param {Blob} blob - The blob to convert.
+ * @returns {Promise<string>}
+ */
 function blobToBase64(blob) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -277,6 +336,12 @@ function blobToBase64(blob) {
 }
 
 // Helper: Base64 to Blob
+/**
+ * Converts a Base64 string back to a Blob.
+ * @param {string} base64 - The base64 string.
+ * @param {string} mimeType - The fallback MIME type.
+ * @returns {Blob}
+ */
 function base64ToBlob(base64, mimeType) {
     // Basic validation
     if (typeof base64 !== 'string' || base64.length === 0) {
@@ -323,6 +388,12 @@ function base64ToBlob(base64, mimeType) {
 }
 
 // Helper: Compare Blobs
+/**
+ * Compares two Blobs for equality by content.
+ * @param {Blob} blob1 
+ * @param {Blob} blob2 
+ * @returns {Promise<boolean>}
+ */
 async function areBlobsEqual(blob1, blob2) {
     if (blob1.size !== blob2.size) return false;
     if (blob1.type !== blob2.type) return false;
@@ -341,6 +412,11 @@ async function areBlobsEqual(blob1, blob2) {
 }
 
 // Helper: Hex to RGB
+/**
+ * Converts a hex color string to RGB format (e.g., "255, 255, 255").
+ * @param {string} hex - The hex color string.
+ * @returns {string|null}
+ */
 function hexToRgb(hex) {
     if (!hex || !hex.startsWith('#')) return null;
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -348,6 +424,11 @@ function hexToRgb(hex) {
 }
 
 // Helper: Seconds <-> DHMS
+/**
+ * Converts seconds into a DHMS object.
+ * @param {number} seconds 
+ * @returns {{d: number, h: number, m: number, s: number}}
+ */
 function secondsToDHMS(seconds) {
     const d = Math.floor(seconds / (3600 * 24));
     seconds %= 3600 * 24;
@@ -358,6 +439,14 @@ function secondsToDHMS(seconds) {
     return { d, h, m, s };
 }
 
+/**
+ * Converts DHMS values back to total seconds.
+ * @param {number} d - Days
+ * @param {number} h - Hours
+ * @param {number} m - Minutes
+ * @param {number} s - Seconds
+ * @returns {number}
+ */
 function dhmsToSeconds(d, h, m, s) {
     return (d * 86400) + (h * 3600) + (m * 60) + s;
 }
@@ -372,6 +461,9 @@ let appState = {
     mediaHistoryIndex: -1 // Point to current position in history
 };
 
+/**
+ * Loads the application state from localStorage.
+ */
 function loadState() {
     try {
         const saved = localStorage.getItem(STATE_KEY);
@@ -386,6 +478,9 @@ function loadState() {
     } catch (e) { console.error('Failed to load state', e); }
 }
 
+/**
+ * Saves the application state to localStorage.
+ */
 function saveState() {
     try {
         localStorage.setItem(STATE_KEY, JSON.stringify(appState));

@@ -20,6 +20,13 @@
     --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.05);
     --font-jp: 'Noto Sans JP', sans-serif;
     --font-en: 'Outfit', sans-serif;
+
+    /* Z-Index Hierarchy */
+    --z-base: 1;
+    --z-sticky: 100;
+    --z-popup: 1000;
+    --z-modal: 2000;
+    --z-overlay: 3000;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -78,7 +85,7 @@ body {
     justify-content: center;
     gap: 20px;
     position: relative;
-    z-index: 100;
+    z-index: var(--z-sticky);
     /* Removed padding to fit better in flow */
 }
 
@@ -474,7 +481,7 @@ body {
     left: 4px;
     font-size: 0.75rem;
     font-weight: 500;
-    z-index: 5;
+    z-index: var(--z-base);
     line-height: 1;
     pointer-events: none;
 }
@@ -1518,7 +1525,7 @@ details[open]>summary::before {
 /* --- Date Hover Popup --- */
 #date-hover-popup {
     position: fixed;
-    z-index: 1000;
+    z-index: var(--z-popup);
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -1593,7 +1600,7 @@ details[open]>summary::before {
 /* Input styling for manual add */
 .manual-add-form {
     padding: 10px;
-    background: #f8f9fa;
+    background: var(--bg-color);
     border-radius: 8px;
     margin-top: 10px;
 }
@@ -1696,7 +1703,7 @@ details[open]>summary::before {
     /* Hide by default */
     /* Layout handled in :popover-open */
     pointer-events: none;
-    z-index: 1000;
+    z-index: var(--z-popup);
     border: none;
     background: transparent;
     padding: 0;
@@ -1807,7 +1814,7 @@ details[open]>summary::before {
     font-weight: 600;
     font-size: 0.85rem;
     color: var(--text-secondary);
-    background: #f8f9fa;
+    background: var(--bg-color);
     position: sticky;
     top: 0;
     z-index: 5;
