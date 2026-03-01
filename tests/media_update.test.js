@@ -1,166 +1,78 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import fs from 'fs';
-import path from 'path';
+// @vitest-environment jsdom
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { extractCode, loadModule, setupTestEnvironment } from './test-utils.js';
 
-// --- Mocks Setup ---
-const mockGetElementById = vi.fn();
-const mockQuerySelector = vi.fn();
-const mockAdjustMediaLayout = vi.fn();
-const mockLocalImageDB = {
-    getAllKeys: vi.fn(),
-    getImage: vi.fn(),
-};
-const mockRevokeObjectURL = vi.fn();
-const mockCreateObjectURL = vi.fn();
+// 環境セットアップと基本モック
+setupTestEnvironment();
 
-// Global Scope Mocks
-global.document = {
-    getElementById: mockGetElementById,
-    querySelector: mockQuerySelector,
-    createElement: (tag) => ({ style: {}, classList: { add: vi.fn(), remove: vi.fn() }, appendChild: vi.fn() }),
-};
-global.URL = {
-    revokeObjectURL: mockRevokeObjectURL,
-    createObjectURL: mockCreateObjectURL,
-};
-global.localImageDB = mockLocalImageDB;
-global.adjustMediaLayout = mockAdjustMediaLayout;
+// script.js からロジックを抽出
+const mediaUpdateCode = extractCode('async function updateMediaArea', 'function adjustMediaLayout');
+const { updateMediaArea } = loadModule([mediaUpdateCode], ['updateMediaArea']);
 
-// App Variables
-global.appSettings = {
-    mediaMode: 'random',
-    mediaPosition: 'right',
-};
-global.appState = {
-    lastMediaKey: 'key1',
-    mediaHistory: [],
-    mediaHistoryIndex: -1
-};
-global.saveState = vi.fn();
-
-// --- Load Script Logic ---
-const scriptPath = path.resolve(__dirname, '../script.js');
-const scriptContent = fs.readFileSync(scriptPath, 'utf8');
-
-// Extract updateMediaArea function
-// We look for "async function updateMediaArea" and matching brace
-const startStr = 'async function updateMediaArea';
-const startIndex = scriptContent.indexOf(startStr);
-if (startIndex === -1) throw new Error('Could not find updateMediaArea function');
-
-// Simple extraction: assume it ends before "function adjustMediaLayout" or end of file
-// Looking at the file, adjustMediaLayout comes after.
-const nextFuncStr = 'function adjustMediaLayout';
-const endIndex = scriptContent.indexOf(nextFuncStr, startIndex);
-if (endIndex === -1) throw new Error('Could not find end of updateMediaArea function');
-
-// We need to be careful about not cutting off the last closing brace.
-// The code structure in script.js is:
-// ...
-// }
-// 
-// function adjustMediaLayout() {
-// ...
-// So extracting up to nextFuncStr should include the closing brace of updateMediaArea, but also some whitespace.
-// A safe bet is to assume standard formatting or use a bracket counter (complex).
-// Or we can just grab the compiled JS string if we can.
-// Let's try a simpler approach: Eval the specific block we identified in `logic.test.js` style?
-// But `updateMediaArea` calls `adjustMediaLayout` which is global.
-
-// Let's copy the function body string and create it.
-// However `updateMediaArea` is async.
-// Let's use `vm` or just simple eval in global scope if we can.
-// Actually, since we are in a module (test file), defining a global function via eval works.
-
-// Let's define it by slicing.
-const functionCode = scriptContent.slice(startIndex, endIndex);
-
-// We need to execute this code to define the function in the global scope? 
-// Or just evaluate it to get the function reference.
-// `eval(functionCode)` will define it in the current scope if strict mode allows, or we can assign it.
-
-// Let's evaluate it.
-// Note: Vitest runs in strict mode? 
-// We can wrap it: `global.updateMediaArea = ...` isn't easy with function declaration syntax.
-// We can change the declaration to expression?
-const funcExpression = functionCode.replace('async function updateMediaArea', 'return async function updateMediaArea');
-// Wait, that changes the internal name.
-// Better: `(async function updateMediaArea... )`
-// But we want to call it.
-
-// Let's simply eval it. It should be available in the scope.
-let updateMediaArea;
-try {
-    // We wrap in a block or IIFE that returns it
-    // "async function foo() {}; return foo;"
-    const setupCode = `
-        ${functionCode}
-        return updateMediaArea;
-    `;
-    updateMediaArea = new Function(setupCode)();
-} catch (e) {
-    console.error("Failed to parse function code:", e);
-}
-
-
-describe('updateMediaArea Logic', () => {
+describe('updateMediaArea ロジック (メディア表示更新)', () => {
+    let mockArea, mockContainer, mockMainLayout;
 
     beforeEach(() => {
         vi.clearAllMocks();
 
-        // Default Mock Returns
-        mockGetElementById.mockReturnValue({ // Generic Element
-            style: {},
-            classList: { add: vi.fn(), remove: vi.fn() }
-        });
-        mockLocalImageDB.getAllKeys.mockResolvedValue(['key1', 'key2']);
-        mockLocalImageDB.getImage.mockResolvedValue(new Blob([]));
-
-        // Reset Global State
-        global.appSettings = { mediaMode: 'random', mediaPosition: 'right' };
-        global.appState = { lastMediaKey: 'key1', mediaHistory: [], mediaHistoryIndex: -1 };
-        global.currentMediaObjectURL = null; // simulate global var
-
-        // Mock container with querySelector for content layer
-        const mockContainer = {
+        // DOM 要素のモック作成
+        mockArea = { style: {} };
+        mockContainer = {
             style: {},
             innerHTML: '',
             querySelector: vi.fn(),
             appendChild: vi.fn()
         };
-        const mockArea = { style: {} };
+        mockMainLayout = { classList: { add: vi.fn(), remove: vi.fn() } };
 
-        mockGetElementById.mockImplementation((id) => {
-            if (id === 'mediaContainer') return mockContainer;
+        // document.getElementById の戻り値を定義
+        document.getElementById.mockImplementation((id) => {
             if (id === 'mediaArea') return mockArea;
-            if (id === 'mainLayout') return { classList: { add: vi.fn(), remove: vi.fn() } };
+            if (id === 'mediaContainer') return mockContainer;
+            if (id === 'mainLayout') return mockMainLayout;
             return null;
         });
+
+        // グローバル変数の初期化
+        global.appSettings = { mediaMode: 'random', mediaPosition: 'right' };
+        global.appState = { lastMediaKey: 'key1', mediaHistory: [], mediaHistoryIndex: -1 };
+        global.localImageDB = {
+            getAllKeys: vi.fn().mockResolvedValue(['key1', 'key2']),
+            getImage: vi.fn().mockResolvedValue(new Blob(['test'], { type: 'image/png' }))
+        };
+        global.currentMediaObjectURL = null;
+        global.adjustMediaLayout = vi.fn();
+        global.saveState = vi.fn();
     });
 
-    it('should NOT fetch images or update media when mode is "layout"', async () => {
+    it('mode が "layout" の場合、画像取得は行わずレイアウト調整のみ実行されること', async () => {
         await updateMediaArea('layout');
 
-        // Verification
-        expect(mockAdjustMediaLayout).toHaveBeenCalled();
-        expect(mockLocalImageDB.getAllKeys).not.toHaveBeenCalled();
-        expect(mockLocalImageDB.getImage).not.toHaveBeenCalled();
+        expect(global.adjustMediaLayout).toHaveBeenCalled();
+        expect(global.localImageDB.getAllKeys).not.toHaveBeenCalled();
     });
 
-    it('should fetch images when mode is "advance" (default)', async () => {
+    it('mode が "advance"（デフォルト）の場合、画像を取得して表示が更新されること', async () => {
         await updateMediaArea('advance');
 
-        expect(mockAdjustMediaLayout).toHaveBeenCalled();
-        expect(mockLocalImageDB.getAllKeys).toHaveBeenCalled();
-        // Should fetch an image (random behavior)
-        expect(mockLocalImageDB.getImage).toHaveBeenCalled();
+        expect(global.adjustMediaLayout).toHaveBeenCalled();
+        expect(global.localImageDB.getAllKeys).toHaveBeenCalled();
+        expect(global.localImageDB.getImage).toHaveBeenCalled();
     });
 
-    it('should fetch key from state when mode is "restore"', async () => {
+    it('mode が "restore" の場合、state に保存されたキーを使用して画像を取得すること', async () => {
         await updateMediaArea('restore');
 
-        expect(mockAdjustMediaLayout).toHaveBeenCalled();
-        expect(mockLocalImageDB.getAllKeys).toHaveBeenCalled();
-        expect(mockLocalImageDB.getImage).toHaveBeenCalledWith('key1');
+        expect(global.adjustMediaLayout).toHaveBeenCalled();
+        expect(global.localImageDB.getImage).toHaveBeenCalledWith('key1');
+    });
+
+    it('画像が存在しない場合、プレースホルダーが表示されること', async () => {
+        global.localImageDB.getAllKeys.mockResolvedValue([]);
+
+        await updateMediaArea('advance');
+
+        const contentLayer = mockContainer.appendChild.mock.calls.find(call => call[0].className === 'media-content-layer')[0];
+        expect(contentLayer.innerHTML).toContain('assets/default_image.png');
     });
 });
