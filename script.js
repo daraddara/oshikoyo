@@ -543,11 +543,48 @@ function parseDateString(str) {
 }
 
 // --- Holiday Logic ---
+const HOLIDAY_EXCEPTIONS = {
+    // 2019年天皇即位関連
+    "2019-04-30": "国民の休日",
+    "2019-05-01": "即位の日",
+    "2019-05-02": "国民の休日",
+    "2019-10-22": "即位礼正殿の儀",
+    // 2020年オリンピック特例
+    "2020-07-20": null, // 海の日（移動前）
+    "2020-07-23": "海の日",
+    "2020-07-24": "スポーツの日",
+    "2020-08-10": "山の日",
+    "2020-08-11": null, // 山の日（移動前）
+    "2020-10-12": null, // スポーツの日（移動前）
+    // 2021年オリンピック特例
+    "2021-07-19": null, // 海の日（移動前）
+    "2021-07-22": "海の日",
+    "2021-07-23": "スポーツの日",
+    "2021-08-08": "山の日",
+    "2021-08-09": "振替休日",
+    "2021-08-11": null, // 山の日（移動前）
+    "2021-10-11": null, // スポーツの日（移動前）
+    // 敬老の日と秋分の日で挟まれる国民の休日（シルバーウィーク）
+    "2009-09-22": "国民の休日",
+    "2015-09-22": "国民の休日",
+    "2026-09-22": "国民の休日",
+    "2032-09-21": "国民の休日",
+    "2037-09-22": "国民の休日"
+};
+
 function getJPHoliday(date) {
     const y = date.getFullYear();
     const m = date.getMonth() + 1;
     const d = date.getDate();
     const day = date.getDay();
+
+    // フォーマット: YYYY-MM-DD
+    const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+    // 例外リストに存在する場合はそれを優先（特例や移動、新設など）
+    if (HOLIDAY_EXCEPTIONS[dateStr] !== undefined) {
+        return HOLIDAY_EXCEPTIONS[dateStr];
+    }
 
     const isNthMonday = (n) => {
         if (day !== 1) return false;
@@ -556,24 +593,43 @@ function getJPHoliday(date) {
         return d >= min && d <= max;
     };
 
-    const getVernalEquinox = (year) => Math.floor(20.8431 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
-    const getAutumnalEquinox = (year) => Math.floor(23.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+    const getVernalEquinox = (year) => {
+        if (year <= 1947) return 0; // 祝日法施行前
+        if (year <= 1979) return Math.floor(20.8357 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+        if (year <= 2099) return Math.floor(20.8431 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+        return Math.floor(21.8510 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+    };
+
+    const getAutumnalEquinox = (year) => {
+        if (year <= 1947) return 0; // 祝日法施行前
+        if (year <= 1979) return Math.floor(23.2588 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+        if (year <= 2099) return Math.floor(23.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+        return Math.floor(24.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+    };
 
     if (m === 1 && d === 1) return "元日";
     if (m === 2 && d === 11) return "建国記念の日";
-    if (m === 2 && d === 23) return "天皇誕生日";
-    if (m === 4 && d === 29) return "昭和の日";
+    if (m === 2 && d === 23 && y >= 2020) return "天皇誕生日";
+    if (m === 4 && d === 29) return y >= 2007 ? "昭和の日" : "みどりの日";
     if (m === 5 && d === 3) return "憲法記念日";
-    if (m === 5 && d === 4) return "みどりの日";
+    if (m === 5 && d === 4) return y >= 2007 ? "みどりの日" : "国民の休日";
     if (m === 5 && d === 5) return "こどもの日";
-    if (m === 8 && d === 11) return "山の日";
+    if (m === 8 && d === 11 && y >= 2016) return "山の日";
     if (m === 11 && d === 3) return "文化の日";
     if (m === 11 && d === 23) return "勤労感謝の日";
+    if (m === 12 && d === 23 && y >= 1989 && y <= 2018) return "天皇誕生日";
 
-    if (m === 1 && isNthMonday(2)) return "成人の日";
-    if (m === 7 && isNthMonday(3)) return "海の日";
-    if (m === 9 && isNthMonday(3)) return "敬老の日";
-    if (m === 10 && isNthMonday(2)) return "スポーツの日";
+    if (m === 1 && isNthMonday(2)) return y >= 2000 ? "成人の日" : null;
+    if (m === 1 && d === 15 && y <= 1999) return "成人の日";
+
+    if (m === 7 && isNthMonday(3)) return y >= 2003 ? "海の日" : null;
+    if (m === 7 && d === 20 && y >= 1996 && y <= 2002) return "海の日";
+
+    if (m === 9 && isNthMonday(3)) return y >= 2003 ? "敬老の日" : null;
+    if (m === 9 && d === 15 && y <= 2002) return "敬老の日";
+
+    if (m === 10 && isNthMonday(2)) return y >= 2020 ? "スポーツの日" : (y >= 2000 ? "体育の日" : null);
+    if (m === 10 && d === 10 && y <= 1999) return "体育の日";
 
     if (m === 3 && d === getVernalEquinox(y)) return "春分の日";
     if (m === 9 && d === getAutumnalEquinox(y)) return "秋分の日";
