@@ -17,6 +17,7 @@ const DEFAULT_SETTINGS = {
     // Media Settings
     mediaMode: 'single', // 'none', 'single', 'random', 'cycle'
     mediaPosition: 'top', // 'top', 'bottom', 'left', 'right'
+    mediaSize: null,      // size of media area (width or height depending on position)
     mediaIntervalRandom: 60, // seconds
     mediaIntervalCycle: 60, // seconds
 };
@@ -1560,6 +1561,145 @@ function setupDragAndDrop() {
         const files = dt.files;
         await handleFiles(files);
     }
+
+    // --- Layout Drag & Drop ---
+    const dragHandle = document.getElementById('mediaDragHandle');
+    const mainLayout = document.getElementById('mainLayout');
+    const dropzones = document.querySelectorAll('.layout-dropzone');
+
+    if (dragHandle && mainLayout) {
+        // ドラッグ開始
+        dragHandle.addEventListener('dragstart', (e) => {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('application/x-oshigoto-layout', 'true');
+            // 少し遅らせてクラスを付与（即座だとドラッグイメージも半透明になる場合があるため）
+            setTimeout(() => {
+                mainLayout.classList.add('is-dragging-layout');
+            }, 10);
+        });
+
+        // ドラッグ終了
+        dragHandle.addEventListener('dragend', () => {
+            mainLayout.classList.remove('is-dragging-layout');
+            dropzones.forEach(zone => zone.classList.remove('drag-over'));
+        });
+
+        // ドロップゾーンのイベント
+        dropzones.forEach(zone => {
+            zone.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                if (e.dataTransfer.types.includes('application/x-oshigoto-layout')) {
+                    zone.classList.add('drag-over');
+                }
+            });
+
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('drag-over');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+
+                if (e.dataTransfer.types.includes('application/x-oshigoto-layout')) {
+                    const newPos = zone.getAttribute('data-position');
+                    if (newPos && ['top', 'bottom', 'left', 'right'].includes(newPos)) {
+                        appSettings.mediaPosition = newPos;
+
+                        // 設定モーダルのラジオボタンの表示も更新しておく
+                        const radio = document.querySelector(`input[name="mediaPosition"][value="${newPos}"]`);
+                        if (radio) radio.checked = true;
+
+                        // 位置が変わったらサイズ制約をリセットする
+                        appSettings.mediaSize = null;
+
+                        // 設定モーダルの内容を上書きしないよう直接保存とUI更新のみ行う
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+                        updateView();
+                    }
+                }
+            });
+        });
+    }
+
+    // --- Splitter Resizing ---
+    const splitter = document.getElementById('layoutSplitter');
+    const mediaArea = document.getElementById('mediaArea');
+    if (splitter && mediaArea && mainLayout) {
+        let isResizing = false;
+        let startPos = 0;
+        let startSize = 0;
+        let direction = ''; // 'horizontal' (x-axis) or 'vertical' (y-axis)
+
+        splitter.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            mainLayout.classList.add('is-resizing');
+            splitter.classList.add('is-resizing');
+
+            const pos = appSettings.mediaPosition || 'right';
+            if (pos === 'left' || pos === 'right') {
+                direction = 'horizontal';
+                startPos = e.clientX;
+                startSize = mediaArea.offsetWidth;
+            } else {
+                direction = 'vertical';
+                startPos = e.clientY;
+                startSize = mediaArea.offsetHeight;
+            }
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+
+            let newSize = startSize;
+            const pos = appSettings.mediaPosition || 'right';
+
+            if (direction === 'horizontal') {
+                const deltaX = e.clientX - startPos;
+                // 'left' layout: image is on left, drag right increases width
+                // 'right' layout: image is on right, drag left increases width
+                newSize = pos === 'left' ? startSize + deltaX : startSize - deltaX;
+            } else {
+                const deltaY = e.clientY - startPos;
+                // 'top' layout: image is top, drag down increases height
+                // 'bottom' layout: image is bottom, drag up increases height
+                newSize = pos === 'top' ? startSize + deltaY : startSize - deltaY;
+            }
+
+            // Constrain constraints
+            const minSize = 250;
+            const maxSize = direction === 'horizontal' ? window.innerWidth * 0.8 : window.innerHeight * 0.8;
+            newSize = Math.max(minSize, Math.min(newSize, maxSize));
+
+            if (direction === 'horizontal') {
+                mediaArea.style.width = `${newSize}px`;
+                mediaArea.style.maxWidth = `${newSize}px`;
+            } else {
+                const mediaContainer = document.getElementById('mediaContainer');
+                if (mediaContainer) mediaContainer.style.height = `${newSize}px`;
+            }
+
+            appSettings.mediaSize = newSize;
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                mainLayout.classList.remove('is-resizing');
+                splitter.classList.remove('is-resizing');
+
+                if (appSettings.mediaSize) {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+                }
+            }
+        });
+    }
 }
 
 function setupClipboardPaste() {
@@ -2041,7 +2181,10 @@ async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'
     // Prepare Container Structure (Content Layer + UI Layer)
     let contentLayer = container.querySelector('.media-content-layer');
     if (!contentLayer) {
-        container.innerHTML = ''; // Full reset if structure not present
+        // Remove placeholder instead of full reset to preserve drag handle
+        const placeholder = container.querySelector('.media-placeholder');
+        if (placeholder) placeholder.remove();
+
         contentLayer = document.createElement('div');
         contentLayer.className = 'media-content-layer';
         contentLayer.style.width = '100%';
@@ -2050,8 +2193,6 @@ async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'
         contentLayer.style.alignItems = 'center';
         contentLayer.style.justifyContent = 'center';
         container.appendChild(contentLayer);
-
-
     }
 
 
@@ -2188,13 +2329,19 @@ function adjustMediaLayout() {
         return;
     }
 
-    // Reset manual styles first
+    // Reset manual styles first, except if we have a saved size that overrides default
     area.style.width = '';
     area.style.maxWidth = '';
     container.style.height = '';
 
     const pos = appSettings.mediaPosition || 'right';
     const header = document.querySelector('.header');
+
+    // スプリッターの表示/非表示調整等
+    const splitter = document.getElementById('layoutSplitter');
+    if (splitter) {
+        splitter.style.display = 'flex'; // Reset splitter state
+    }
 
     // Gaps estimate: Header Margin (24) + Layout Gap (24) + Padding (40) + Safety (20)
     // Adjusted to ensure bottom margin
@@ -2212,42 +2359,34 @@ function adjustMediaLayout() {
         area.style.width = `${targetWidth}px`;
         area.style.maxWidth = '95vw';
 
-        // Height: Fit to Remaining Window
-        const calendarSection = document.querySelector('.calendar-section');
-        if (header && calendarSection) {
-            const headerH = header.offsetHeight;
-            const calendarH = calendarSection.offsetHeight;
-            const availableH = window.innerHeight - headerH - calendarH - gaps;
+        // Height: Fit to Remaining Window OR Use Saved Size
+        if (appSettings.mediaSize) {
+            container.style.height = `${appSettings.mediaSize}px`;
+        } else {
+            const calendarSection = document.querySelector('.calendar-section');
+            if (calendarSection) {
+                const calendarH = calendarSection.offsetHeight;
+                const availableH = window.innerHeight - calendarH - gaps;
 
-            // Minimum 250px
-            container.style.height = `${Math.max(250, availableH)}px`;
+                // Minimum 250px
+                container.style.height = `${Math.max(250, availableH)}px`;
+            }
         }
+
     } else {
-        // --- Left/Right: Fixed 550px Width & Match Calendar Height ---
+        // --- Left/Right: Fixed Width & Match Calendar Height ---
 
-        // Width: Fixed 550px
-        area.style.width = '550px';
-        area.style.maxWidth = '550px';
+        // Width: Use Saved Size or Fixed 550px
+        const currentWidth = appSettings.mediaSize || 550;
+        area.style.width = `${currentWidth}px`;
+        area.style.maxWidth = `${currentWidth}px`;
 
-        // Height: Match Calendar Section Height
-        // This ensures "Unified Vertical Spec" - just as Top/Bottom matches Calendar Width
-        const calendarSection = document.querySelector('.calendar-section');
-        if (calendarSection) {
-            // Wait for render/layout if needed? usually called after render
-            const calH = calendarSection.offsetHeight;
-
-            // If calendar is smaller than window height (e.g. 1 month row), maybe use window height?
-            // User query: "Vertical size doesn't follow calendar vertical width".
-            // Interpretation: If calendar is tall, image should use that height.
-            // If calendar is short, should image shorten? Or stay max window?
-            // Safer to use "Max of (Window-Header, Calendar)" to avoid shrinking too much?
-            // But strict implementation of "Follow Calendar" means match height.
-
-            // Let's match Calendar Height exactly (plus maybe some safety).
-            // But add a minimum to avoid super small images if calendar is empty/small.
-
-            // Wait, if calendar is huge (Vertical 3 months), we want huge image.
-            container.style.height = `${Math.max(400, calH)}px`;
+        // Height: Match Calendar Wrapper Height (White Cards only)
+        // This ensures the image box visually aligns with the calendar cards.
+        const calendarWrapper = document.getElementById('calendarWrapper');
+        if (calendarWrapper) {
+            const calH = calendarWrapper.offsetHeight;
+            container.style.height = `${calH}px`;
         }
     }
 }

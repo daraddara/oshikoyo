@@ -162,12 +162,17 @@ body {
 
 /* Safe Centering for Top Layout */
 .main-layout.pos-top .media-area {
-    order: -1;
+    order: 1;
     margin-top: auto;
     /* Push down to center */
 }
 
+.main-layout.pos-top .layout-splitter {
+    order: 2;
+}
+
 .main-layout.pos-top .calendar-section {
+    order: 3;
     margin-bottom: auto;
     /* Push up to center */
 }
@@ -188,13 +193,13 @@ body {
 .main-layout.pos-left {
     flex-direction: row-reverse;
     justify-content: center;
-    /* Safe for horizontal */
+    align-items: center;
 }
 
 .main-layout.pos-right {
     flex-direction: row;
     justify-content: center;
-    /* Safe for horizontal */
+    align-items: center;
 }
 
 /* Ensure sticky works correctly when vertical */
@@ -210,6 +215,77 @@ body {
     flex-direction: column;
     justify-content: center;
     overflow: hidden;
+}
+
+/* --- Splitter (Resizer) Styles --- */
+.layout-splitter {
+    background: transparent;
+    position: relative;
+    z-index: var(--z-sticky);
+    transition: background 0.2s;
+    /* Default visibility (hidden for some layouts if not needed, but generally cross-axis flex) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.layout-splitter::after {
+    content: '';
+    position: absolute;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.layout-splitter:hover::after,
+.layout-splitter.is-resizing::after {
+    background: var(--accent-color);
+}
+
+/* Horizontal Splitter (for pos-top/pos-bottom layout) */
+.main-layout.pos-top .layout-splitter,
+.main-layout.pos-bottom .layout-splitter {
+    width: 100%;
+    height: 12px;
+    cursor: row-resize;
+    margin: 4px 0;
+}
+
+.main-layout.pos-top .layout-splitter::after,
+.main-layout.pos-bottom .layout-splitter::after {
+    width: 40px;
+    height: 4px;
+}
+
+.main-layout.pos-top .layout-splitter:hover::after,
+.main-layout.pos-bottom .layout-splitter.is-resizing::after {
+    transform: scaleY(1.5);
+}
+
+/* Vertical Splitter (for pos-left/pos-right layout) */
+.main-layout.pos-left .layout-splitter,
+.main-layout.pos-right .layout-splitter {
+    width: 12px;
+    height: 100%;
+    cursor: col-resize;
+    margin: 0 4px;
+}
+
+.main-layout.pos-left .layout-splitter::after,
+.main-layout.pos-right .layout-splitter::after {
+    width: 4px;
+    height: 40px;
+}
+
+.main-layout.pos-left .layout-splitter:hover::after,
+.main-layout.pos-right .layout-splitter.is-resizing::after {
+    transform: scaleX(1.5);
+}
+
+/* Disable transitions during resize for smooth dragging */
+.main-layout.is-resizing * {
+    transition: none !important;
+    user-select: none;
 }
 
 /* Calendar Layout */
@@ -245,8 +321,6 @@ body {
 /* For side layouts, ensure height is managed */
 .main-layout.pos-left .media-area,
 .main-layout.pos-right .media-area {
-    height: 100%;
-    max-height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -273,6 +347,104 @@ body {
     overflow: hidden;
     position: relative;
     /* For absolute positioning of search btn */
+}
+
+/* Drag Handle */
+.media-drag-handle {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    backdrop-filter: blur(4px);
+    transition: all 0.2s;
+    z-index: 20;
+}
+
+.media-drag-handle:hover {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--accent-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.media-drag-handle:active {
+    cursor: grabbing;
+    background: rgba(255, 255, 255, 1);
+}
+
+/* 画面全体のドロップゾーン */
+.layout-dropzone {
+    position: fixed;
+    z-index: var(--z-overlay);
+    background: rgba(59, 130, 246, 0);
+    /* var(--accent-color) w/ opacity */
+    border: 2px dashed transparent;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    /* ドラッグ中のみ js で auto にする */
+    display: none;
+    /* ドラッグ中のみ flex/block にする */
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+    font-weight: bold;
+    font-size: 1.5rem;
+    backdrop-filter: blur(0px);
+}
+
+/* ドラッグ中の状態 */
+.main-layout.is-dragging-layout .layout-dropzone {
+    display: flex;
+    pointer-events: auto;
+}
+
+/* 各ゾーンの位置・サイズ */
+.layout-dropzone.zone-top {
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 150px;
+}
+
+.layout-dropzone.zone-bottom {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 150px;
+}
+
+.layout-dropzone.zone-left {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 150px;
+}
+
+.layout-dropzone.zone-right {
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 150px;
+}
+
+/* ホバー(dragenter)時のスタイル */
+.layout-dropzone.drag-over {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    backdrop-filter: blur(4px);
+}
+
+.layout-dropzone.drag-over::after {
+    content: "ここに配置";
 }
 
 /* Quick Search Palette */

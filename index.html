@@ -25,6 +25,12 @@
 
 
         <div class="main-layout" id="mainLayout">
+            <!-- 配置変更用ドロップゾーン -->
+            <div class="layout-dropzone zone-top" data-position="top"></div>
+            <div class="layout-dropzone zone-bottom" data-position="bottom"></div>
+            <div class="layout-dropzone zone-left" data-position="left"></div>
+            <div class="layout-dropzone zone-right" data-position="right"></div>
+
             <div class="calendar-section">
                 <div class="controls">
                     <button id="btnPrev" class="nav-btn" aria-label="前の月">
@@ -40,15 +46,16 @@
                             <polyline points="9 18 15 12 9 6"></polyline>
                         </svg>
                     </button>
-                    <button id="btnToggleMonths" class="nav-btn toggle-months-btn" aria-label="表示月数の切り替え" title="表示月数の切り替え">
+                    <button id="btnToggleMonths" class="nav-btn toggle-months-btn" aria-label="表示月数の切り替え"
+                        title="表示月数の切り替え">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                             <line x1="3" y1="10" x2="21" y2="10"></line>
                             <line x1="16" y1="2" x2="16" y2="6"></line>
                             <line x1="8" y1="2" x2="8" y2="6"></line>
-                            <text id="toggleMonthsText" x="12" y="18" text-anchor="middle"
-                                font-size="9" font-weight="bold" fill="currentColor" stroke="none">2</text>
+                            <text id="toggleMonthsText" x="12" y="18" text-anchor="middle" font-size="9"
+                                font-weight="bold" fill="currentColor" stroke="none">2</text>
                         </svg>
                     </button>
                     <button id="btnSettings" class="nav-btn" aria-label="設定">
@@ -65,8 +72,23 @@
                     <!-- カレンダーの内容はJSによって注入されます -->
                 </main>
             </div>
+
+            <!-- リサイズ用スプリッター -->
+            <div class="layout-splitter" id="layoutSplitter"></div>
+
             <aside class="media-area" id="mediaArea">
                 <div class="media-container" id="mediaContainer">
+                    <div class="media-drag-handle" id="mediaDragHandle" draggable="true" title="ドラッグして配置を変更">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                    </div>
                     <p class="media-placeholder">設定から画像を追加してください</p>
                 </div>
             </aside>
