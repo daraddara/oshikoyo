@@ -2186,7 +2186,7 @@ function adjustMediaLayout() {
         const count = appSettings.monthCount || 2;
         const targetWidth = (count * monthWidth) + ((count - 1) * gap);
 
-        area.style.width = `${targetWidth} px`;
+        area.style.width = `${targetWidth}px`;
         area.style.maxWidth = '95vw';
 
         // Height: Fit to Remaining Window
@@ -2197,7 +2197,7 @@ function adjustMediaLayout() {
             const availableH = window.innerHeight - headerH - calendarH - gaps;
 
             // Minimum 250px
-            container.style.height = `${Math.max(250, availableH)} px`;
+            container.style.height = `${Math.max(250, availableH)}px`;
         }
     } else {
         // --- Left/Right: Fixed 550px Width & Match Calendar Height ---
@@ -2224,7 +2224,7 @@ function adjustMediaLayout() {
             // But add a minimum to avoid super small images if calendar is empty/small.
 
             // Wait, if calendar is huge (Vertical 3 months), we want huge image.
-            container.style.height = `${Math.max(400, calH)} px`;
+            container.style.height = `${Math.max(400, calH)}px`;
         }
     }
 }
