@@ -2070,6 +2070,23 @@ function init() {
         });
     }
 
+    // --- Toggle Layout Button ---
+    const btnToggleLayout = document.getElementById('btnToggleLayout');
+    if (btnToggleLayout) {
+        updateLayoutToggleUI();
+        btnToggleLayout.addEventListener('click', () => {
+            appSettings.layoutDirection = appSettings.layoutDirection === 'row' ? 'column' : 'row';
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+
+            // 同期: 設定モーダルのレイアウトラジオボタン
+            const radio = document.querySelector(`input[name="layout"][value="${appSettings.layoutDirection}"]`);
+            if (radio) radio.checked = true;
+
+            updateLayoutToggleUI();
+            updateView();
+        });
+    }
+
     // Cycle check (Refactored to dynamic timer)
     setupMediaTimer(true);
 }
@@ -2081,6 +2098,29 @@ function updateToggleMonthsUI() {
     const textEl = document.getElementById('toggleMonthsText');
     if (textEl) {
         textEl.textContent = appSettings.monthCount;
+    }
+}
+
+/**
+ * レイアウト切替ボタンのSVGアイコンを現在の状況に合わせて変更する。
+ */
+function updateLayoutToggleUI() {
+    const layoutIcon = document.getElementById('layoutIcon');
+    if (!layoutIcon) return;
+
+    // 現在のレイアウト（row または column）に応じてアイコンを描画
+    if (appSettings.layoutDirection === 'row') {
+        // 横並び: 左右に２つの四角形
+        layoutIcon.innerHTML = `
+            <rect x="3" y="3" width="8" height="18" rx="2" ry="2"></rect>
+            <rect x="13" y="3" width="8" height="18" rx="2" ry="2"></rect>
+        `;
+    } else {
+        // 縦並び: 上下に２つの四角形
+        layoutIcon.innerHTML = `
+            <rect x="3" y="3" width="18" height="8" rx="2" ry="2"></rect>
+            <rect x="3" y="13" width="18" height="8" rx="2" ry="2"></rect>
+        `;
     }
 }
 
