@@ -1883,6 +1883,7 @@ function saveSettings() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
     document.getElementById('settingsModal').close();
     setupMediaTimer(true); // Reset timer with new settings and refresh image
+    updateToggleMonthsUI();
     updateView();
 }
 
@@ -1917,8 +1918,30 @@ function init() {
         updateView();
     });
 
+    // --- Toggle Display Months Button ---
+    const btnToggleMonths = document.getElementById('btnToggleMonths');
+    if (btnToggleMonths) {
+        updateToggleMonthsUI();
+        btnToggleMonths.addEventListener('click', () => {
+            appSettings.monthCount = (appSettings.monthCount % 3) + 1;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+            updateToggleMonthsUI();
+            updateView();
+        });
+    }
+
     // Cycle check (Refactored to dynamic timer)
     setupMediaTimer(true);
+}
+
+/**
+ * トグルボタンのSVGテキストを現在のmonthCountに同期する。
+ */
+function updateToggleMonthsUI() {
+    const textEl = document.getElementById('toggleMonthsText');
+    if (textEl) {
+        textEl.textContent = appSettings.monthCount;
+    }
 }
 
 let mediaTimer = null;

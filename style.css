@@ -114,6 +114,14 @@ body {
     transform: scale(0.95);
 }
 
+/* Toggle Months Button */
+.toggle-months-btn {
+    border-radius: 12px;
+    width: auto;
+    padding: 0 4px;
+    gap: 2px;
+}
+
 
 
 .current-date-display {
