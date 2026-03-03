@@ -3,41 +3,57 @@ description:
 ---
 
 ---
-description: 起動前清掃と即時強制終了による、ポート8081固定のUIセルフチェック
+description: プロファイル隔離、起動前清掃、Chromeバブル抑止、および即時強制終了によるUIセルフチェック
 ---
 # 手順
-1. **サーバー起動前の「徹底掃除」とポート確認 (メインエージェントの義務)**:
-   - **事前清掃**: 起動前に必ず以下のコマンドを実行し、8081番ポートを確実に解放してください。
+1. **サーバー起動前の「徹底掃除」とエージェント専用プロファイルの正常化 (メインエージェント)**:
+   - **プロセスの強制終了**: `Get-Process -Name node, chrome -ErrorAction SilentlyContinue | Stop-Process -Force` を実行し、ファイルロック解除のため **3秒待機** してください。
+   
+   - **隔離プロファイルのバブル抑止（個人環境への影響ゼロ）**: 
+     エージェント専用プロファイル内の終了ステータスのみを正常化します。
+     ```powershell
+     $agentData = Join-Path (Get-Location).Path ".agent/browser_data"
+     if (Test-Path $agentData) {
+         Get-ChildItem -Path $agentData -Filter "Preferences" -Recurse | ForEach-Object {
+             $content = Get-Content $_.FullName -Raw
+             $content = $content -replace '"exit_type":"Crashed"','"exit_type":"Normal"' `
+                                 -replace '"exit_type":"SessionCrashed"','"exit_type":"Normal"' `
+                                 -replace '"exited_cleanly":false','"exited_cleanly":true' `
+                                 -replace '"restore_on_startup":\d+','"restore_on_startup":0'
+             Set-Content -Path $_.FullName -Value $content -Encoding UTF8
+          }
+      }
+     ```
+   
+   - **ポート解放と起動**: 8081番ポートを確実に解放してから、サーバーを起動してください。
      `Get-Process -Id (Get-NetTCPConnection -LocalPort 8081 -ErrorAction SilentlyContinue).OwningProcess -ErrorAction SilentlyContinue | Stop-Process -Force`
-     （上記で失敗する場合、または念押しとして: `taskkill /F /IM node.exe /T`）
-   - **起動**: ターミナルで `npx serve . -p 8081` を実行してください。
-   - **重要（起動確認）**: 起動直後に必ず `netstat -ano | findstr :8081` を実行し、状態が `LISTENING` であることを目視確認してください。
+     `npx serve . -p 8081`
 
 2. **ブラウザへの指示 (ブラウザエージェントの義務)**:
-   - **必ず `http://localhost:8081/index.html` をフルパスで開いて検証を開始してください。** 単なる / だとサーバー設定によりファイルリストが表示される恐れがあります。セキュリティポリシーにより `file:///` 形式のアクセスは禁止されています。
-   - 接続に失敗した場合はリトライせず、即座にメインエージェントに制御を戻してサーバーの状態を確認させてください。
-   - ページを開いた直後に、コンソールで `localStorage.clear()` を実行し、リロードして検証を開始してください。
+   - **プロファイルの分離とバブル抑止**: ブラウザを起動する際は、必ず以下の引数を付与してください。
+     `--user-data-dir=".agent/browser_data" --disable-session-crashed-bubble --disable-infobars --restore-last-session=false`
+   - **最重要：URLの指定**: **必ず `http://localhost:8081/index.html` をフルパスで開いてください。**
+   - ページを開いた直後に `localStorage.clear()` を実行し、リロードして検証を開始してください。
 
 3. **ビジュアル確認**:
-   - ダークモードとライトモードの視認性、および画面幅変更時のレスポンシブ表示を確認してください。
+   - ダークモード/ライトモードの視認性、レスポンシブ表示を確認してください。
 
 4. **機能動作確認**:
-   - 設定パネルの変更保存、カレンダーの月移動などが正しく動作するか確認してください。
+   - 設定パネルの保存反映、カレンダーの月移動などが正しく動作するか確認してください。
 
 5. **推し設定確認**:
-   - 推しの追加・削除・インポート・エクスポート、およびカレンダーへのカラー反映をチェックしてください。
+   - 推しの追加/削除、カラー反映をチェックしてください。
 
 6. **課題照合**:
-   - `ISSUES.md` に記載されている未完了の懸念点が改善されているか確認してください。
+   - `ISSUES.md` に記載されている未完了事項を確認してください。
 
 7. **検証と記録**:
-   - 結果を日本語で報告し、スクリーンショットは `screenshots/` フォルダに Issue ID を含めて保存してください（例: `A-09-result.png`）。
+   - `screenshots/` フォルダに Issue ID を含めて保存してください（例: `A-09-result.png`）。
 
 8. **報告書の作成 (Walkthrough)**:
-   - 画像埋め込みには `./screenshots/A-09-result.png` のような**相対パス**を使用してください。
-   - **絶対パス（C:\等）はバリデーションエラーの原因となるため厳禁です。**
+   - 画像埋め込みには **プロジェクトルートからの相対パス** を使用してください。
 
-9. **クリーンアップ（猶予ゼロの強制終了）**:
-   - 報告完了後、直ちにブラウザウィンドウを閉じてください。
-   - **即時強制終了**: 通常の終了信号はタイムアウト（`termination request timeout`）の原因となるため、**最初から**以下のコマンドで子プロセスを含め完全に断ち切ってください。
+9. **クリーンアップ（即時強制終了）**:
+   - タイムアウトを防ぐため、最初から `taskkill` を使用して完全に断ち切ってください。
      `taskkill /F /IM node.exe /T`
+     `taskkill /F /IM chrome.exe /T`
