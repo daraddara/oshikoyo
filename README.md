@@ -52,6 +52,6 @@ Oshigoto-Calendar（推しカレ）は、あなたの大切な「推し」の予
 ---
 
 > [!TIP]
-> 開発環境の構築やテストの実行方法については [DEVELOPMENT.md](./DEVELOPMENT.md) を、詳細な開発ルールについては `.agent/rules/` 内のドキュメントを参照してください。
+> 開発環境の構築やテストの実行方法については [DEVELOPMENT.md](./DEVELOPMENT.md) を、詳細な開発ルールについては `.agents/rules/` 内のドキュメントを参照してください。
 
 

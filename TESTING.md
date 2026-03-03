@@ -25,4 +25,4 @@
 
 ---
 
-具体的な実行コマンドや、テストコードの記述規約、自律実行ルールについては `.agent/rules/testing-policy.md` および `.agent/rules/testing-standards.md` を参照してください。
+具体的な実行コマンドや、テストコードの記述規約、自律実行ルールについては `.agents/rules/testing-policy.md` および `.agents/rules/testing-standards.md` を参照してください。
