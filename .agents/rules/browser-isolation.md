@@ -18,13 +18,17 @@ trigger: always_on
 - `--restore-last-session=false`
 
 ## 3. Preferences ファイルの事前修繕
-ブラウザプロセスを強制終了（`taskkill` 等）した場合、次回起動時に「異常終了」としてバブルが表示されます。これを防ぐため、**起動直前**に隔離プロファイル内の `Preferences` ファイルを以下の通り書き換えてください。
+ブラウザプロセスを強制終了（`taskkill` 等）した場合、次回起動時に「異常終了」としてバブルが表示されます。これを防ぐため、**起動直前**に PowerShell スクリプトを実行して、隔離プロファイル内の `Preferences` ファイルを正常化してください。
 
-### 修繕対象のステータス
-PowerShell 等を用いて、以下の JSON キーと値を置換してください。
-- `"exit_type": "Crashed"` → `"Normal"`
-- `"exit_type": "SessionCrashed"` → `"Normal"`
+### 修繕の実行
+プロジェクトルートで以下のコマンドを実行します。
+```powershell
+powershell -ExecutionPolicy Bypass -File .agent/scripts/fix_preferences.ps1
+```
+これにより、以下の項目が自動的に修正されます：
+- `"exit_type": "Crashed" / "SessionCrashed"` → `"Normal"`
 - `"exited_cleanly": false` → `true`
+- `"restore_on_startup"` → `0`
 
 ## 4. プロセスの完全な終了
 検証終了後は、関連するすべてのブラウザプロセスとサーバープロセスを、タイムアウトを待たず即座に強制終了（Terminate）してください。これにより、次回の検証時にファイルロックやポート競合が発生するのを防ぎます。
