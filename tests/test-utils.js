@@ -64,6 +64,8 @@ export function setupTestEnvironment() {
             style: {},
             classList: { add: vi.fn(), remove: vi.fn() },
             appendChild: vi.fn(),
+            querySelector: vi.fn(() => null),
+            remove: vi.fn(),
             innerHTML: ''
         }));
     } else {
@@ -74,6 +76,8 @@ export function setupTestEnvironment() {
                 style: {},
                 classList: { add: vi.fn(), remove: vi.fn() },
                 appendChild: vi.fn(),
+                querySelector: vi.fn(() => null),
+                remove: vi.fn(),
                 innerHTML: ''
             })),
             body: { appendChild: vi.fn() }

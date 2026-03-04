@@ -337,6 +337,7 @@ body {
     box-shadow: var(--shadow-soft);
     border-radius: var(--border-radius);
     padding: 12px;
+    /* Standardize padding */
 
     /* Dynamic Height via JS removed, handled by flex now */
     width: 100%;
@@ -345,42 +346,55 @@ body {
     min-height: 200px;
 
     display: flex;
+    flex-direction: column;
+    /* Stack controls and content */
+    align-items: center;
+    justify-content: flex-start;
+    overflow: visible;
+    /* 改正：ドロップダウンメニューが領域外に出られるようにする */
+}
+
+.media-controls-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    /* Space between controls and image */
+    flex-shrink: 0;
+    position: relative;
+    z-index: var(--z-sticky);
+    /* 画像レイヤー(z-index未指定=0)より前面にする */
+}
+
+.media-content-layer {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    /* Allow shrinking */
+    display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
     position: relative;
-    /* For absolute positioning of search btn */
+    /* For absolutely positioned nav buttons */
 }
 
 /* Drag Handle */
 .media-drag-handle {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: var(--text-primary);
+    cursor: grab;
+    color: var(--text-secondary);
+    opacity: 0.5;
+    transition: opacity 0.2s;
     display: flex;
     align-items: center;
-    justify-content: center;
-    cursor: grab;
-    backdrop-filter: blur(4px);
-    transition: all 0.2s;
-    z-index: 20;
 }
 
 .media-drag-handle:hover {
-    background: rgba(255, 255, 255, 0.9);
-    color: var(--accent-color);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    opacity: 1;
 }
 
 .media-drag-handle:active {
     cursor: grabbing;
-    background: rgba(255, 255, 255, 1);
 }
 
 /* 画面全体のドロップゾーン */
@@ -452,32 +466,96 @@ body {
 
 /* Quick Media Mode Controls */
 .quick-media-controls {
-    position: absolute;
-    top: 12px;
-    right: 12px;
     display: flex;
+    align-items: stretch;
+    /* Stretch to fill height of container */
     gap: 4px;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     padding: 4px;
-    backdrop-filter: blur(4px);
-    z-index: 20;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.media-mode-wrapper {
+    position: relative;
+    display: flex;
+}
+
+.interval-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    padding: 6px;
+    min-width: 120px;
+    z-index: var(--z-popup);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.media-mode-wrapper:hover .interval-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.interval-option {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.interval-option:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.interval-option.active {
+    background: var(--accent-color);
+    color: white;
+}
+
+.interval-divider {
+    height: 1px;
+    background: rgba(0, 0, 0, 0.05);
+    margin: 4px 0;
+}
+
+.quick-media-controls:hover {
+    background: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .media-mode-btn {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
     background: transparent;
     border: none;
     color: var(--text-primary);
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
-    opacity: 0.6;
+    opacity: 0.7;
 }
 
 .media-mode-btn:hover {
@@ -492,11 +570,46 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.media-interval-select {
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0 6px;
+    margin-right: 2px;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: 24px;
+    max-width: 70px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    text-align: center;
+}
+
+.media-interval-select:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.media-interval-select option {
+    background: #fff;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+/* Interval Select hidden (legacy or if used in modal) */
+.media-interval-select {
+    display: none;
+}
+
 /* Quick Search Palette */
 .media-search-btn {
     position: absolute;
-    top: 54px;
-    right: 12px;
+    top: 8px;
+    right: 8px;
     width: 32px;
     height: 32px;
     border-radius: 50%;

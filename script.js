@@ -18,8 +18,7 @@ const DEFAULT_SETTINGS = {
     mediaMode: 'single', // 'single', 'random', 'cycle'
     mediaPosition: 'top', // 'top', 'bottom', 'left', 'right'
     mediaSize: null,      // size of media area (width or height depending on position)
-    mediaIntervalRandom: 60, // seconds
-    mediaIntervalCycle: 60, // seconds
+    mediaIntervalPreset: '1m', // '10s', '30s', '1m', '10m', '1h', '0:00', '4:00', 'startup'
 };
 
 // --- IndexedDB Management ---
@@ -1799,18 +1798,8 @@ function initSettings() {
         // Media Button State Update
         updateQuickMediaButtons();
 
-        // Interval Settings (DHMS)
-        const randTime = secondsToDHMS(appSettings.mediaIntervalRandom || 60);
-        document.getElementById('randD').value = randTime.d;
-        document.getElementById('randH').value = randTime.h;
-        document.getElementById('randM').value = randTime.m;
-        document.getElementById('randS').value = randTime.s;
-
-        const cycTime = secondsToDHMS(appSettings.mediaIntervalCycle || 60);
-        document.getElementById('cycD').value = cycTime.d;
-        document.getElementById('cycH').value = cycTime.h;
-        document.getElementById('cycM').value = cycTime.m;
-        document.getElementById('cycS').value = cycTime.s;
+        // Interval Settings (Sync Custom UI)
+        updateQuickMediaButtons();
 
         // Initialize Local UI visibility
         updateLocalMediaUI();
@@ -1909,14 +1898,12 @@ function initSettings() {
     });
 
     // --- New: Image Backup/Restore Listeners ---
-    document.getElementById('btnExportImages').addEventListener('click', handleExportImages);
-
-    const inputImportImages = document.getElementById('inputImportImages');
-    document.getElementById('btnImportImages').addEventListener('click', () => inputImportImages.click());
     inputImportImages.addEventListener('change', (e) => {
         handleImportImages(e.target.files);
         e.target.value = ''; // Reset for re-selection
     });
+
+    // (Legacy cleanup: mediaIntervalSelect listener removed)
 }
 
 function loadSettings() {
@@ -1942,6 +1929,20 @@ function loadSettings() {
             // Fallback for removed 'none' mode
             if (appSettings.mediaMode === 'none') {
                 appSettings.mediaMode = 'single';
+            }
+
+            // Migration: DHMS interval to preset
+            if (!appSettings.mediaIntervalPreset && (appSettings.mediaIntervalRandom || appSettings.mediaIntervalCycle)) {
+                const oldSec = appSettings.mediaIntervalRandom || appSettings.mediaIntervalCycle || 60;
+                if (oldSec <= 10) appSettings.mediaIntervalPreset = '10s';
+                else if (oldSec <= 30) appSettings.mediaIntervalPreset = '30s';
+                else if (oldSec <= 60) appSettings.mediaIntervalPreset = '1m';
+                else if (oldSec <= 600) appSettings.mediaIntervalPreset = '10m';
+                else appSettings.mediaIntervalPreset = '1h';
+
+                // Clean up old settings
+                delete appSettings.mediaIntervalRandom;
+                delete appSettings.mediaIntervalCycle;
             }
         } catch (e) { }
     }
@@ -2016,21 +2017,7 @@ function saveSettings() {
     if (startOfWeekEl) appSettings.startOfWeek = parseInt(startOfWeekEl.value);
 
     // Media mode is managed by UI buttons directly
-
-    // Save Intervals
-    const rD = parseInt(document.getElementById('randD').value) || 0;
-    const rH = parseInt(document.getElementById('randH').value) || 0;
-    const rM = parseInt(document.getElementById('randM').value) || 0;
-    const rS = parseInt(document.getElementById('randS').value) || 0;
-    appSettings.mediaIntervalRandom = dhmsToSeconds(rD, rH, rM, rS);
-    if (appSettings.mediaIntervalRandom < 5) appSettings.mediaIntervalRandom = 5; // Min 5s safety
-
-    const cD = parseInt(document.getElementById('cycD').value) || 0;
-    const cH = parseInt(document.getElementById('cycH').value) || 0;
-    const cM = parseInt(document.getElementById('cycM').value) || 0;
-    const cS = parseInt(document.getElementById('cycS').value) || 0;
-    appSettings.mediaIntervalCycle = dhmsToSeconds(cD, cH, cM, cS);
-    if (appSettings.mediaIntervalCycle < 5) appSettings.mediaIntervalCycle = 5;
+    // Interval is managed by select menu directly
 
     // Note: oshiList is already updated in memory via adding/deleting buttons.
     // We just save the current state.
@@ -2052,6 +2039,16 @@ function updateQuickMediaButtons() {
             btn.classList.add('active');
         } else {
             btn.classList.remove('active');
+        }
+    });
+
+    // Synchronize Interval Menu Active State
+    const intervalOptions = document.querySelectorAll('.interval-option');
+    intervalOptions.forEach(opt => {
+        if (opt.getAttribute('data-value') === appSettings.mediaIntervalPreset) {
+            opt.classList.add('active');
+        } else {
+            opt.classList.remove('active');
         }
     });
 }
@@ -2101,6 +2098,27 @@ function init() {
             }
         });
     });
+
+    // Quick Media Interval Options (Custom Dropdown via Delegation)
+    const quickControls = document.getElementById('quickMediaControls');
+    if (quickControls) {
+        quickControls.addEventListener('click', (e) => {
+            const opt = e.target.closest('.interval-option');
+            if (opt) {
+                e.stopPropagation();
+                e.preventDefault();
+                const val = opt.getAttribute('data-value');
+                if (val) {
+                    appSettings.mediaIntervalPreset = val;
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+                    updateQuickMediaButtons();
+                    setupMediaTimer(false); // Restart timer
+                    showToast(`間隔を ${opt.textContent} に設定しました`);
+                    updateView();
+                }
+            }
+        });
+    }
     updateQuickMediaButtons(); // Initialize active state
 
     // --- Toggle Display Months Button ---
@@ -2169,7 +2187,11 @@ let mediaTimer = null;
 let currentCycleIndex = -1;
 
 function setupMediaTimer(isInit = false) {
-    if (mediaTimer) clearInterval(mediaTimer);
+    if (mediaTimer) {
+        clearInterval(mediaTimer);
+        clearTimeout(mediaTimer);
+        mediaTimer = null;
+    }
 
     if (isInit) {
         updateMediaArea('restore');
@@ -2177,21 +2199,44 @@ function setupMediaTimer(isInit = false) {
 
     if (appSettings.mediaMode === 'single') return;
 
-    let interval = 60;
-    if (appSettings.mediaMode === 'random') interval = appSettings.mediaIntervalRandom || 60;
-    if (appSettings.mediaMode === 'cycle') interval = appSettings.mediaIntervalCycle || 60;
+    const preset = appSettings.mediaIntervalPreset || '1m';
+    if (preset === 'startup') return;
 
-    // Minimum safety
-    if (interval < 5) interval = 5;
+    // --- Case 1: Fixed Interval (s, m, h) ---
+    if (preset.includes('s') || preset.includes('m') || preset.includes('h')) {
+        let seconds = 60;
+        if (preset === '10s') seconds = 10;
+        else if (preset === '30s') seconds = 30;
+        else if (preset === '1m') seconds = 60;
+        else if (preset === '10m') seconds = 600;
+        else if (preset === '1h') seconds = 3600;
 
-    // Helper for correct execution
-    const tick = () => {
-        if (appSettings.mediaMode === 'cycle' || appSettings.mediaMode === 'random') {
+        mediaTimer = setInterval(() => {
             updateMediaArea('advance');
-        }
-    };
+        }, seconds * 1000);
+    }
+    // --- Case 2: Specific Time (H:MM) ---
+    else if (preset.includes(':')) {
+        const scheduleNext = () => {
+            const [targetH, targetM] = preset.split(':').map(Number);
+            const now = new Date();
+            const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), targetH, targetM, 0, 0);
 
-    mediaTimer = setInterval(tick, interval * 1000);
+            // If target time has already passed today, set for tomorrow
+            if (target <= now) {
+                target.setDate(target.getDate() + 1);
+            }
+
+            const diff = target - now;
+
+            mediaTimer = setTimeout(() => {
+                updateMediaArea('advance');
+                scheduleNext(); // Recursive for next day
+            }, diff);
+        };
+
+        scheduleNext();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', init);
@@ -2207,42 +2252,6 @@ async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'
 
     area.style.display = 'block';
 
-
-    // --- Manual Navigation Logic ---
-    const handleNavigation = async (direction) => { // 'next' or 'prev'
-        await updateMediaArea(direction === 'next' ? 'next' : 'prev');
-    };
-
-    // Render Navigation Buttons (if not present)
-    if (appSettings.mediaMode === 'random' || appSettings.mediaMode === 'cycle') {
-        if (!container.querySelector('.media-nav-btn.prev')) {
-            const btnPrev = document.createElement('div');
-            btnPrev.className = 'media-nav-btn prev';
-            btnPrev.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>';
-            btnPrev.onclick = (e) => { e.stopPropagation(); handleNavigation('prev'); };
-            container.appendChild(btnPrev);
-        }
-        if (!container.querySelector('.media-nav-btn.next')) {
-            const btnNext = document.createElement('div');
-            btnNext.className = 'media-nav-btn next';
-            btnNext.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
-            btnNext.onclick = (e) => { e.stopPropagation(); handleNavigation('next'); };
-            container.appendChild(btnNext);
-        }
-    } else {
-        // Remove valid buttons if mode changed to single/none
-        const existing = container.querySelectorAll('.media-nav-btn');
-        existing.forEach(el => el.remove());
-    }
-
-    // Apply position class to main-layout
-    const mainLayout = document.getElementById('mainLayout');
-    if (mainLayout) {
-        // Remove existing pos- classes
-        mainLayout.classList.remove('pos-top', 'pos-bottom', 'pos-left', 'pos-right');
-        // Add new one
-        mainLayout.classList.add(`pos-${appSettings.mediaPosition || 'right'}`);
-    }
 
     adjustMediaLayout();
 
@@ -2269,6 +2278,39 @@ async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'
         contentLayer.style.alignItems = 'center';
         contentLayer.style.justifyContent = 'center';
         container.appendChild(contentLayer);
+    }
+
+    // --- Manual Navigation Logic ---
+    const handleNavigation = async (direction) => { // 'next' or 'prev'
+        await updateMediaArea(direction === 'next' ? 'next' : 'prev');
+
+        // Reset timer if it's an interval-based preset to prevent immediate switch
+        const preset = appSettings.mediaIntervalPreset || '1m';
+        if (preset.includes('s') || preset.includes('m') || preset.includes('h')) {
+            setupMediaTimer(false);
+        }
+    };
+
+    // Render Navigation Buttons (if not present)
+    if (appSettings.mediaMode === 'random' || appSettings.mediaMode === 'cycle') {
+        if (!contentLayer.querySelector('.media-nav-btn.prev')) {
+            const btnPrev = document.createElement('div');
+            btnPrev.className = 'media-nav-btn prev';
+            btnPrev.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>';
+            btnPrev.onclick = (e) => { e.stopPropagation(); handleNavigation('prev'); };
+            contentLayer.appendChild(btnPrev);
+        }
+        if (!contentLayer.querySelector('.media-nav-btn.next')) {
+            const btnNext = document.createElement('div');
+            btnNext.className = 'media-nav-btn next';
+            btnNext.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+            btnNext.onclick = (e) => { e.stopPropagation(); handleNavigation('next'); };
+            contentLayer.appendChild(btnNext);
+        }
+    } else {
+        // Remove valid buttons if mode changed to single/none
+        const existing = contentLayer.querySelectorAll('.media-nav-btn');
+        existing.forEach(el => el.remove());
     }
 
 
@@ -2467,3 +2509,5 @@ function adjustMediaLayout() {
 
 
 window.addEventListener('resize', adjustMediaLayout);
+
+// script ends here
