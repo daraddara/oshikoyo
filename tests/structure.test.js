@@ -15,14 +15,16 @@ describe('DOM Structure', () => {
 
     it('should have key elements required by script.js', () => {
         // Critical elements that caused the crash if missing
-        expect(htmlContent).toContain('id="mediaMode"');
+        expect(htmlContent).toContain('id="quickMediaControls"');
         expect(htmlContent).toContain('id="btnSettings"');
         expect(htmlContent).toContain('id="settingsModal"');
     });
 
-    it('should have valid select structure for mediaMode', () => {
-        // Ensure the tag is opened correctly
-        expect(htmlContent).toMatch(/<select[^>]*id="mediaMode"/);
+    it('should have valid div structure for quickMediaControls', () => {
+        expect(htmlContent).toMatch(/<div[^>]*id="quickMediaControls"/);
+        expect(htmlContent).toContain('data-mode="single"');
+        expect(htmlContent).toContain('data-mode="random"');
+        expect(htmlContent).toContain('data-mode="cycle"');
     });
 
     it('should have new settings guide and reset button', () => {

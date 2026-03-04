@@ -15,7 +15,7 @@ const DEFAULT_SETTINGS = {
     oshiDebutDay: '',
     oshiColor: '#3b82f6',
     // Media Settings
-    mediaMode: 'single', // 'none', 'single', 'random', 'cycle'
+    mediaMode: 'single', // 'single', 'random', 'cycle'
     mediaPosition: 'top', // 'top', 'bottom', 'left', 'right'
     mediaSize: null,      // size of media area (width or height depending on position)
     mediaIntervalRandom: 60, // seconds
@@ -1796,8 +1796,8 @@ function initSettings() {
         const radiosStart = document.querySelectorAll('input[name="startOfWeek"]');
         radiosStart.forEach(r => { if (parseInt(r.value) === appSettings.startOfWeek) r.checked = true; });
 
-        // Media
-        document.getElementById('mediaMode').value = appSettings.mediaMode;
+        // Media Button State Update
+        updateQuickMediaButtons();
 
         // Interval Settings (DHMS)
         const randTime = secondsToDHMS(appSettings.mediaIntervalRandom || 60);
@@ -1938,6 +1938,11 @@ function loadSettings() {
                 // Clear legacy
                 appSettings.oshiName = '';
             }
+
+            // Fallback for removed 'none' mode
+            if (appSettings.mediaMode === 'none') {
+                appSettings.mediaMode = 'single';
+            }
         } catch (e) { }
     }
     // updateView(); // Removed to prevent double rendering on init
@@ -2010,8 +2015,7 @@ function saveSettings() {
     const startOfWeekEl = document.querySelector('input[name="startOfWeek"]:checked');
     if (startOfWeekEl) appSettings.startOfWeek = parseInt(startOfWeekEl.value);
 
-    // Media
-    appSettings.mediaMode = document.getElementById('mediaMode').value;
+    // Media mode is managed by UI buttons directly
 
     // Save Intervals
     const rD = parseInt(document.getElementById('randD').value) || 0;
@@ -2036,6 +2040,20 @@ function saveSettings() {
     setupMediaTimer(true); // Reset timer with new settings and refresh image
     updateToggleMonthsUI();
     updateView();
+}
+
+/**
+ * Updates the active state of Quick Media Mode buttons based on current settings.
+ */
+function updateQuickMediaButtons() {
+    const mediaModeBtns = document.querySelectorAll('.media-mode-btn');
+    mediaModeBtns.forEach(btn => {
+        if (btn.getAttribute('data-mode') === appSettings.mediaMode) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
 }
 
 function init() {
@@ -2068,6 +2086,22 @@ function init() {
         currentRefDate.setMonth(currentRefDate.getMonth() + 1);
         updateView();
     });
+
+    // Quick Media Mode Buttons
+    const mediaModeBtns = document.querySelectorAll('.media-mode-btn');
+    mediaModeBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const mode = e.currentTarget.getAttribute('data-mode');
+            if (mode) {
+                appSettings.mediaMode = mode;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+                updateQuickMediaButtons();
+                setupMediaTimer(true); // Reset timer and refresh image
+                updateView();
+            }
+        });
+    });
+    updateQuickMediaButtons(); // Initialize active state
 
     // --- Toggle Display Months Button ---
     const btnToggleMonths = document.getElementById('btnToggleMonths');
@@ -2141,7 +2175,7 @@ function setupMediaTimer(isInit = false) {
         updateMediaArea('restore');
     }
 
-    if (appSettings.mediaMode === 'none' || appSettings.mediaMode === 'single') return;
+    if (appSettings.mediaMode === 'single') return;
 
     let interval = 60;
     if (appSettings.mediaMode === 'random') interval = appSettings.mediaIntervalRandom || 60;
@@ -2170,11 +2204,6 @@ async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'
     const area = document.getElementById('mediaArea');
     const container = document.getElementById('mediaContainer');
     if (!area || !container) return;
-
-    if (appSettings.mediaMode === 'none') {
-        area.style.display = 'none';
-        return;
-    }
 
     area.style.display = 'block';
 
@@ -2370,11 +2399,6 @@ function adjustMediaLayout() {
     const area = document.getElementById('mediaArea');
     const container = document.getElementById('mediaContainer');
     if (!area || !container) return;
-
-    if (appSettings.mediaMode === 'none') {
-        area.style.display = 'none';
-        return;
-    }
 
     // Reset manual styles first, except if we have a saved size that overrides default
     area.style.width = '';

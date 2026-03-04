@@ -450,10 +450,52 @@ body {
     content: "ここに配置";
 }
 
+/* Quick Media Mode Controls */
+.quick-media-controls {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 4px;
+    backdrop-filter: blur(4px);
+    z-index: 20;
+}
+
+.media-mode-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0.6;
+}
+
+.media-mode-btn:hover {
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 1;
+}
+
+.media-mode-btn.active {
+    background: var(--accent-color);
+    color: white;
+    opacity: 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 /* Quick Search Palette */
 .media-search-btn {
     position: absolute;
-    top: 12px;
+    top: 54px;
     right: 12px;
     width: 32px;
     height: 32px;
