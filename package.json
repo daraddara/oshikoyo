@@ -5,7 +5,8 @@
     "scripts": {
         "test": "vitest run",
         "serve": "npx serve . -p 8081",
-        "test:ui": "npm run serve"
+        "test:ui": "npm run serve",
+        "e2e": "npm run test:ui"
     },
     "devDependencies": {
         "fake-indexeddb": "^6.2.5",
