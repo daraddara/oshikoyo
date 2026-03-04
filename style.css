@@ -206,15 +206,18 @@ body {
 .main-layout.pos-top .media-area,
 .main-layout.pos-bottom .media-area {
     position: static;
-    width: 100%;
-    flex: 1;
-    /* Grow to fill space */
+    /* width is managed by JS (adjustMediaLayout) */
+    flex: 0 0 auto;
+    /* Prevent unwanted growing */
     min-height: 250px;
-    /* Ensure image doesn't disappear */
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
+    /* Center the container content */
     overflow: hidden;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* --- Splitter (Resizer) Styles --- */
@@ -311,11 +314,11 @@ body {
 
 /* Media Area */
 .media-area {
-    width: 500px;
+    width: 550px;
+    /* Matches default calendar width */
     flex-shrink: 0;
     position: sticky;
     top: 20px;
-    /* Default for side layout */
 }
 
 /* For side layouts, ensure height is managed */

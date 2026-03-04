@@ -2395,14 +2395,13 @@ function adjustMediaLayout() {
     const gaps = 110;
 
     if (pos === 'top' || pos === 'bottom') {
-        // --- Top/Bottom: Dynamic Width & Height ---
+        // --- Top/Bottom: Full Width (Centered) & Dynamic Height ---
 
-        // Width: Match Calendar
-        const monthWidth = 550;
-        const gap = 24;
-        const count = appSettings.monthCount || 2;
-        const targetWidth = (count * monthWidth) + ((count - 1) * gap);
-
+        // Width: Match total calendar width
+        let targetWidth = 550;
+        if (appSettings.layoutDirection === 'row') {
+            targetWidth = (550 * appSettings.monthCount) + (24 * (appSettings.monthCount - 1));
+        }
         area.style.width = `${targetWidth}px`;
         area.style.maxWidth = '95vw';
 
@@ -2421,20 +2420,23 @@ function adjustMediaLayout() {
         }
 
     } else {
-        // --- Left/Right: Fixed Width & Match Calendar Height ---
+        // --- Left/Right: Fixed Width & Full Available Height ---
 
         // Width: Use Saved Size or Fixed 550px
         const currentWidth = appSettings.mediaSize || 550;
         area.style.width = `${currentWidth}px`;
         area.style.maxWidth = `${currentWidth}px`;
 
-        // Height: Match Calendar Wrapper Height (White Cards only)
-        // This ensures the image box visually aligns with the calendar cards.
+        // Height: Expand to fill available screen height (minimum matching calendar)
+        // Decoupled from strict calendar height synchronization
         const calendarWrapper = document.getElementById('calendarWrapper');
+        let minHeight = 400;
         if (calendarWrapper) {
-            const calH = calendarWrapper.offsetHeight;
-            container.style.height = `${calH}px`;
+            minHeight = calendarWrapper.offsetHeight;
         }
+
+        const availableH = window.innerHeight - 100; // body padding + safety
+        container.style.height = `${Math.max(minHeight, availableH)}px`;
     }
 }
 
