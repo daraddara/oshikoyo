@@ -24,4 +24,9 @@ describe('DOM Structure', () => {
         // Ensure the tag is opened correctly
         expect(htmlContent).toMatch(/<select[^>]*id="mediaMode"/);
     });
+
+    it('should have new settings guide and reset button', () => {
+        expect(htmlContent).toContain('class="settings-guide"');
+        expect(htmlContent).toContain('id="btnResetLayout"');
+    });
 });

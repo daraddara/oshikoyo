@@ -116,20 +116,12 @@
                             <label><input type="radio" name="startOfWeek" value="1"> 月曜日</label>
                         </div>
                     </div>
-                    <div class="setting-group">
-                        <label>表示月数</label>
-                        <div class="radio-group">
-                            <label><input type="radio" name="displayMonths" value="1"> 1ヶ月</label>
-                            <label><input type="radio" name="displayMonths" value="2" checked> 2ヶ月</label>
-                            <label><input type="radio" name="displayMonths" value="3"> 3ヶ月</label>
-                        </div>
+                    <div class="settings-guide">
+                        <p>💡 表示月数・レイアウト方向はヘッダーのボタンから直接切り替えできます。</p>
                     </div>
                     <div class="setting-group">
-                        <label>レイアウト</label>
-                        <div class="radio-group">
-                            <label><input type="radio" name="layout" value="row" checked> 横並び</label>
-                            <label><input type="radio" name="layout" value="column"> 縦並び</label>
-                        </div>
+                        <button type="button" id="btnResetLayout" class="btn-reset-layout">🔄 配置をデフォルトに戻す</button>
+                        <p class="help-text">表示月数・レイアウト方向・画像位置・画像サイズを初期状態に戻します。</p>
                     </div>
                 </section>
 
@@ -195,14 +187,8 @@
                         </div>
                     </div>
 
-                    <div class="setting-group">
-                        <label>画像表示位置</label>
-                        <div class="radio-group">
-                            <label><input type="radio" name="mediaPosition" value="top"> 上</label>
-                            <label><input type="radio" name="mediaPosition" value="bottom"> 下</label>
-                            <label><input type="radio" name="mediaPosition" value="left"> 左</label>
-                            <label><input type="radio" name="mediaPosition" value="right" checked> 右</label>
-                        </div>
+                    <div class="settings-guide">
+                        <p>💡 画像の配置は、画像エリア左上のハンドル（≡）をドラッグして変更できます。境界のバーをドラッグすると画像サイズを調整できます。</p>
                     </div>
                     <div id="localMediaSettings" class="setting-group">
                         <label>ローカル画像管理</label>

@@ -1611,10 +1611,6 @@ function setupDragAndDrop() {
                     if (newPos && ['top', 'bottom', 'left', 'right'].includes(newPos)) {
                         appSettings.mediaPosition = newPos;
 
-                        // 設定モーダルのラジオボタンの表示も更新しておく
-                        const radio = document.querySelector(`input[name="mediaPosition"][value="${newPos}"]`);
-                        if (radio) radio.checked = true;
-
                         // 位置が変わったらサイズ制約をリセットする
                         appSettings.mediaSize = null;
 
@@ -1800,16 +1796,8 @@ function initSettings() {
         const radiosStart = document.querySelectorAll('input[name="startOfWeek"]');
         radiosStart.forEach(r => { if (parseInt(r.value) === appSettings.startOfWeek) r.checked = true; });
 
-        const radiosMonth = document.querySelectorAll('input[name="displayMonths"]');
-        radiosMonth.forEach(r => { if (parseInt(r.value) === appSettings.monthCount) r.checked = true; });
-
-        const radiosLayout = document.querySelectorAll('input[name="layout"]');
-        radiosLayout.forEach(r => { if (r.value === appSettings.layoutDirection) r.checked = true; });
-
         // Media
         document.getElementById('mediaMode').value = appSettings.mediaMode;
-        const radiosMediaPos = document.querySelectorAll('input[name="mediaPosition"]');
-        radiosMediaPos.forEach(r => { if (r.value === appSettings.mediaPosition) r.checked = true; });
 
         // Interval Settings (DHMS)
         const randTime = secondsToDHMS(appSettings.mediaIntervalRandom || 60);
@@ -1857,6 +1845,9 @@ function initSettings() {
 
     // Save Settings
     document.getElementById('btnSave').addEventListener('click', saveSettings);
+
+    // Reset Layout
+    document.getElementById('btnResetLayout').addEventListener('click', resetLayoutToDefault);
 
     // --- Oshi Management Modal ---
     document.getElementById('btnOpenOshiManager').addEventListener('click', openOshiManager);
@@ -1986,21 +1977,41 @@ function showToast(message, duration = 3000) {
     }, duration);
 }
 
+/**
+ * レイアウト関連の設定（表示月数・レイアウト方向・画像位置・画像サイズ）を
+ * デフォルト値にリセットし、UIに反映する。
+ */
+function resetLayoutToDefault() {
+    appSettings.monthCount = DEFAULT_SETTINGS.monthCount;
+    appSettings.layoutDirection = DEFAULT_SETTINGS.layoutDirection;
+    appSettings.mediaPosition = DEFAULT_SETTINGS.mediaPosition;
+    appSettings.mediaSize = null;
+
+    // メディアエリアのインラインスタイルをクリア
+    const mediaArea = document.getElementById('mediaArea');
+    if (mediaArea) {
+        mediaArea.style.width = '';
+        mediaArea.style.maxWidth = '';
+    }
+    const mediaContainer = document.getElementById('mediaContainer');
+    if (mediaContainer) {
+        mediaContainer.style.height = '';
+    }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+    updateToggleMonthsUI();
+    updateLayoutToggleUI();
+    updateView();
+    showToast('配置をデフォルトに戻しました');
+}
+
 function saveSettings() {
     // Basic
     const startOfWeekEl = document.querySelector('input[name="startOfWeek"]:checked');
     if (startOfWeekEl) appSettings.startOfWeek = parseInt(startOfWeekEl.value);
 
-    const monthCountEl = document.querySelector('input[name="displayMonths"]:checked');
-    if (monthCountEl) appSettings.monthCount = parseInt(monthCountEl.value);
-
-    const layoutEl = document.querySelector('input[name="layout"]:checked');
-    if (layoutEl) appSettings.layoutDirection = layoutEl.value;
-
     // Media
     appSettings.mediaMode = document.getElementById('mediaMode').value;
-    const mediaPosEl = document.querySelector('input[name="mediaPosition"]:checked');
-    if (mediaPosEl) appSettings.mediaPosition = mediaPosEl.value;
 
     // Save Intervals
     const rD = parseInt(document.getElementById('randD').value) || 0;
@@ -2077,10 +2088,6 @@ function init() {
         btnToggleLayout.addEventListener('click', () => {
             appSettings.layoutDirection = appSettings.layoutDirection === 'row' ? 'column' : 'row';
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
-
-            // 同期: 設定モーダルのレイアウトラジオボタン
-            const radio = document.querySelector(`input[name="layout"][value="${appSettings.layoutDirection}"]`);
-            if (radio) radio.checked = true;
 
             updateLayoutToggleUI();
             updateView();
