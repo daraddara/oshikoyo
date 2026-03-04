@@ -16,3 +16,9 @@ node_modules/
 # Agent data
 .agent/browser_data/
 .agent/browser_test/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
