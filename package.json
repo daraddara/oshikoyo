@@ -3,7 +3,9 @@
     "version": "1.0.0",
     "description": "Oshikoyo",
     "scripts": {
-        "test": "vitest run"
+        "test": "vitest run",
+        "serve": "npx serve . -p 8081",
+        "test:ui": "npm run serve"
     },
     "devDependencies": {
         "fake-indexeddb": "^6.2.5",
