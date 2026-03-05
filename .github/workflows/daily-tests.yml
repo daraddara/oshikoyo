@@ -2,8 +2,8 @@ name: Daily Tests
 
 on:
   schedule:
-    # Runs at 3:00 AM JST (18:00 UTC) every day
-    - cron: '0 18 * * *'
+    # Runs at 2:00 AM JST (17:00 UTC) every day
+    - cron: '0 17 * * *'
   workflow_dispatch:
 
 jobs:
