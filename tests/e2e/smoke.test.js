@@ -11,5 +11,8 @@ test.describe('Smoke Test', () => {
         // カレンダーのメイン要素が表示されていることを確認
         const calendar = page.locator('#calendarWrapper');
         await expect(calendar).toBeVisible();
+
+        // スクリーンショットの保存
+        await page.screenshot({ path: 'tests/e2e/screenshots/latest_ui.png', fullPage: true });
     });
 });
