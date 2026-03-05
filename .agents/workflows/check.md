@@ -4,7 +4,7 @@ description: Playwright E2EテストによるUIおよび機能検証の自動実
 # 手順
 1. **事前準備（環境のクリーンアップ）**:
    - 既存のサーバープロセスや不要なブラウザプロセスが残っている場合は終了してください。
-   - Linux: `pkill -9 node || true` および `pkill -9 chrome || true`
+   - Linux: `npx kill-port 8081` および `pkill -9 chrome || true`
    - Windows: `taskkill /F /IM node.exe /T` および `taskkill /F /IM chrome.exe /T`
 
 2. **E2Eテストの実行**:

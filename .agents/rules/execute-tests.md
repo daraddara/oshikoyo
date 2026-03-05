@@ -30,7 +30,7 @@ trigger: always_on
 - **待機**: ファイルロック解除のため、終了後に 3〜5 秒の待機 (`Start-Sleep -s 5`) を推奨します。
 
 ### Linux / macOS (bash)
-- **プロセス終了**: `pkill -9 node || true` および `pkill -9 chrome || true` を使用。
+- **プロセス終了**: `npx kill-port 8081` および `pkill -9 chrome || true` を使用。
 - **待機**: `sleep 5` を実行。
 
 ## 5. ブラウザ検証の要件
