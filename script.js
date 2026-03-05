@@ -2241,6 +2241,14 @@ function setupMediaTimer(isInit = false) {
 
 document.addEventListener('DOMContentLoaded', init);
 
+// PWA Service Worker Registration
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('Service Worker registered.'))
+            .catch(err => console.log('Service Worker registration failed.', err));
+    });
+}
 
 // --- Media Logic ---
 let currentMediaObjectURL = null;
