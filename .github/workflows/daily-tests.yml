@@ -1,0 +1,55 @@
+name: Daily Tests
+
+on:
+  schedule:
+    # Runs at 3:00 AM JST (18:00 UTC) every day
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run logic tests
+        run: npm test
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Start server in background
+        run: |
+          npm run serve > server.log 2>&1 &
+          # Wait for server to start
+          sleep 5
+          curl -I http://localhost:8081
+
+      - name: Fix Chrome Preferences (if needed)
+        # As per .agents/rules/browser-isolation.md, but since it's a fresh CI runner, it's mostly for local.
+        # Still, we'll run the script if it exists.
+        run: |
+          if [ -f .agent/scripts/fix_preferences.ps1 ]; then
+            pwsh -ExecutionPolicy Bypass -File .agent/scripts/fix_preferences.ps1 || true
+          fi
+
+      - name: Run UI tests
+        run: npm run e2e
+
+      - name: Cleanup server
+        if: always()
+        run: |
+          pkill -9 node || true
+          pkill -9 chrome || true
+          sleep 5
