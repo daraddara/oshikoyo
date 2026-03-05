@@ -66,7 +66,9 @@ export function setupTestEnvironment() {
             appendChild: vi.fn(),
             querySelector: vi.fn(() => null),
             remove: vi.fn(),
-            innerHTML: ''
+            innerHTML: '',
+            addEventListener: vi.fn(),
+            getBoundingClientRect: vi.fn(() => ({ top: 0, left: 0, width: 0, height: 0, bottom: 0 }))
         }));
     } else {
         global.document = {
