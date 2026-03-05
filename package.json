@@ -5,6 +5,7 @@
     "scripts": {
         "test": "vitest run",
         "serve": "npx serve . -p 8081",
+        "tunnel": "cloudflared tunnel --url http://localhost:8081",
         "test:ui": "npm run serve",
         "e2e": "cross-env NODE_ENV=test playwright test",
         "e2e:ui": "cross-env NODE_ENV=test playwright test --ui"
