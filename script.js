@@ -411,6 +411,24 @@ async function areBlobsEqual(blob1, blob2) {
     return true;
 }
 
+// Helper: Escape HTML
+/**
+ * Escapes special characters in a string to prevent XSS.
+ * @param {string} str - The string to escape.
+ * @returns {string} The escaped string.
+ */
+function escapeHTML(str) {
+    if (!str) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return str.replace(/[&<>"']/g, m => map[m]);
+}
+
 // Helper: Hex to RGB
 /**
  * Converts a hex color string to RGB format (e.g., "255, 255, 255").
@@ -790,16 +808,18 @@ function renderCalendar(container, year, month) {
             // Birthday Check
             const bd = parseDateString(oshi.birthday);
             if (bd && bd.month === month && bd.day === d) {
-                oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="誕生日: ${oshi.name}"><span class="oshi-event-icon">🎂</span>${oshi.name}</div>`);
-                oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">🎂 ${oshi.name} 誕生日</div>`);
+                const escapedName = escapeHTML(oshi.name);
+                oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="誕生日: ${escapedName}"><span class="oshi-event-icon">🎂</span>${escapedName}</div>`);
+                oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">🎂 ${escapedName} 誕生日</div>`);
             }
 
             // Anniversary Check
             const dd = parseDateString(oshi.debutDate);
             if (dd && dd.month === month && dd.day === d) {
+                const escapedName = escapeHTML(oshi.name);
                 // Using 🎉 as it is universally celebratory.
-                oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="記念日: ${oshi.name}"><span class="oshi-event-icon">🎉</span>${oshi.name}</div>`);
-                oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">🎉 ${oshi.name} 記念日</div>`);
+                oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="記念日: ${escapedName}"><span class="oshi-event-icon">🎉</span>${escapedName}</div>`);
+                oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">🎉 ${escapedName} 記念日</div>`);
             }
         });
 
