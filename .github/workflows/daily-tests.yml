@@ -2,8 +2,8 @@ name: Daily Tests
 
 on:
   schedule:
-    # Runs at 2:00 AM JST (17:00 UTC) every day
-    - cron: '0 17 * * *'
+    # Runs at 3:00 AM JST (18:00 UTC) every day
+    - cron: '0 18 * * *'
   workflow_dispatch:
 
 jobs:
@@ -31,6 +31,7 @@ jobs:
 
       - name: Start server in background
         run: |
+          npx kill-port 8081 || true
           npm run serve > server.log 2>&1 &
           # Wait for server to start
           sleep 5
@@ -50,6 +51,6 @@ jobs:
       - name: Cleanup server
         if: always()
         run: |
-          pkill -9 node || true
+          npx kill-port 8081
           pkill -9 chrome || true
           sleep 5
