@@ -16,6 +16,18 @@ export default defineConfig({
             name: 'chromium',
             use: { ...devices['Desktop Chrome'] },
         },
+        {
+            name: 'Mobile Chrome',
+            use: { ...devices['Galaxy S9+'] },
+        },
+        {
+            name: 'Mobile Safari',
+            use: { ...devices['iPhone 12'] },
+        },
+        {
+            name: 'Tablet',
+            use: { ...devices['iPad (gen 7)'] },
+        },
     ],
     // テスト実行前にサーバーを起動する設定
     webServer: {
