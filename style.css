@@ -2273,3 +2273,42 @@ details[open]>summary::before {
 .oshi-edit-modal {
     max-width: 400px;
 }
+/* Mobile Specific Overrides */
+@media (max-width: 768px) {
+    .main-layout {
+        flex-direction: column !important;
+        height: auto !important;
+        overflow-y: visible !important;
+    }
+    .media-area {
+        width: 100% !important;
+        max-width: 100% !important;
+        position: static !important;
+    }
+    /* Ensure image container doesn't take full height */
+    .media-container {
+        height: 35vh !important;
+        min-height: 250px !important;
+    }
+    .calendar-section {
+        width: 100% !important;
+        margin-top: 10px !important;
+    }
+    .calendar-wrapper {
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+    .calendar-month {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: none !important;
+    }
+    /* Hide desktop specific controls */
+    .toggle-months-btn,
+    #btnToggleLayout,
+    .layout-splitter,
+    .layout-dropzone,
+    .media-drag-handle {
+        display: none !important;
+    }
+}

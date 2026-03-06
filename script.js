@@ -2475,6 +2475,14 @@ function adjustMediaLayout() {
     area.style.maxWidth = '';
     container.style.height = '';
 
+    // Mobile Override
+    if (window.innerWidth <= 768) {
+        area.style.width = '100%';
+        area.style.maxWidth = '100%';
+        container.style.height = 'auto';
+        return;
+    }
+
     const pos = appSettings.mediaPosition || 'right';
     const header = document.querySelector('.header');
 
