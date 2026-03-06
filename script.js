@@ -2259,7 +2259,7 @@ function setupMediaTimer(isInit = false) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', init);
+if (typeof document !== 'undefined') { document.addEventListener('DOMContentLoaded', init); }
 
 // PWA Service Worker Registration
 if ('serviceWorker' in navigator) {
@@ -2536,6 +2536,19 @@ function adjustMediaLayout() {
 
 
 
-window.addEventListener('resize', adjustMediaLayout);
+if (typeof window !== 'undefined') { window.addEventListener('resize', adjustMediaLayout); }
 
 // script ends here
+
+// --- Exports for Testing ---
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        appSettings,
+        renderCalendar,
+        escapeHTML,
+        getContrastColor,
+        parseDateString,
+        getWeekdayHeaderHTML,
+        getJPHoliday
+    };
+}
