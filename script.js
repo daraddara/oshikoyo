@@ -1893,6 +1893,63 @@ function initSettings() {
     document.getElementById('btnLocalFiles').addEventListener('click', () => inputFiles.click());
     inputFiles.addEventListener('change', (e) => handleLocalImageImport(e.target.files));
 
+    // Clipboard Paste Helper
+    const handleClipboardPaste = async () => {
+        try {
+            if (!navigator.clipboard || !navigator.clipboard.read) {
+                showToast('お使いのブラウザはクリップボードからの画像読み取りに対応していません。', 'warning');
+                return;
+            }
+            const clipboardItems = await navigator.clipboard.read();
+            let files = [];
+            for (const item of clipboardItems) {
+                const imageTypes = item.types.filter(type => type.startsWith('image/'));
+                for (const type of imageTypes) {
+                    const blob = await item.getType(type);
+                    const file = new File([blob], `pasted-${Date.now()}.${type.split('/')[1] || 'png'}`, { type });
+                    files.push(file);
+                }
+            }
+            if (files.length > 0) {
+                handleLocalImageImport(files); // Reuse preview logic
+            } else {
+                showToast('クリップボードに画像が見つかりませんでした。', 'warning');
+            }
+        } catch (err) {
+            console.error('Failed to read clipboard:', err);
+            showToast('クリップボードの読み取りに失敗しました。権限が許可されているか確認してください。', 'error');
+        }
+    };
+
+    // Clipboard Paste (Settings)
+    const btnClipboardPaste = document.getElementById('btnClipboardPaste');
+    if (btnClipboardPaste) {
+        btnClipboardPaste.addEventListener('click', handleClipboardPaste);
+    }
+
+    // Clipboard Paste (Global)
+    const btnGlobalPaste = document.getElementById('btnGlobalPaste');
+    if (btnGlobalPaste) {
+        btnGlobalPaste.addEventListener('click', handleClipboardPaste);
+    }
+
+    // Global Paste Event Listener
+    window.addEventListener('paste', (e) => {
+        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            const items = (e.clipboardData || window.clipboardData).items;
+            let files = [];
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].kind === 'file' && items[i].type.startsWith('image/')) {
+                    files.push(items[i].getAsFile());
+                }
+            }
+            if (files.length > 0) {
+                e.preventDefault();
+                handleLocalImageImport(files);
+            }
+        }
+    });
+
     // Clear Local
     document.getElementById('btnClearLocal').addEventListener('click', async () => {
         if (confirm('登録済みの画像をすべて削除します。よろしいですか？')) {
@@ -2073,12 +2130,38 @@ function updateQuickMediaButtons() {
     });
 }
 
+/**
+ * Checks if the PWA was opened via Web Share Target and loads the shared image.
+ */
+async function checkSharedImage() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('shared') === 'true') {
+        try {
+            const cache = await caches.open('shared-image');
+            const response = await cache.match('shared-image-file');
+            if (response) {
+                const blob = await response.blob();
+                const file = new File([blob], `shared-${Date.now()}.${blob.type.split('/')[1] || 'png'}`, { type: blob.type });
+                handleLocalImageImport([file]); // Pass to preview/import logic
+                // Clean up
+                await cache.delete('shared-image-file');
+            }
+            // Remove query param to prevent reload issues
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({ path: newUrl }, '', newUrl);
+        } catch (error) {
+            console.error('Failed to load shared image:', error);
+            showToast('共有された画像の読み取りに失敗しました。', 'error');
+        }
+    }
+}
+
 function init() {
     loadSettings();
     loadState(); // Restore last state
     initSettings();
+    checkSharedImage();
     setupDragAndDrop();
-    setupClipboardPaste();
     setupPreviewModal();
 
     const dateDisplay = document.getElementById('currentDateDisplay');
