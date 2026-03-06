@@ -50,39 +50,12 @@ export function setupTestEnvironment() {
                 reader.onerror = () => reject(reader.error);
                 reader.readAsArrayBuffer(this);
             });
-        };
+        }
+
     }
 
     // fake-indexeddb 用の structuredClone パッチ
     globalThis.structuredClone = val => val;
-
-    // 基本的な DOM モック
-    if (global.document) {
-        document.getElementById = vi.fn();
-        document.querySelector = vi.fn();
-        document.createElement = vi.fn(() => ({
-            style: {},
-            classList: { add: vi.fn(), remove: vi.fn() },
-            appendChild: vi.fn(),
-            querySelector: vi.fn(() => null),
-            remove: vi.fn(),
-            innerHTML: ''
-        }));
-    } else {
-        global.document = {
-            getElementById: vi.fn(),
-            querySelector: vi.fn(),
-            createElement: vi.fn(() => ({
-                style: {},
-                classList: { add: vi.fn(), remove: vi.fn() },
-                appendChild: vi.fn(),
-                querySelector: vi.fn(() => null),
-                remove: vi.fn(),
-                innerHTML: ''
-            })),
-            body: { appendChild: vi.fn() }
-        };
-    }
 
     if (global.URL) {
         URL.createObjectURL = vi.fn();
