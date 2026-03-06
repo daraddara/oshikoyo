@@ -9,11 +9,11 @@ description: スマホ実機(PWA)での動作確認のためにサーバーとcl
 
 2. **サーバー起動**:
 // turbo
-   `npm run serve` (または `npx serve . -p 8081`) をバックグラウンドで起動し、ポート `8081` がリッスンしていることを確認します。起動に失敗する場合は、`.agents/rules/execute-tests.md` に従い、既存のプロセスをクリーンアップしてから再起動します。
+   `npm run serve > /tmp/serve.log 2>&1 &` 等を使用してバックグラウンドで起動し、ポート `8081` がリッスンしていることを確認します。起動に失敗する場合は、`.agents/rules/execute-tests.md` に従い、既存のプロセスをクリーンアップしてから再起動します。
 
 3. **Cloudflared トンネル起動**:
 // turbo
-   `npm run tunnel` を実行します。コンソールに出力される `https://*.trycloudflare.com` の形式のURLを抽出します。
+   `npm run tunnel > /tmp/tunnel.log 2>&1 &` を実行し、`/tmp/tunnel.log` から `https://*.trycloudflare.com` の形式のURLを抽出します。
 
 4. **URLの提示**:
    - 抽出した公開URLをユーザーに提示し、「スマートフォン等でこのURLにアクセスして動作確認を行ってください」と案内します。
