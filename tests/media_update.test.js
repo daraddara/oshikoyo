@@ -26,7 +26,7 @@ describe('updateMediaArea ロジック (メディア表示更新)', () => {
         mockMainLayout = { classList: { add: vi.fn(), remove: vi.fn() } };
 
         // document.getElementById の戻り値を定義
-        document.getElementById.mockImplementation((id) => {
+        vi.spyOn(document, 'getElementById').mockImplementation((id) => {
             if (id === 'mediaArea') return mockArea;
             if (id === 'mediaContainer') return mockContainer;
             if (id === 'mainLayout') return mockMainLayout;
