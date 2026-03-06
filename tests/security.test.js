@@ -12,7 +12,7 @@ beforeAll(async () => {
     vi.stubGlobal('TODAY', new Date(2024, 0, 1));
 
     // Prevent DOMContentLoaded init from firing and modifying the DOM during test setup
-    vi.spyOn(document, 'addEventListener').mockImplementation(() => { });
+    vi.spyOn(document, 'addEventListener').mockImplementation(() => {});
 
     // Dynamically import script.js
     const imported = await import('../script.js');
@@ -31,42 +31,7 @@ describe('Security: XSS Vulnerability in renderCalendar', () => {
     });
 
     it('should demonstrate XSS via oshi name', () => {
-        const container = document.createElement('div');
-        container.id = 'calendar-container';
-        container.querySelector = vi.fn((selector) => {
-            if (selector === '.days-grid') {
-                const daysGrid = document.createElement('div');
-                daysGrid.className = 'days-grid';
-                // Mock appendChild to just capture HTML instead of throwing if jsdom mock is incomplete
-                daysGrid.appendChild = function (child) {
-                    if (!this.childNodes) this.childNodes = [];
-                    this.childNodes.push(child);
-                };
-                return daysGrid;
-            }
-            if (selector === '.month-title' || selector === '.weekday-header') {
-                return document.createElement('div');
-            }
-            return null;
-        });
-        // Override so we can actually find the cell in the array
-        const originalQuerySelector = container.querySelector;
-        let capturedCells = [];
-        container.querySelector = function (selector) {
-            if (selector === '.days-grid') {
-                const daysGrid = document.createElement('div');
-                daysGrid.className = 'days-grid';
-                daysGrid.appendChild = function (child) {
-                    capturedCells.push(child);
-                };
-                return daysGrid;
-            }
-            if (selector === '.month-title' || selector === '.weekday-header') {
-                return document.createElement('div');
-            }
-            return null;
-        }
-
+        const container = document.getElementById('calendar-container');
         const xssPayload = '<img src=x onerror=alert("XSS")>';
 
         // Assign the malicious payload to the module's exported appSettings
@@ -93,6 +58,6 @@ describe('Security: XSS Vulnerability in renderCalendar', () => {
         expect(img).toBeNull();
 
         // The escaped content should be visible as text
-        expect(dayCell.innerHTML).toContain('&lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;');
+        expect(dayCell.innerHTML).toContain('&lt;img src=x onerror=alert("XSS")&gt;');
     });
 });
