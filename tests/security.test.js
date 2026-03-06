@@ -1,38 +1,33 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { extractCode, loadModule, setupTestEnvironment } from './test-utils.js';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
+import { setupTestEnvironment } from './test-utils.js';
 
-// Extract necessary code blocks from script.js
-const constants = extractCode('const DEFAULT_SETTINGS = {', '};') + '};';
-const escapeHTML = extractCode('function escapeHTML(str) {', '}\n\n// Helper: Hex to RGB') + '}';
-const contrastColorLogic = extractCode('function getContrastColor(hex) {', '}\n\n// Helper: Parse Date String') + '}';
-const parseDateLogic = extractCode('function parseDateString(str) {', '}\n\n// --- Holiday Logic ---') + '}';
-const holidayLogic = extractCode('// --- Holiday Logic ---', '// --- Calendar Generation ---');
-const calendarLogic = extractCode('function renderCalendar(container, year, month) {', 'function updateView() {');
-
-// Mock external dependencies and globals
+// Setup environment and test-utils first
 setupTestEnvironment();
 
-// Create the module
-const module = loadModule([
-    'let appSettings = { startOfWeek: 0, oshiList: [] };',
-    'const TODAY = new Date(2024, 0, 1);',
-    constants,
-    escapeHTML,
-    contrastColorLogic,
-    parseDateLogic,
-    holidayLogic,
-    'function createPopup() {}',
-    'function showPopup() {}',
-    'function hidePopup() {}',
-    'function getWeekdayHeaderHTML() { return ""; }',
-    calendarLogic
-], ['renderCalendar', 'appSettings', 'TODAY']);
+let scriptModule;
 
-const { renderCalendar, appSettings } = module;
+beforeAll(async () => {
+    // Provide variables expected globally by script.js using vi.stubGlobal
+    vi.stubGlobal('appSettings', { startOfWeek: 0, oshiList: [] });
+    vi.stubGlobal('TODAY', new Date(2024, 0, 1));
+
+    // Prevent DOMContentLoaded init from firing and modifying the DOM during test setup
+    vi.spyOn(document, 'addEventListener').mockImplementation(() => { });
+
+    // Dynamically import script.js
+    const imported = await import('../script.js');
+    scriptModule = imported.default || imported;
+});
 
 describe('Security: XSS Vulnerability in renderCalendar', () => {
     beforeEach(() => {
+        // Reset DOM container for tests
         document.body.innerHTML = '<div id="calendar-container"></div>';
+
+        // Reset internal app settings list (via the exported appSettings object)
+        if (scriptModule && scriptModule.appSettings) {
+            scriptModule.appSettings.oshiList = [];
+        }
     });
 
     it('should demonstrate XSS via oshi name', () => {
@@ -43,9 +38,9 @@ describe('Security: XSS Vulnerability in renderCalendar', () => {
                 const daysGrid = document.createElement('div');
                 daysGrid.className = 'days-grid';
                 // Mock appendChild to just capture HTML instead of throwing if jsdom mock is incomplete
-                daysGrid.appendChild = function(child) {
-                     if (!this.childNodes) this.childNodes = [];
-                     this.childNodes.push(child);
+                daysGrid.appendChild = function (child) {
+                    if (!this.childNodes) this.childNodes = [];
+                    this.childNodes.push(child);
                 };
                 return daysGrid;
             }
@@ -57,11 +52,11 @@ describe('Security: XSS Vulnerability in renderCalendar', () => {
         // Override so we can actually find the cell in the array
         const originalQuerySelector = container.querySelector;
         let capturedCells = [];
-        container.querySelector = function(selector) {
+        container.querySelector = function (selector) {
             if (selector === '.days-grid') {
                 const daysGrid = document.createElement('div');
                 daysGrid.className = 'days-grid';
-                daysGrid.appendChild = function(child) {
+                daysGrid.appendChild = function (child) {
                     capturedCells.push(child);
                 };
                 return daysGrid;
@@ -74,23 +69,26 @@ describe('Security: XSS Vulnerability in renderCalendar', () => {
 
         const xssPayload = '<img src=x onerror=alert("XSS")>';
 
-        // Setup oshi with XSS payload
-        appSettings.oshiList = [{
+        // Assign the malicious payload to the module's exported appSettings
+        const list = [{
             name: xssPayload,
-            birthday: '2024/01/01', // Match the day being rendered
+            birthday: '2024/01/01', // Match the day being rendered (1/1/2024 since TODAY is mocked to this)
             color: '#3b82f6'
         }];
 
-        // Render January 2024
-        renderCalendar(container, 2024, 1);
+        if (scriptModule && scriptModule.appSettings) {
+            scriptModule.appSettings.oshiList = list;
+        } else {
+            throw new Error("appSettings was not exported from script.js");
+        }
 
-        // Check if the payload is present as raw HTML in the day cell
-        const dayCell = capturedCells.find(n => n.classList && n.classList.add && n.classList.add.mock && n.classList.add.mock.calls.some(c => c[0] === 'is-oshi-date'));
-        expect(dayCell).toBeDefined();
+        // Render January 2024
+        scriptModule.renderCalendar(container, 2024, 1);
+
+        // Verify the payload is present as raw escaped HTML in the day cell, not an actual img tag
+        const dayCell = container.querySelector('.day-cell.is-oshi-date');
         expect(dayCell).not.toBeNull();
 
-        // If fixed, innerHTML will contain the escaped payload
-        // and no img tag should be created by the browser/jsdom
         const img = dayCell.querySelector('img');
         expect(img).toBeNull();
 
