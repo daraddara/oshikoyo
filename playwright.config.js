@@ -33,7 +33,7 @@ export default defineConfig({
     webServer: {
         command: 'npm run serve',
         url: 'http://localhost:8081',
-        reuseExistingServer: !process.env.CI,
+        reuseExistingServer: true,
         stdout: 'pipe',
         stderr: 'pipe',
     },
