@@ -5,6 +5,30 @@ import { extractCode, loadModule } from './test-utils.js';
 const utilsLogic = extractCode('// Helper: Get Contrast Color (Black or White)', '// Helper: Parse Date String to {month, day}');
 const { getContrastColor } = loadModule([utilsLogic], ['getContrastColor']);
 
+// Extract getWeekdayHeaderHTML from script.js
+const weekdayHeaderLogic = extractCode('// Generate Weekday Header HTML based on startOfWeek', '// --- Popup Logic ---');
+const { getWeekdayHeaderHTML } = loadModule([weekdayHeaderLogic], ['getWeekdayHeaderHTML']);
+
+describe('getWeekdayHeaderHTML', () => {
+    it('should generate headers starting with Sunday when startOfWeek is 0', () => {
+        const expectedHTML = '<span class="sunday">日</span><span class="">月</span><span class="">火</span><span class="">水</span><span class="">木</span><span class="">金</span><span class="saturday">土</span>';
+        expect(getWeekdayHeaderHTML(0)).toBe(expectedHTML);
+    });
+
+    it('should generate headers starting with Monday when startOfWeek is 1', () => {
+        const expectedHTML = '<span class="">月</span><span class="">火</span><span class="">水</span><span class="">木</span><span class="">金</span><span class="saturday">土</span><span class="sunday">日</span>';
+        expect(getWeekdayHeaderHTML(1)).toBe(expectedHTML);
+    });
+
+    it('should default to Sunday start for invalid startOfWeek values (not explicitly handled, but tests current behavior)', () => {
+        // According to the function, it only checks startOfWeek === 1 to shift the array.
+        // Therefore, any other value like 2, -1, or undefined will default to Sunday start.
+        const expectedHTML = '<span class="sunday">日</span><span class="">月</span><span class="">火</span><span class="">水</span><span class="">木</span><span class="">金</span><span class="saturday">土</span>';
+        expect(getWeekdayHeaderHTML(undefined)).toBe(expectedHTML);
+        expect(getWeekdayHeaderHTML(2)).toBe(expectedHTML);
+    });
+});
+
 describe('getContrastColor', () => {
     it('should return white for dark colors', () => {
         expect(getContrastColor('#000000')).toBe('#ffffff');
