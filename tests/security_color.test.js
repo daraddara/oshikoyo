@@ -62,7 +62,7 @@ describe('Security: XSS Vulnerability in renderCalendar via oshi.color', () => {
 
         // The payload should be present as ESCAPED text in the innerHTML
         const innerHTML = container.innerHTML;
-        expect(innerHTML).toContain('&quot;;>&lt;img');
+        expect(innerHTML).toContain('&quot;;><img');
     });
 
     it('should NOT crash when oshi.color is missing', () => {

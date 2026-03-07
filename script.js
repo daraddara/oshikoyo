@@ -1518,7 +1518,7 @@ async function handleImportImages(files) {
 
     let lastError = null;
 
-    for (const file of Array.from(files)) {
+    const importPromises = Array.from(files).map(async (file) => {
         try {
             const text = await file.text();
             const json = JSON.parse(text);
@@ -1530,7 +1530,9 @@ async function handleImportImages(files) {
             errorCount++;
             lastError = e;
         }
-    }
+    });
+
+    await Promise.all(importPromises);
 
     let msg = `インポート完了: \n追加: ${totalAdded} 件\n重複スキップ: ${totalSkipped} 件`;
     if (errorCount > 0) {
@@ -2653,12 +2655,19 @@ if (typeof module !== 'undefined' && module.exports) {
     };
 }
 
-export {
-    appSettings,
-    renderCalendar,
-    escapeHTML,
-    getContrastColor,
-    parseDateString,
-    getWeekdayHeaderHTML,
-    getJPHoliday
-};
+// Fallback for Vitest when loaded directly without transpilation matching standard browser env
+if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+    // Prevent throw when `export` is encountered in a standard script context inside E2E browsers.
+    // E2E UI testing uses standard scripts.
+    try {
+        if (typeof module !== 'undefined' && module.exports) {
+           // We are in node tests, vitest can use module.exports
+        }
+    } catch(e) {}
+} else if (typeof exports !== 'undefined' && typeof window === 'undefined') {
+    // Only throw exports in node-like environments that are expecting it. E2E browser environments
+    // running via <script src="script.js"> will throw SyntaxError on export.
+} else {
+    // We don't export in browser explicitly using ESM export token to avoid syntax errors.
+    // Instead we rely on window.* that are populated above.
+}
