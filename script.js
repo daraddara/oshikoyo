@@ -1076,6 +1076,8 @@ function handleOshiImportFromModal(files) {
     let processedCount = 0;
     let errorMessages = [];
 
+    const existingNames = new Set((appSettings.oshiList || []).map(o => o.name));
+
     Array.from(files).forEach(file => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -1116,7 +1118,6 @@ function handleOshiImportFromModal(files) {
                     return;
                 }
 
-                const existingNames = new Set((appSettings.oshiList || []).map(o => o.name));
                 const newItems = rawItems.filter(item => {
                     if (existingNames.has(item.name)) {
                         skippedCount++;
@@ -1185,6 +1186,8 @@ function handleFileImport() {
     let addedCount = 0;
     let skippedCount = 0;
 
+    const existingNames = new Set((appSettings.oshiList || []).map(o => o.name));
+
     Array.from(files).forEach(file => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -1202,12 +1205,12 @@ function handleFileImport() {
                     }));
 
                     // Deduplication Logic
-                    const existingNames = new Set((appSettings.oshiList || []).map(o => o.name));
                     const newItems = rawItems.filter(item => {
                         if (existingNames.has(item.name)) {
                             skippedCount++;
                             return false;
                         }
+                        existingNames.add(item.name);
                         return true;
                     });
 
