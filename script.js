@@ -429,19 +429,6 @@ function escapeHTML(str) {
     return str.replace(/[&<>"']/g, m => map[m]);
 }
 
-// Helper: Hex to RGB
-/**
- * Converts a hex color string to RGB format (e.g., "255, 255, 255").
- * @param {string} hex - The hex color string.
- * @returns {string|null}
- */
-function hexToRgb(hex) {
-    if (!hex || !hex.startsWith('#')) return null;
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
-}
-
-
 // --- State Persistence (Separate from Settings) ---
 const STATE_KEY = 'oshigoto_calendar_state';
 let appState = {
