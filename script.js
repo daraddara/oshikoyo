@@ -1203,68 +1203,6 @@ function handleOshiImportFromModal(files) {
     }
 }
 
-function handleFileImport() {
-    const fileInput = document.getElementById('importJson');
-    const files = fileInput.files;
-    if (!files || files.length === 0) return;
-
-    const totalFiles = files.length; // Cache length before clearing input
-    let processedCount = 0;
-    let addedCount = 0;
-    let skippedCount = 0;
-
-    const existingNames = new Set((appSettings.oshiList || []).map(o => o.name));
-
-    Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const data = JSON.parse(e.target.result);
-                if (Array.isArray(data)) {
-                    // Map to internal format
-                    const rawItems = data.map(item => ({
-                        name: item['メンバー名'] || item.name || 'Unknown',
-                        birthday: item['誕生日'] || item.birthday,
-                        debutDate: item['周年記念日'] || item.debutDate,
-                        color: item['公式カラー (Hex/系統)'] || item.color,
-                        fanArtTag: item['ファンアートタグ'] || item.fanArtTag,
-                        source: file.name
-                    }));
-
-                    // Deduplication Logic
-                    const newItems = rawItems.filter(item => {
-                        if (existingNames.has(item.name)) {
-                            skippedCount++;
-                            return false;
-                        }
-                        existingNames.add(item.name);
-                        return true;
-                    });
-
-                    addedCount += newItems.length;
-                    appSettings.oshiList = [...(appSettings.oshiList || []), ...newItems];
-                }
-            } catch (err) {
-                console.error('Failed to parse JSON', err);
-                alert(`${file.name} の読み込みに失敗しました: ${err.message}`);
-            } finally {
-                processedCount++;
-                if (processedCount === totalFiles) {
-                    renderOshiList();
-                    fileInput.value = ''; // Reset
-
-                    let msg = `${totalFiles} ファイルのインポートが完了しました。`;
-                    if (addedCount > 0) msg += `\n(${addedCount}件追加)`;
-                    if (skippedCount > 0) msg += `\n(${skippedCount}件は重複のためスキップされました)`;
-
-                    alert(msg);
-                }
-            }
-        };
-        reader.readAsText(file);
-    });
-}
-
 function addManualOshi() {
     const name = document.getElementById('newOshiName').value;
     const birthday = document.getElementById('newOshiBirthday').value;
