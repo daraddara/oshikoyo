@@ -1468,45 +1468,6 @@ function handleImportSettings(file) {
     reader.readAsText(file);
 }
 
-async function handleExportImages() {
-    try {
-        const chunks = await localImageDB.exportData(); // Default limit 50MB
-        if (chunks.length === 0) {
-            alert('エクスポートする画像がありません。');
-            return;
-        }
-
-        let msg = `${chunks.length}個のファイルに分割してダウンロードします。`;
-        if (chunks.length > 1) {
-            msg += '\nブラウザが複数ファイルのダウンロードをブロックする場合があります。「許可」してください。';
-        }
-
-        // Use a small delay between downloads to try and satisfy browser throttles
-        for (const chunk of chunks) {
-            const dataStr = JSON.stringify(chunk.data); // Minify? No, standard.
-            const blob = new Blob([dataStr], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = chunk.filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-
-            // Short delay
-            await new Promise(r => setTimeout(r, 1000));
-            URL.revokeObjectURL(url);
-        }
-
-        // Only show message after triggering
-        // alert('エクスポートを開始しました'); 
-    } catch (e) {
-        console.error(e);
-        alert('エクスポートに失敗しました: ' + e.message);
-    }
-}
-
 async function handleImportImages(files) {
     if (!files || files.length === 0) {
         return;
