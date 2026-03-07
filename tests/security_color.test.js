@@ -12,7 +12,7 @@ beforeAll(async () => {
     vi.stubGlobal('TODAY', new Date(2024, 0, 1));
 
     // Prevent DOMContentLoaded init from firing and modifying the DOM during test setup
-    vi.spyOn(document, 'addEventListener').mockImplementation(() => {});
+    vi.spyOn(document, 'addEventListener').mockImplementation(() => { });
 
     // Dynamically import script.js
     const imported = await import('../script.js');
@@ -62,6 +62,9 @@ describe('Security: XSS Vulnerability in renderCalendar via oshi.color', () => {
 
         // The payload should be present as ESCAPED text in the innerHTML
         const innerHTML = container.innerHTML;
+
+        // The HTML specification for DOM serialization does not escape < and > inside attribute values.
+        // The payload remains trapped securely within the style attribute because the leading " is escaped to &quot;.
         expect(innerHTML).toContain('&quot;;><img');
     });
 
