@@ -764,12 +764,10 @@ function renderCalendar(container, year, month) {
             const textShadow = textColor === '#ffffff' ? '0 0 1px rgba(0,0,0,0.3)' : 'none';
 
             let baseStyle = '';
-            let borderStyle = 'border-left: 3px solid #ccc;';
 
             if (oshi.color) {
                 const escapedColor = escapeHTML(oshi.color);
                 baseStyle = `background-color: ${escapedColor}; color: ${textColor}; text-shadow: ${textShadow};`;
-                borderStyle = `border-left: 3px solid ${escapedColor};`;
             }
 
             // Birthday Check
