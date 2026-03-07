@@ -1409,7 +1409,7 @@ async function handleImportImages(files) {
 
     let lastError = null;
 
-    for (const file of Array.from(files)) {
+    const importPromises = Array.from(files).map(async (file) => {
         try {
             const text = await file.text();
             const json = JSON.parse(text);
@@ -1421,7 +1421,9 @@ async function handleImportImages(files) {
             errorCount++;
             lastError = e;
         }
-    }
+    });
+
+    await Promise.all(importPromises);
 
     let msg = `インポート完了: \n追加: ${totalAdded} 件\n重複スキップ: ${totalSkipped} 件`;
     if (errorCount > 0) {
