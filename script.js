@@ -429,34 +429,6 @@ function escapeHTML(str) {
     return str.replace(/[&<>"']/g, m => map[m]);
 }
 
-// Helper: Seconds <-> DHMS
-/**
- * Converts seconds into a DHMS object.
- * @param {number} seconds 
- * @returns {{d: number, h: number, m: number, s: number}}
- */
-function secondsToDHMS(seconds) {
-    const d = Math.floor(seconds / (3600 * 24));
-    seconds %= 3600 * 24;
-    const h = Math.floor(seconds / 3600);
-    seconds %= 3600;
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return { d, h, m, s };
-}
-
-/**
- * Converts DHMS values back to total seconds.
- * @param {number} d - Days
- * @param {number} h - Hours
- * @param {number} m - Minutes
- * @param {number} s - Seconds
- * @returns {number}
- */
-function dhmsToSeconds(d, h, m, s) {
-    return (d * 86400) + (h * 3600) + (m * 60) + s;
-}
-
 // --- State Persistence (Separate from Settings) ---
 const STATE_KEY = 'oshigoto_calendar_state';
 let appState = {
@@ -1251,34 +1223,6 @@ function handleFileImport() {
         };
         reader.readAsText(file);
     });
-}
-
-function addManualOshi() {
-    const name = document.getElementById('newOshiName').value;
-    const birthday = document.getElementById('newOshiBirthday').value;
-    const debut = document.getElementById('newOshiDebutDay').value;
-    const color = document.getElementById('newOshiColor').value;
-
-    if (!name) {
-        alert('名前を入力してください');
-        return;
-    }
-
-    if (!appSettings.oshiList) appSettings.oshiList = [];
-    appSettings.oshiList.push({
-        name: name,
-        birthday: birthday,
-        debutDate: debut,
-        color: color,
-        source: 'manual'
-    });
-
-    renderOshiList();
-
-    // Reset inputs
-    document.getElementById('newOshiName').value = '';
-    document.getElementById('newOshiBirthday').value = '';
-    document.getElementById('newOshiDebutDay').value = '';
 }
 
 // --- Local Media UI Handlers ---
