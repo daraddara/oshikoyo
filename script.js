@@ -429,46 +429,6 @@ function escapeHTML(str) {
     return str.replace(/[&<>"']/g, m => map[m]);
 }
 
-// Helper: Hex to RGB
-/**
- * Converts a hex color string to RGB format (e.g., "255, 255, 255").
- * @param {string} hex - The hex color string.
- * @returns {string|null}
- */
-function hexToRgb(hex) {
-    if (!hex || !hex.startsWith('#')) return null;
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
-}
-
-// Helper: Seconds <-> DHMS
-/**
- * Converts seconds into a DHMS object.
- * @param {number} seconds 
- * @returns {{d: number, h: number, m: number, s: number}}
- */
-function secondsToDHMS(seconds) {
-    const d = Math.floor(seconds / (3600 * 24));
-    seconds %= 3600 * 24;
-    const h = Math.floor(seconds / 3600);
-    seconds %= 3600;
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return { d, h, m, s };
-}
-
-/**
- * Converts DHMS values back to total seconds.
- * @param {number} d - Days
- * @param {number} h - Hours
- * @param {number} m - Minutes
- * @param {number} s - Seconds
- * @returns {number}
- */
-function dhmsToSeconds(d, h, m, s) {
-    return (d * 86400) + (h * 3600) + (m * 60) + s;
-}
-
 // --- State Persistence (Separate from Settings) ---
 const STATE_KEY = 'oshigoto_calendar_state';
 let appState = {
@@ -804,12 +764,10 @@ function renderCalendar(container, year, month) {
             const textShadow = textColor === '#ffffff' ? '0 0 1px rgba(0,0,0,0.3)' : 'none';
 
             let baseStyle = '';
-            let borderStyle = 'border-left: 3px solid #ccc;';
 
             if (oshi.color) {
                 const escapedColor = escapeHTML(oshi.color);
                 baseStyle = `background-color: ${escapedColor}; color: ${textColor}; text-shadow: ${textShadow};`;
-                borderStyle = `border-left: 3px solid ${escapedColor};`;
             }
 
             // Birthday Check
@@ -1203,32 +1161,66 @@ function handleOshiImportFromModal(files) {
     }
 }
 
-function addManualOshi() {
-    const name = document.getElementById('newOshiName').value;
-    const birthday = document.getElementById('newOshiBirthday').value;
-    const debut = document.getElementById('newOshiDebutDay').value;
-    const color = document.getElementById('newOshiColor').value;
+function handleFileImport() {
+    const fileInput = document.getElementById('importJson');
+    const files = fileInput.files;
+    if (!files || files.length === 0) return;
 
-    if (!name) {
-        alert('名前を入力してください');
-        return;
-    }
+    const totalFiles = files.length; // Cache length before clearing input
+    let processedCount = 0;
+    let addedCount = 0;
+    let skippedCount = 0;
 
-    if (!appSettings.oshiList) appSettings.oshiList = [];
-    appSettings.oshiList.push({
-        name: name,
-        birthday: birthday,
-        debutDate: debut,
-        color: color,
-        source: 'manual'
+    const existingNames = new Set((appSettings.oshiList || []).map(o => o.name));
+
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (Array.isArray(data)) {
+                    // Map to internal format
+                    const rawItems = data.map(item => ({
+                        name: item['メンバー名'] || item.name || 'Unknown',
+                        birthday: item['誕生日'] || item.birthday,
+                        debutDate: item['周年記念日'] || item.debutDate,
+                        color: item['公式カラー (Hex/系統)'] || item.color,
+                        fanArtTag: item['ファンアートタグ'] || item.fanArtTag,
+                        source: file.name
+                    }));
+
+                    // Deduplication Logic
+                    const newItems = rawItems.filter(item => {
+                        if (existingNames.has(item.name)) {
+                            skippedCount++;
+                            return false;
+                        }
+                        existingNames.add(item.name);
+                        return true;
+                    });
+
+                    addedCount += newItems.length;
+                    appSettings.oshiList = [...(appSettings.oshiList || []), ...newItems];
+                }
+            } catch (err) {
+                console.error('Failed to parse JSON', err);
+                alert(`${file.name} の読み込みに失敗しました: ${err.message}`);
+            } finally {
+                processedCount++;
+                if (processedCount === totalFiles) {
+                    renderOshiList();
+                    fileInput.value = ''; // Reset
+
+                    let msg = `${totalFiles} ファイルのインポートが完了しました。`;
+                    if (addedCount > 0) msg += `\n(${addedCount}件追加)`;
+                    if (skippedCount > 0) msg += `\n(${skippedCount}件は重複のためスキップされました)`;
+
+                    alert(msg);
+                }
+            }
+        };
+        reader.readAsText(file);
     });
-
-    renderOshiList();
-
-    // Reset inputs
-    document.getElementById('newOshiName').value = '';
-    document.getElementById('newOshiBirthday').value = '';
-    document.getElementById('newOshiDebutDay').value = '';
 }
 
 // --- Local Media UI Handlers ---
@@ -1404,45 +1396,6 @@ function handleImportSettings(file) {
         }
     };
     reader.readAsText(file);
-}
-
-async function handleExportImages() {
-    try {
-        const chunks = await localImageDB.exportData(); // Default limit 50MB
-        if (chunks.length === 0) {
-            alert('エクスポートする画像がありません。');
-            return;
-        }
-
-        let msg = `${chunks.length}個のファイルに分割してダウンロードします。`;
-        if (chunks.length > 1) {
-            msg += '\nブラウザが複数ファイルのダウンロードをブロックする場合があります。「許可」してください。';
-        }
-
-        // Use a small delay between downloads to try and satisfy browser throttles
-        for (const chunk of chunks) {
-            const dataStr = JSON.stringify(chunk.data); // Minify? No, standard.
-            const blob = new Blob([dataStr], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = chunk.filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-
-            // Short delay
-            await new Promise(r => setTimeout(r, 1000));
-            URL.revokeObjectURL(url);
-        }
-
-        // Only show message after triggering
-        // alert('エクスポートを開始しました'); 
-    } catch (e) {
-        console.error(e);
-        alert('エクスポートに失敗しました: ' + e.message);
-    }
 }
 
 async function handleImportImages(files) {
