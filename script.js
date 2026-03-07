@@ -1237,34 +1237,6 @@ function handleFileImport() {
     });
 }
 
-function addManualOshi() {
-    const name = document.getElementById('newOshiName').value;
-    const birthday = document.getElementById('newOshiBirthday').value;
-    const debut = document.getElementById('newOshiDebutDay').value;
-    const color = document.getElementById('newOshiColor').value;
-
-    if (!name) {
-        alert('名前を入力してください');
-        return;
-    }
-
-    if (!appSettings.oshiList) appSettings.oshiList = [];
-    appSettings.oshiList.push({
-        name: name,
-        birthday: birthday,
-        debutDate: debut,
-        color: color,
-        source: 'manual'
-    });
-
-    renderOshiList();
-
-    // Reset inputs
-    document.getElementById('newOshiName').value = '';
-    document.getElementById('newOshiBirthday').value = '';
-    document.getElementById('newOshiDebutDay').value = '';
-}
-
 // --- Local Media UI Handlers ---
 
 async function updateLocalMediaUI() {
