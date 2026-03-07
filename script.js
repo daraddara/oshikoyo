@@ -1717,22 +1717,6 @@ function setupDragAndDrop() {
     }
 }
 
-function setupClipboardPaste() {
-    window.addEventListener('paste', async (e) => {
-        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-        const files = [];
-        for (let i = 0; i < items.length; i++) {
-            if (items[i].kind === 'file' && items[i].type.startsWith('image/')) {
-                const blob = items[i].getAsFile();
-                if (blob) files.push(blob);
-            }
-        }
-        if (files.length > 0) {
-            e.preventDefault(); // Prevent default paste behavior
-            await handleFiles(files);
-        }
-    });
-}
 // --- Preview Logic ---
 let pendingPreviewFiles = [];
 let hasNewLocalImages = false;
