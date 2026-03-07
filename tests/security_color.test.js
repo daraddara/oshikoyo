@@ -12,7 +12,7 @@ beforeAll(async () => {
     vi.stubGlobal('TODAY', new Date(2024, 0, 1));
 
     // Prevent DOMContentLoaded init from firing and modifying the DOM during test setup
-    vi.spyOn(document, 'addEventListener').mockImplementation(() => {});
+    vi.spyOn(document, 'addEventListener').mockImplementation(() => { });
 
     // Dynamically import script.js
     const imported = await import('../script.js');
