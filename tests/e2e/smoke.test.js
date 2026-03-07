@@ -21,10 +21,10 @@ test.describe('Smoke Test & Layout Verification', () => {
         const wrapperOverflowX = await calendar.evaluate((el) => window.getComputedStyle(el).overflowX);
         expect(['auto', 'visible', 'hidden']).toContain(wrapperOverflowX);
 
-        // Save screenshot of the main page
-        await page.screenshot({ path: `tests/e2e/screenshots/main_ui_${testInfo.project.name.replace(/ /g, '_')}.png`, fullPage: true });
+        // Verify main page layout with snapshot
+        await expect(page).toHaveScreenshot('main_ui.png', { fullPage: true });
 
-        // Open settings modal to test scrollability of .settings-scroll-area
+        // Open settings modal
         const btnSettings = page.locator('#btnSettings');
         await btnSettings.click();
 
@@ -38,12 +38,11 @@ test.describe('Smoke Test & Layout Verification', () => {
         await page.waitForTimeout(500);
 
         // Test if scroll area is actually scrollable when content overflows
-        // We verify it has overflow-y set to auto or scroll.
         const overflowY = await scrollArea.evaluate((el) => window.getComputedStyle(el).overflowY);
         expect(['auto', 'scroll']).toContain(overflowY);
 
-        // Take a screenshot of the opened modal
-        await page.screenshot({ path: `tests/e2e/screenshots/settings_modal_${testInfo.project.name.replace(/ /g, '_')}.png` });
+        // Verify modal layout with snapshot
+        await expect(page).toHaveScreenshot('settings_modal.png');
 
         // Close modal
         await page.locator('#btnCancel').click();
