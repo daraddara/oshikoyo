@@ -2,12 +2,32 @@ import { describe, it, expect } from 'vitest';
 import { extractCode, loadModule } from './test-utils.js';
 
 // Extract getContrastColor from script.js
-const utilsLogic = extractCode('// Helper: Get Contrast Color (Black or White)', '// Helper: Parse Date String to {month, day}');
+const utilsLogic = extractCode('// Helper: Get Contrast Color (Black or White)', '// --- Holiday Logic ---');
+const { getContrastColor, parseDateString } = loadModule([utilsLogic], ['getContrastColor', 'parseDateString']);
 
 // Extract getWeekdayHeaderHTML from script.js
-const headerLogic = extractCode('// Generate Weekday Header HTML based on startOfWeek', '// --- Popup Logic ---');
+const weekdayHeaderLogic = extractCode('// Generate Weekday Header HTML based on startOfWeek', '// --- Popup Logic ---');
+const { getWeekdayHeaderHTML } = loadModule([weekdayHeaderLogic], ['getWeekdayHeaderHTML']);
 
-const { getContrastColor, getWeekdayHeaderHTML } = loadModule([utilsLogic, headerLogic], ['getContrastColor', 'getWeekdayHeaderHTML']);
+describe('getWeekdayHeaderHTML', () => {
+    it('should generate headers starting with Sunday when startOfWeek is 0', () => {
+        const expectedHTML = '<span class="sunday">日</span><span class="">月</span><span class="">火</span><span class="">水</span><span class="">木</span><span class="">金</span><span class="saturday">土</span>';
+        expect(getWeekdayHeaderHTML(0)).toBe(expectedHTML);
+    });
+
+    it('should generate headers starting with Monday when startOfWeek is 1', () => {
+        const expectedHTML = '<span class="">月</span><span class="">火</span><span class="">水</span><span class="">木</span><span class="">金</span><span class="saturday">土</span><span class="sunday">日</span>';
+        expect(getWeekdayHeaderHTML(1)).toBe(expectedHTML);
+    });
+
+    it('should default to Sunday start for invalid startOfWeek values (not explicitly handled, but tests current behavior)', () => {
+        // According to the function, it only checks startOfWeek === 1 to shift the array.
+        // Therefore, any other value like 2, -1, or undefined will default to Sunday start.
+        const expectedHTML = '<span class="sunday">日</span><span class="">月</span><span class="">火</span><span class="">水</span><span class="">木</span><span class="">金</span><span class="saturday">土</span>';
+        expect(getWeekdayHeaderHTML(undefined)).toBe(expectedHTML);
+        expect(getWeekdayHeaderHTML(2)).toBe(expectedHTML);
+    });
+});
 
 describe('getContrastColor', () => {
     it('should return white for dark colors', () => {
@@ -51,28 +71,49 @@ describe('getContrastColor', () => {
     });
 });
 
-describe('getWeekdayHeaderHTML', () => {
-    it('should generate headers starting with Sunday when startOfWeek is 0', () => {
-        const result = getWeekdayHeaderHTML(0);
-
-        // Should start with Sunday and end with Saturday
-        expect(result.startsWith('<span class="sunday">日</span>')).toBe(true);
-        expect(result.endsWith('<span class="saturday">土</span>')).toBe(true);
-
-        // Exact full HTML string
-        const expected = '<span class="sunday">日</span><span class="">月</span><span class="">火</span><span class="">水</span><span class="">木</span><span class="">金</span><span class="saturday">土</span>';
-        expect(result).toBe(expected);
+describe('parseDateString', () => {
+    it('should parse "YYYY/MM/DD" format', () => {
+        expect(parseDateString('2023/05/12')).toEqual({ month: 5, day: 12 });
+        expect(parseDateString('2023/5/2')).toEqual({ month: 5, day: 2 });
     });
 
-    it('should generate headers starting with Monday when startOfWeek is 1', () => {
-        const result = getWeekdayHeaderHTML(1);
+    it('should parse "YYYY-MM-DD" format', () => {
+        expect(parseDateString('2023-05-12')).toEqual({ month: 5, day: 12 });
+        expect(parseDateString('2023-5-2')).toEqual({ month: 5, day: 2 });
+    });
 
-        // Should start with Monday and end with Sunday
-        expect(result.startsWith('<span class="">月</span>')).toBe(true);
-        expect(result.endsWith('<span class="sunday">日</span>')).toBe(true);
+    it('should parse "M/D" format', () => {
+        expect(parseDateString('5/12')).toEqual({ month: 5, day: 12 });
+        expect(parseDateString('12/5')).toEqual({ month: 12, day: 5 });
+        expect(parseDateString('05/02')).toEqual({ month: 5, day: 2 });
+    });
 
-        // Exact full HTML string
-        const expected = '<span class="">月</span><span class="">火</span><span class="">水</span><span class="">木</span><span class="">金</span><span class="saturday">土</span><span class="sunday">日</span>';
-        expect(result).toBe(expected);
+    it('should parse "M月D日" format', () => {
+        expect(parseDateString('5月12日')).toEqual({ month: 5, day: 12 });
+        expect(parseDateString('12月5日')).toEqual({ month: 12, day: 5 });
+        expect(parseDateString('05月02日')).toEqual({ month: 5, day: 2 });
+    });
+
+    it('should handle "YYYY-MM-DD" standard date input value', () => {
+        expect(parseDateString('2023-05-12')).toEqual({ month: 5, day: 12 });
+        // NOTE: The function code has two blocks that match YYYY-MM-DD.
+        // We're essentially covering both blocks with this and the first YYYY-MM-DD test.
+    });
+
+    it('should trim whitespace from the input string', () => {
+        expect(parseDateString('  2023/05/12  ')).toEqual({ month: 5, day: 12 });
+        expect(parseDateString('\t5/12\n')).toEqual({ month: 5, day: 12 });
+        expect(parseDateString(' 5月12日 ')).toEqual({ month: 5, day: 12 });
+    });
+
+    it('should return null for invalid inputs', () => {
+        expect(parseDateString(null)).toBeNull();
+        expect(parseDateString(undefined)).toBeNull();
+        expect(parseDateString('')).toBeNull();
+        expect(parseDateString('   ')).toBeNull(); // Only whitespace
+        expect(parseDateString('invalid-date')).toBeNull();
+        expect(parseDateString('2023/13/45')).toEqual({ month: 13, day: 45 }); // Regex matches, semantic validation is not part of parseDateString as currently written.
+        expect(parseDateString('23-05-12')).toBeNull(); // Missing digits in year
+        expect(parseDateString('2023-05')).toBeNull(); // Incomplete
     });
 });
