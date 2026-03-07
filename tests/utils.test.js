@@ -5,6 +5,10 @@ import { extractCode, loadModule } from './test-utils.js';
 const utilsLogic = extractCode('// Helper: Get Contrast Color (Black or White)', '// Helper: Parse Date String to {month, day}');
 const { getContrastColor } = loadModule([utilsLogic], ['getContrastColor']);
 
+// Extract hexToRgb from script.js
+const hexToRgbLogic = extractCode('// Helper: Hex to RGB', '// Helper: Seconds <-> DHMS');
+const { hexToRgb } = loadModule([hexToRgbLogic], ['hexToRgb']);
+
 describe('getContrastColor', () => {
     it('should return white for dark colors', () => {
         expect(getContrastColor('#000000')).toBe('#ffffff');
@@ -44,5 +48,30 @@ describe('getContrastColor', () => {
         // #8b8b8b (139, 139, 139)
         // YIQ = 139
         expect(getContrastColor('#8b8b8b')).toBe('#ffffff');
+    });
+});
+
+describe('hexToRgb', () => {
+    it('should convert standard 6-character hex colors to RGB', () => {
+        expect(hexToRgb('#ffffff')).toBe('255, 255, 255');
+        expect(hexToRgb('#000000')).toBe('0, 0, 0');
+        expect(hexToRgb('#ff0000')).toBe('255, 0, 0');
+        expect(hexToRgb('#00ff00')).toBe('0, 255, 0');
+        expect(hexToRgb('#0000ff')).toBe('0, 0, 255');
+    });
+
+    it('should be case insensitive', () => {
+        expect(hexToRgb('#FFFFFF')).toBe('255, 255, 255');
+        expect(hexToRgb('#Ff00aA')).toBe('255, 0, 170');
+    });
+
+    it('should return null for invalid inputs', () => {
+        expect(hexToRgb(null)).toBeNull();
+        expect(hexToRgb(undefined)).toBeNull();
+        expect(hexToRgb('')).toBeNull();
+        expect(hexToRgb('ffffff')).toBeNull(); // Missing '#'
+        expect(hexToRgb('#fff')).toBeNull(); // Short form not supported by the regex
+        expect(hexToRgb('#zzzzzz')).toBeNull(); // Invalid characters
+        expect(hexToRgb('#ffff')).toBeNull(); // Invalid length
     });
 });
