@@ -457,18 +457,6 @@ function secondsToDHMS(seconds) {
     return { d, h, m, s };
 }
 
-/**
- * Converts DHMS values back to total seconds.
- * @param {number} d - Days
- * @param {number} h - Hours
- * @param {number} m - Minutes
- * @param {number} s - Seconds
- * @returns {number}
- */
-function dhmsToSeconds(d, h, m, s) {
-    return (d * 86400) + (h * 3600) + (m * 60) + s;
-}
-
 // --- State Persistence (Separate from Settings) ---
 const STATE_KEY = 'oshigoto_calendar_state';
 let appState = {
