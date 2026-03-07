@@ -8,8 +8,8 @@ trigger: always_on
 
 ## 1. 隔離プロファイルの使用
 ブラウザを起動する際は、必ずプロジェクトルート配下の隔離ディレクトリを使用してください。
-- **データディレクトリ**: `.agent/browser_data`
-- **必須引数**: `--user-data-dir=".agent/browser_data"`
+- **データディレクトリ**: `.agents/browser_data`
+- **必須引数**: `--user-data-dir=".agents/browser_data"`
 - **補足**: Antigravity ツールがシステムレベルのプロファイル（例: `%USERPROFILE%\.gemini\antigravity-browser-profile`）を優先して使用する場合があります。この場合でも、後述の修繕スクリプトによってバブルを抑制します。
 
 ## 2. 起動時のバブル抑止（引数）
@@ -25,7 +25,7 @@ trigger: always_on
 ### 修繕の実行
 プロジェクトルートで以下のコマンドを実行します。
 ```powershell
-powershell -ExecutionPolicy Bypass -File .agent/scripts/fix_preferences.ps1
+powershell -ExecutionPolicy Bypass -File .agents/scripts/fix_preferences.ps1
 ```
 これにより、以下の項目が自動的に修正されます：
 - `"exit_type": "Crashed" / "SessionCrashed"` → `"Normal"`
