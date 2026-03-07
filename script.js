@@ -1347,13 +1347,11 @@ async function renderLocalImageManager() {
 async function handleLocalImageImport(files) {
     if (!files || files.length === 0) return;
 
-    let addedCount = 0;
+    const fileArray = Array.from(files).filter(f => f.type.startsWith('image/'));
+    const importPromises = fileArray.map(file => localImageDB.addImage(file));
 
-    for (const file of Array.from(files)) {
-        if (!file.type.startsWith('image/')) continue;
-        await localImageDB.addImage(file);
-        addedCount++;
-    }
+    await Promise.all(importPromises);
+    const addedCount = fileArray.length;
 
     showToast(`${addedCount} 枚の画像を追加しました`);
     updateLocalMediaUI();
@@ -1659,13 +1657,10 @@ function setupPreviewModal() {
         modal.close(); // Close first
 
         // Actually save
-        let count = 0;
-        let lastKey = null;
-
-        for (const file of pendingPreviewFiles) {
-            lastKey = await localImageDB.addImage(file);
-            count++;
-        }
+        const importPromises = pendingPreviewFiles.map(file => localImageDB.addImage(file));
+        const results = await Promise.all(importPromises);
+        const count = results.length;
+        const lastKey = results[results.length - 1];
 
         if (count > 0) {
             hasNewLocalImages = true;
@@ -2552,9 +2547,9 @@ if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
     // E2E UI testing uses standard scripts.
     try {
         if (typeof module !== 'undefined' && module.exports) {
-           // We are in node tests, vitest can use module.exports
+            // We are in node tests, vitest can use module.exports
         }
-    } catch(e) {}
+    } catch (e) { }
 } else if (typeof exports !== 'undefined' && typeof window === 'undefined') {
     // Only throw exports in node-like environments that are expecting it. E2E browser environments
     // running via <script src="script.js"> will throw SyntaxError on export.
