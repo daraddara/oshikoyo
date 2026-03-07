@@ -26,6 +26,7 @@ description: GitHub Pull Request (PR) の管理および操作に関する基本
 - `git-branching-policy.md` の「マージの条件 (Definition of Done)」をすべて満たしていることを再確認します。
 - マージは原則として **Squash Merge** 行います。
 - コマンド例: `gh pr merge --squash --delete-branch`
+  - `--delete-branch` フラグを使用することで、マージ完了と同時にリモートブランチが削除され、不要なブランチが残るのを防げます。
 
 # 注意事項
 - PR作業中に大規模なリファクタリングを勝手に含めないでください。必要な場合は別途PRを作成してください。
