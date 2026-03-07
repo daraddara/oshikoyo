@@ -62,8 +62,9 @@ describe('Security: XSS Vulnerability in renderCalendar via oshi.color', () => {
 
         // The payload should be present as ESCAPED text in the innerHTML
         const innerHTML = container.innerHTML;
-        // In original setup `borderStyle` used `${escapedColor}` directly inside border-left, meaning the color was escaped properly.
-        // `baseStyle` does the same. JSDOM serializes the `style` attribute back into `&quot;;><img`
+
+        // The HTML specification for DOM serialization does not escape < and > inside attribute values.
+        // The payload remains trapped securely within the style attribute because the leading " is escaped to &quot;.
         expect(innerHTML).toContain('&quot;;><img');
     });
 
