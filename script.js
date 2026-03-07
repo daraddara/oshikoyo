@@ -802,8 +802,15 @@ function renderCalendar(container, year, month) {
 
             const textColor = oshi.color ? getContrastColor(oshi.color) : '#333';
             const textShadow = textColor === '#ffffff' ? '0 0 1px rgba(0,0,0,0.3)' : 'none';
-            const baseStyle = oshi.color ? `background-color: ${oshi.color}; color: ${textColor}; text-shadow: ${textShadow};` : '';
-            const borderStyle = oshi.color ? `border-left: 3px solid ${oshi.color};` : 'border-left: 3px solid #ccc;';
+
+            let baseStyle = '';
+            let borderStyle = 'border-left: 3px solid #ccc;';
+
+            if (oshi.color) {
+                const escapedColor = escapeHTML(oshi.color);
+                baseStyle = `background-color: ${escapedColor}; color: ${textColor}; text-shadow: ${textShadow};`;
+                borderStyle = `border-left: 3px solid ${escapedColor};`;
+            }
 
             // Birthday Check
             const bd = parseDateString(oshi.birthday);
@@ -2632,6 +2639,21 @@ if (typeof window !== 'undefined') { window.addEventListener('resize', adjustMed
 // script ends here
 
 // --- Exports for Testing ---
+/** @export */
+window.appSettings = appSettings;
+/** @export */
+window.renderCalendar = renderCalendar;
+/** @export */
+window.escapeHTML = escapeHTML;
+/** @export */
+window.getContrastColor = getContrastColor;
+/** @export */
+window.parseDateString = parseDateString;
+/** @export */
+window.getWeekdayHeaderHTML = getWeekdayHeaderHTML;
+/** @export */
+window.getJPHoliday = getJPHoliday;
+
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         appSettings,
@@ -2643,3 +2665,13 @@ if (typeof module !== 'undefined' && module.exports) {
         getJPHoliday
     };
 }
+
+export {
+    appSettings,
+    renderCalendar,
+    escapeHTML,
+    getContrastColor,
+    parseDateString,
+    getWeekdayHeaderHTML,
+    getJPHoliday
+};
