@@ -7,9 +7,11 @@ description: Playwright E2EテストによるUIおよび機能検証の自動実
    - Linux: `npx kill-port 8081` および `pkill -9 chrome || true`
    - Windows: `taskkill /F /IM node.exe /T` および `taskkill /F /IM chrome.exe /T`
 
-2. **E2Eテストの実行**:
-   - Playwright による E2E テストを実行します。このテスト内で開発サーバーの起動からUI検証まで自動で行われます。
-   - `npm run e2e`
+- 2. **E2Eテストの実行**:
+-    - Playwright による E2E テストを実行します。このテスト内で開発サーバーの起動からUI検証まで自動で行われます。
+-    - `npm run e2e`
+-    - > [!TIP]
+-      > WSL等の低速な環境でタイムアウトが発生する場合は、`TEST_TIMEOUT_FACTOR=2.0 npm run e2e` のように環境変数を指定して実行してください。
 
 3. **検証と記録**:
    - E2E テストが成功したか確認してください。
