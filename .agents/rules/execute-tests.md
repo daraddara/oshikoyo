@@ -34,7 +34,7 @@ trigger: always_on
 - **待機**: `sleep 5` を実行。
 
 ## 5. ブラウザ検証の要件
-- ブラウザを起動する際は、必ず `.agents/rules/browser-isolation.md` の規定に従い、プロジェクトルートの隔離プロファイル (`.agent/browser_data`) を使用してください。
+- ブラウザを起動する際は、必ず `.agents/rules/browser-isolation.md` の規定に従い、プロジェクトルートの隔離プロファイル (`.agents/browser_data`) を使用してください。
 - URL は常にフルパス (`http://localhost:8081/index.html`) で指定し、相対パスでのアクセスを禁止します。
 
 ## 6. エラー時の対応

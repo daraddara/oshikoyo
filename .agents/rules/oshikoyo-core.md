@@ -23,4 +23,4 @@ description: 推しカレの基本開発規約（JS/CSS）
 # 開発環境
 - **ポート固定**: 視覚的確認や機能テストの際は、ポート `8081` を使用してください。
 - **アクセス制限**: セキュリティおよび機能正常動作のため、ブラウザで直接ファイルを開く（`file:///`）ことは禁止します。必ず `http://localhost:8081` 経由でアクセスしてください。
-- **ブラウザ隔離**: ブラウザツールを使用する際は、必ず [.agents/rules/browser-isolation.md](file:///d:/Projects/oshigoto-calendar/.agents/rules/browser-isolation.md) の規定を遵守してください。
+- **ブラウザ隔離**: ブラウザツールを使用する際は、必ず [.agents/rules/browser-isolation.md](./browser-isolation.md) の規定を遵守してください。
