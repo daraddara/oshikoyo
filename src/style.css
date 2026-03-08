@@ -56,7 +56,7 @@ body {
     min-height: 100vh;
     min-height: 100vh;
     padding: 20px;
-    transition: background 0.3s ease;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* App Container */
@@ -153,7 +153,7 @@ body {
     /* Ensure bottom scroll clearance */
     overflow-y: auto;
     overflow-x: hidden;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .main-layout.pos-top {
@@ -702,12 +702,37 @@ body {
     }
 }
 
-.media-container img {
-    /* Fill container but keep aspect ratio */
+.media-content-layer img,
+.media-content-layer video {
+    object-fit: contain;
+}
+
+/* Glassmorphism Layers */
+.media-backdrop {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    filter: blur(25px) brightness(0.7);
+    z-index: -1;
+    opacity: 0.8;
+    transform: scale(1.1);
+    /* Prevent edge flicker */
+}
+
+.media-main-img {
     width: 100%;
     height: 100%;
-    border-radius: 12px;
     object-fit: contain;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+    z-index: 1;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.media-main-img:hover {
+    transform: scale(1.02);
 }
 
 .media-container.drag-active {
@@ -2273,6 +2298,7 @@ details[open]>summary::before {
 .oshi-edit-modal {
     max-width: 400px;
 }
+
 /* Mobile Specific Overrides */
 @media (max-width: 768px) {
     .main-layout {
@@ -2280,29 +2306,35 @@ details[open]>summary::before {
         height: auto !important;
         overflow-y: visible !important;
     }
+
     .media-area {
         width: 100% !important;
         max-width: 100% !important;
         position: static !important;
     }
+
     /* Ensure image container doesn't take full height */
     .media-container {
         height: 35vh !important;
         min-height: 250px !important;
     }
+
     .calendar-section {
         width: 100% !important;
         margin-top: 10px !important;
     }
+
     .calendar-wrapper {
         flex-direction: column !important;
         width: 100% !important;
     }
+
     .calendar-month {
         width: 100% !important;
         max-width: 100% !important;
         flex: none !important;
     }
+
     /* Hide desktop specific controls */
     .toggle-months-btn,
     #btnToggleLayout,

@@ -19,6 +19,7 @@ const DEFAULT_SETTINGS = {
     mediaPosition: 'top', // 'top', 'bottom', 'left', 'right'
     mediaSize: null,      // size of media area (width or height depending on position)
     mediaIntervalPreset: '1m', // '10s', '30s', '1m', '10m', '1h', '0:00', '4:00', 'startup'
+    autoLayoutMode: true,  // Automatically optimize layout based on image aspect ratio
 };
 
 // --- IndexedDB Management ---
@@ -1697,6 +1698,10 @@ function initSettings() {
         const radiosStart = document.querySelectorAll('input[name="startOfWeek"]');
         radiosStart.forEach(r => { if (parseInt(r.value) === appSettings.startOfWeek) r.checked = true; });
 
+        // Auto Layout
+        const checkAutoLayout = document.getElementById('checkAutoLayout');
+        if (checkAutoLayout) checkAutoLayout.checked = !!appSettings.autoLayoutMode;
+
         // Media Button State Update
         updateQuickMediaButtons();
 
@@ -1978,6 +1983,10 @@ function saveSettings() {
     // Basic
     const startOfWeekEl = document.querySelector('input[name="startOfWeek"]:checked');
     if (startOfWeekEl) appSettings.startOfWeek = parseInt(startOfWeekEl.value);
+
+    // Auto Layout
+    const checkAutoLayout = document.getElementById('checkAutoLayout');
+    if (checkAutoLayout) appSettings.autoLayoutMode = checkAutoLayout.checked;
 
     // Media mode is managed by UI buttons directly
     // Interval is managed by select menu directly
@@ -2311,13 +2320,37 @@ async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'
         existing.forEach(el => el.remove());
     }
 
+    // Helper to get or create image display area (to preserve buttons)
+    let displayArea = contentLayer.querySelector('.media-display-area');
+    if (!displayArea) {
+        displayArea = document.createElement('div');
+        displayArea.className = 'media-display-area';
+        displayArea.style.width = '100%';
+        displayArea.style.height = '100%';
+        displayArea.style.display = 'flex';
+        displayArea.style.alignItems = 'center';
+        displayArea.style.justifyContent = 'center';
+        contentLayer.appendChild(displayArea);
+    }
+
 
 
     // --- Logic: Local Only ---
     try {
         const keys = await localImageDB.getAllKeys();
         if (keys.length === 0) {
-            contentLayer.innerHTML = '<img src="assets/default_image.png" alt="Default Image" style="width:100%; height:100%; object-fit:contain;">';
+            displayArea.innerHTML = '';
+            const defaultImg = document.createElement('img');
+            defaultImg.alt = "Default Image";
+            defaultImg.style.cssText = 'width:100%; height:100%; object-fit:contain;';
+
+            // Apply auto layout even for default image
+            defaultImg.onload = () => {
+                applyAutoLayout(defaultImg);
+            };
+            defaultImg.src = 'src/assets/default_image.png';
+
+            displayArea.appendChild(defaultImg);
             return;
         }
 
@@ -2419,20 +2452,118 @@ async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'
 
                 // Determine content type
                 const mime = (record.file ? record.file.type : record.type) || 'image/png';
-                let html = '';
-                if (mime.startsWith('image/')) {
-                    html = `<img src="${currentMediaObjectURL}" alt="Oshi Media" style="width:100%; height:100%; object-fit:contain;">`;
-                } else if (mime.startsWith('video/')) {
-                    html = `<video src="${currentMediaObjectURL}" autoplay muted loop playsinline style="width:100%; height:100%; object-fit:contain;"></video>`;
+
+                // Important: DO NOT clear contentLayer entirely, as it contains nav buttons and displayArea.
+                // Clear ONLY the displayArea content.
+                if (displayArea) {
+                    displayArea.innerHTML = '';
                 }
 
-                contentLayer.innerHTML = html;
+                if (mime.startsWith('image/')) {
+                    // Create Background Layer (Blur)
+                    const backdrop = document.createElement('img');
+                    backdrop.className = 'media-backdrop';
+                    backdrop.src = currentMediaObjectURL;
+
+                    // Create Main Image Layer
+                    const mainImg = document.createElement('img');
+                    mainImg.className = 'media-main-img';
+                    mainImg.alt = "Oshi Media";
+
+                    // Aspect Ratio Detection & Auto Layout - Set handler BEFORE src
+                    mainImg.onload = () => {
+                        applyAutoLayout(mainImg);
+                    };
+                    mainImg.src = currentMediaObjectURL;
+
+                    if (displayArea) {
+                        displayArea.appendChild(backdrop);
+                        displayArea.appendChild(mainImg);
+                    }
+                } else if (mime.startsWith('video/')) {
+                    const video = document.createElement('video');
+                    video.src = currentMediaObjectURL;
+                    video.autoplay = true;
+                    video.muted = true;
+                    video.loop = true;
+                    video.playsInline = true;
+                    video.style.width = '100%';
+                    video.style.height = '100%';
+                    video.style.objectFit = 'contain';
+                    if (displayArea) {
+                        displayArea.appendChild(video);
+                    }
+                }
             }
         }
     } catch (e) {
-        console.error(e);
-        contentLayer.innerHTML = '<p class="media-placeholder">画像の読み込みエラー</p>';
+        console.error("Error in updateMediaArea:", e);
+        if (displayArea) {
+            displayArea.innerHTML = '<p class="media-placeholder">画像の読み込みエラー</p>';
+        }
     }
+}
+
+/**
+ * 画像のアスペクト比を判定し、おまかせモードならレイアウトを自動調整する。
+ * @param {HTMLImageElement} img 判定対象の画像エレメント
+ */
+function applyAutoLayout(img) {
+    if (!appSettings.autoLayoutMode) return;
+
+    const w = img.naturalWidth;
+    const h = img.naturalHeight;
+
+    if (w === 0 || h === 0) {
+        console.warn(`[AutoLayout] Image dimensions are zero (${w}x${h}). Skipping adjustment.`);
+        return;
+    }
+
+    const ratio = w / h;
+    const invRatio = h / w;
+
+    console.log(`[AutoLayout] Image Loaded: ${w}x${h} (Ratio: ${ratio.toFixed(2)}, InvRatio: ${invRatio.toFixed(2)})`);
+
+    let changed = false;
+    if (ratio >= 1.2) {
+        // Landscape -> Top Photo + Row Calendar
+        console.log("[AutoLayout] Decision: Landscape");
+        if (appSettings.mediaPosition !== 'top' || appSettings.layoutDirection !== 'row') {
+            appSettings.mediaPosition = 'top';
+            appSettings.layoutDirection = 'row';
+            changed = true;
+        }
+    } else if (invRatio >= 1.2) {
+        // Portrait -> Left Photo + Column Calendar
+        console.log("[AutoLayout] Decision: Portrait");
+        if (appSettings.mediaPosition !== 'left' || appSettings.layoutDirection !== 'column') {
+            appSettings.mediaPosition = 'left';
+            appSettings.layoutDirection = 'column';
+            changed = true;
+        }
+    } else {
+        // Default/Square -> Standard Top + Row
+        console.log("[AutoLayout] Decision: Default");
+        if (appSettings.mediaPosition !== 'top' || appSettings.layoutDirection !== 'row') {
+            appSettings.mediaPosition = 'top';
+            appSettings.layoutDirection = 'row';
+            changed = true;
+        }
+    }
+
+    if (changed) {
+        console.log(`[AutoLayout] Applying new settings: Pos=${appSettings.mediaPosition}, Dir=${appSettings.layoutDirection}`);
+        saveSettingsSilently();
+        updateLayoutToggleUI();
+        updateView(); // Re-render everything with new layout classes
+    }
+}
+
+/**
+ * Saves settings to localStorage without closing the modal or showing toast.
+ */
+function saveSettingsSilently() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
 }
 
 function adjustMediaLayout() {
