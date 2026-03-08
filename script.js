@@ -5,7 +5,7 @@
 // --- Settings State ---
 const DEFAULT_SETTINGS = {
     startOfWeek: 0, // 0: Sun, 1: Mon
-    monthCount: 2,  // 1, 2, 3
+    monthCount: 2,  // 1, 2
     layoutDirection: 'row', // 'row', 'column'
     // Oshi Settings (New List Structure)
     oshiList: [],
@@ -1870,6 +1870,10 @@ function loadSettings() {
     if (saved) {
         try {
             const parsed = JSON.parse(saved);
+            // Validation: monthCount must be 1 or 2
+            if (parsed.monthCount > 2) {
+                parsed.monthCount = 2;
+            }
             appSettings = { ...DEFAULT_SETTINGS, ...parsed };
 
             // Migration: Logic to move single oshi to list if list is empty but single exists
@@ -2111,7 +2115,8 @@ function init() {
     if (btnToggleMonths) {
         updateToggleMonthsUI();
         btnToggleMonths.addEventListener('click', () => {
-            appSettings.monthCount = (appSettings.monthCount % 3) + 1;
+            // 1 -> 2 -> 1
+            appSettings.monthCount = (appSettings.monthCount % 2) + 1;
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
             updateToggleMonthsUI();
             updateView();
