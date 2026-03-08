@@ -2,12 +2,12 @@ const CACHE_NAME = 'oshigoto-calendar-v6';
 const ASSETS = [
     './',
     './index.html',
-    './style.css',
-    './script.js',
+    './src/style.css',
+    './src/script.js',
     './manifest.json',
-    './assets/default_image.png',
-    './assets/icon-192.png',
-    './assets/icon-512.png'
+    './src/assets/default_image.png',
+    './src/assets/icon-192.png',
+    './src/assets/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {

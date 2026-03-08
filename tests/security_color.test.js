@@ -15,7 +15,7 @@ beforeAll(async () => {
     vi.spyOn(document, 'addEventListener').mockImplementation(() => { });
 
     // Dynamically import script.js
-    const imported = await import('../script.js');
+    const imported = await import('../src/script.js');
     scriptModule = imported.default || imported;
 });
 
