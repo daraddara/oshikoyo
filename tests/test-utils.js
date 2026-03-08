@@ -10,7 +10,7 @@ import 'fake-indexeddb/auto';
  * @returns {string} 抽出されたコード
  */
 export function extractCode(startMarker, endMarker) {
-    const scriptPath = path.resolve(__dirname, '../script.js');
+    const scriptPath = path.resolve(__dirname, '../src/script.js');
     const content = fs.readFileSync(scriptPath, 'utf8');
 
     const startIndex = content.indexOf(startMarker);
