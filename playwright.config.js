@@ -1,15 +1,26 @@
 import { defineConfig, devices } from '@playwright/test';
+import { TEST_CONFIG } from './tests/test-config.js';
 
 export default defineConfig({
     testDir: './tests/e2e',
-    fullyParallel: true,
+    fullyParallel: TEST_CONFIG.workers !== 1,
     forbidOnly: !!process.env.CI,
-    retries: process.env.CI ? 2 : 0,
-    workers: process.env.CI ? 1 : undefined,
+    retries: TEST_CONFIG.retries,
+    workers: TEST_CONFIG.workers,
+    timeout: TEST_CONFIG.timeouts.long,
+    expect: {
+        timeout: TEST_CONFIG.timeouts.short,
+        toHaveScreenshot: {
+            maxDiffPixelRatio: TEST_CONFIG.visual.maxDiffPixelRatio,
+            threshold: TEST_CONFIG.visual.threshold,
+        },
+    },
     reporter: 'html',
     use: {
         baseURL: 'http://localhost:8081',
         trace: 'on-first-retry',
+        actionTimeout: TEST_CONFIG.timeouts.short,
+        navigationTimeout: TEST_CONFIG.timeouts.nav,
     },
     projects: [
         {
@@ -29,12 +40,12 @@ export default defineConfig({
             use: { ...devices['iPad (gen 7)'] },
         },
     ],
-    // テスト実行前にサーバーを起動する設定
     webServer: {
         command: 'npm run serve',
         url: 'http://localhost:8081',
         reuseExistingServer: true,
         stdout: 'pipe',
         stderr: 'pipe',
+        timeout: 120000,
     },
 });
