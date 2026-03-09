@@ -4,6 +4,9 @@ import path from 'path';
 
 test.describe('Layout Auto-Optimization & Glassmorphism', () => {
     test.beforeEach(async ({ page }) => {
+        // Date Mocking
+        await page.clock.install({ time: new Date('2026-03-08T00:00:00Z') });
+
         await page.goto('/index.html');
         await page.waitForLoadState('networkidle');
 

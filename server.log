@@ -1573,3 +1573,787 @@
  HTTP  3/8/2026 6:40:03 PM ::1 GET /
  HTTP  3/8/2026 6:40:03 PM ::1 Returned 200 in 4 ms
  HTTP  3/8/2026 6:40:03 PM ::1 Returned 200 in 0 ms
+ HTTP  3/9/2026 3:30:54 AM ::1 GET /
+ HTTP  3/9/2026 3:30:54 AM ::1 Returned 200 in 69 ms
+ HTTP  3/9/2026 3:30:54 AM ::1 GET /
+ HTTP  3/9/2026 3:30:54 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:31:02 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:31:02 AM ::1 Returned 301 in 3 ms
+ HTTP  3/9/2026 3:31:02 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:31:02 AM ::1 Returned 301 in 2 ms
+ HTTP  3/9/2026 3:31:02 AM ::1 GET /index
+ HTTP  3/9/2026 3:31:02 AM ::1 Returned 301 in 2 ms
+ HTTP  3/9/2026 3:31:02 AM ::1 GET /index
+ HTTP  3/9/2026 3:31:02 AM ::1 Returned 301 in 2 ms
+ HTTP  3/9/2026 3:31:02 AM ::1 GET /
+ HTTP  3/9/2026 3:31:02 AM ::1 Returned 200 in 14 ms
+ HTTP  3/9/2026 3:31:02 AM ::1 GET /
+ HTTP  3/9/2026 3:31:02 AM ::1 Returned 200 in 7 ms
+ HTTP  3/9/2026 3:31:02 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:02 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:02 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:02 AM ::1 Returned 200 in 13 ms
+ HTTP  3/9/2026 3:31:02 AM ::1 Returned 200 in 12 ms
+ HTTP  3/9/2026 3:31:02 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:02 AM ::1 Returned 200 in 18 ms
+ HTTP  3/9/2026 3:31:02 AM ::1 Returned 200 in 18 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 200 in 13 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 304 in 4 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 304 in 11 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 304 in 9 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 304 in 6 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 200 in 9 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 304 in 9 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 304 in 4 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 304 in 4 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 304 in 3 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:31:04 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 200 in 12 ms
+ HTTP  3/9/2026 3:31:04 AM ::1 Returned 200 in 13 ms
+ HTTP  3/9/2026 3:31:10 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:31:10 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:31:10 AM ::1 GET /index
+ HTTP  3/9/2026 3:31:10 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:31:10 AM ::1 GET /
+ HTTP  3/9/2026 3:31:10 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:31:10 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:10 AM ::1 Returned 200 in 9 ms
+ HTTP  3/9/2026 3:31:10 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:10 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:31:10 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:31:10 AM ::1 Returned 301 in 2 ms
+ HTTP  3/9/2026 3:31:10 AM ::1 GET /index
+ HTTP  3/9/2026 3:31:10 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:31:10 AM ::1 GET /
+ HTTP  3/9/2026 3:31:10 AM ::1 Returned 200 in 8 ms
+ HTTP  3/9/2026 3:31:11 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:11 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:31:11 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:11 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:31:11 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:31:11 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:11 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:31:11 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:31:11 AM ::1 GET /
+ HTTP  3/9/2026 3:31:11 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:11 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:11 AM ::1 Returned 304 in 4 ms
+ HTTP  3/9/2026 3:31:11 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:11 AM ::1 GET /
+ HTTP  3/9/2026 3:31:11 AM ::1 Returned 304 in 3 ms
+ HTTP  3/9/2026 3:31:11 AM ::1 Returned 304 in 2 ms
+ HTTP  3/9/2026 3:31:11 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:31:11 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:11 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:31:11 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:11 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:31:11 AM ::1 Returned 304 in 9 ms
+ HTTP  3/9/2026 3:31:11 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:31:11 AM ::1 Returned 200 in 7 ms
+ HTTP  3/9/2026 3:31:11 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:31:11 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:11 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:11 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:31:12 AM ::1 GET /
+ HTTP  3/9/2026 3:31:12 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:12 AM ::1 Returned 304 in 3 ms
+ HTTP  3/9/2026 3:31:12 AM ::1 Returned 304 in 5 ms
+ HTTP  3/9/2026 3:31:12 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:31:12 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:12 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:31:12 AM ::1 Returned 304 in 5 ms
+ HTTP  3/9/2026 3:31:12 AM ::1 GET /
+ HTTP  3/9/2026 3:31:12 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:12 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:12 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:31:12 AM ::1 Returned 304 in 2 ms
+ HTTP  3/9/2026 3:31:12 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:31:12 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:31:12 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:31:17 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:31:17 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:31:17 AM ::1 GET /index
+ HTTP  3/9/2026 3:31:17 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:31:17 AM ::1 GET /
+ HTTP  3/9/2026 3:31:17 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:17 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:17 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:31:17 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:17 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:31:17 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:31:17 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:31:17 AM ::1 GET /index
+ HTTP  3/9/2026 3:31:17 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:31:17 AM ::1 GET /
+ HTTP  3/9/2026 3:31:17 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:17 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:17 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:17 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:31:17 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 304 in 2 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 304 in 3 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 304 in 2 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 304 in 2 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:18 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:31:18 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:21 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:31:21 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:31:21 AM ::1 GET /index
+ HTTP  3/9/2026 3:31:21 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:31:21 AM ::1 GET /
+ HTTP  3/9/2026 3:31:21 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:21 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:21 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:21 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:21 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:22 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:31:22 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:31:22 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:22 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:22 AM ::1 GET /
+ HTTP  3/9/2026 3:31:22 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:22 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:22 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:22 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:22 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:31:22 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:22 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:22 AM ::1 GET /
+ HTTP  3/9/2026 3:31:22 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:22 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:31:22 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:22 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:22 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:22 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:31:22 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:25 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:31:25 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:31:25 AM ::1 GET /index
+ HTTP  3/9/2026 3:31:25 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:31:25 AM ::1 GET /
+ HTTP  3/9/2026 3:31:25 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:31:25 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:25 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:25 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:25 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:31:26 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:31:26 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:31:26 AM ::1 GET /
+ HTTP  3/9/2026 3:31:26 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:26 AM ::1 Returned 304 in 2 ms
+ HTTP  3/9/2026 3:31:26 AM ::1 Returned 304 in 2 ms
+ HTTP  3/9/2026 3:31:26 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:31:26 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:26 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:26 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:26 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:31:26 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:26 AM ::1 GET /
+ HTTP  3/9/2026 3:31:26 AM ::1 Returned 304 in 4 ms
+ HTTP  3/9/2026 3:31:26 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:31:26 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:31:26 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:26 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:31:26 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:31:26 AM ::1 Returned 304 in 7 ms
+ HTTP  3/9/2026 3:31:27 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:31:27 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:31:27 AM ::1 GET /index
+ HTTP  3/9/2026 3:31:27 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:31:27 AM ::1 GET /
+ HTTP  3/9/2026 3:31:27 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:27 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:27 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:27 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:27 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:28 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:31:28 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:31:28 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:28 AM ::1 Returned 200 in 0 ms
+ HTTP  3/9/2026 3:31:28 AM ::1 GET /
+ HTTP  3/9/2026 3:31:28 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:28 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:28 AM ::1 Returned 304 in 4 ms
+ HTTP  3/9/2026 3:31:28 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:28 AM ::1 GET /
+ HTTP  3/9/2026 3:31:28 AM ::1 Returned 304 in 9 ms
+ HTTP  3/9/2026 3:31:28 AM ::1 Returned 304 in 7 ms
+ HTTP  3/9/2026 3:31:28 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:31:28 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:31:28 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:31:28 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:28 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:31:28 AM ::1 Returned 304 in 2 ms
+ HTTP  3/9/2026 3:31:28 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:31:28 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:28 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:31:28 AM ::1 Returned 304 in 1 ms
+ HTTP  3/9/2026 3:31:28 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:28 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:31:28 AM ::1 Returned 304 in 8 ms
+ HTTP  3/9/2026 3:31:28 AM ::1 Returned 304 in 7 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /index
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 200 in 0 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 301 in 3 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /index
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:31:32 AM ::1 GET /
+ HTTP  3/9/2026 3:31:32 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:31:42 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:31:42 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:31:42 AM ::1 GET /index
+ HTTP  3/9/2026 3:31:42 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:31:42 AM ::1 GET /
+ HTTP  3/9/2026 3:31:42 AM ::1 Returned 200 in 0 ms
+ HTTP  3/9/2026 3:31:42 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:42 AM ::1 Returned 200 in 8 ms
+ HTTP  3/9/2026 3:31:42 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:31:42 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:31:42 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:42 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:43 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:31:43 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:43 AM ::1 Returned 200 in 13 ms
+ HTTP  3/9/2026 3:31:43 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:31:43 AM ::1 GET /
+ HTTP  3/9/2026 3:31:43 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:43 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:31:43 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:31:43 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:43 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:43 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:31:43 AM ::1 Returned 200 in 7 ms
+ HTTP  3/9/2026 3:31:43 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:43 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:31:43 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:31:43 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:43 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:31:43 AM ::1 GET /index
+ HTTP  3/9/2026 3:31:43 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:31:43 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:31:43 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:31:43 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:31:43 AM ::1 GET /
+ HTTP  3/9/2026 3:31:43 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:54 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:31:54 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:31:54 AM ::1 GET /index
+ HTTP  3/9/2026 3:31:54 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:31:54 AM ::1 GET /
+ HTTP  3/9/2026 3:31:54 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:54 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:54 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:31:54 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:54 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:31:54 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:31:54 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:55 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:31:55 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:55 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:55 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:55 AM ::1 GET /
+ HTTP  3/9/2026 3:31:55 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:55 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:31:55 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:31:55 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:31:55 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:31:55 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:31:55 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:31:55 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:31:55 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:31:55 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:31:55 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:31:55 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:31:55 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:55 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:55 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:31:55 AM ::1 GET /index
+ HTTP  3/9/2026 3:31:55 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:31:55 AM ::1 GET /
+ HTTP  3/9/2026 3:31:55 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:04 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:32:04 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:32:04 AM ::1 GET /index
+ HTTP  3/9/2026 3:32:04 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:32:04 AM ::1 GET /
+ HTTP  3/9/2026 3:32:04 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:32:04 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:32:04 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:32:04 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:32:04 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:32:04 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:32:04 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:32:05 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:32:05 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:32:05 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:32:05 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:32:05 AM ::1 GET /
+ HTTP  3/9/2026 3:32:05 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:32:05 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:32:05 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:32:05 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:32:05 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:05 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:32:05 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:05 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:32:05 AM ::1 Returned 200 in 0 ms
+ HTTP  3/9/2026 3:32:05 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:32:05 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:32:05 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:32:05 AM ::1 GET /index
+ HTTP  3/9/2026 3:32:05 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:32:05 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:32:05 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:05 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:32:05 AM ::1 GET /
+ HTTP  3/9/2026 3:32:05 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:32:15 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:32:15 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:32:15 AM ::1 GET /index
+ HTTP  3/9/2026 3:32:15 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:32:15 AM ::1 GET /
+ HTTP  3/9/2026 3:32:15 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:32:15 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:32:15 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:32:15 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:32:15 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:15 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:32:15 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:16 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:32:16 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:16 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:32:16 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:32:16 AM ::1 GET /
+ HTTP  3/9/2026 3:32:16 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:32:16 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:32:16 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:32:16 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:32:16 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:32:16 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:32:16 AM ::1 Returned 200 in 7 ms
+ HTTP  3/9/2026 3:32:16 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:32:16 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:32:16 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:32:16 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:32:16 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:32:16 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:32:16 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:32:16 AM ::1 GET /index
+ HTTP  3/9/2026 3:32:16 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:32:16 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:32:16 AM ::1 GET /
+ HTTP  3/9/2026 3:32:16 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:32:25 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:32:25 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:32:25 AM ::1 GET /index
+ HTTP  3/9/2026 3:32:25 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:32:25 AM ::1 GET /
+ HTTP  3/9/2026 3:32:25 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:25 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:32:25 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:32:26 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:32:26 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:32:26 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:32:26 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:32:26 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:32:26 AM ::1 Returned 200 in 11 ms
+ HTTP  3/9/2026 3:32:26 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:32:26 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:32:26 AM ::1 GET /
+ HTTP  3/9/2026 3:32:26 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:32:26 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:32:26 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:32:26 AM ::1 Returned 200 in 14 ms
+ HTTP  3/9/2026 3:32:26 AM ::1 Returned 200 in 8 ms
+ HTTP  3/9/2026 3:32:26 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:32:26 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:32:26 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:32:26 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:32:26 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:32:26 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:32:26 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:32:26 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:32:26 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:32:26 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:32:26 AM ::1 GET /index
+ HTTP  3/9/2026 3:32:26 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:32:26 AM ::1 GET /
+ HTTP  3/9/2026 3:32:26 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /index
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 200 in 8 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /index
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:32:35 AM ::1 GET /
+ HTTP  3/9/2026 3:32:35 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /index
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 301 in 5 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 200 in 0 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 200 in 12 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 200 in 10 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 200 in 7 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 200 in 9 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /index
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:32:41 AM ::1 GET /
+ HTTP  3/9/2026 3:32:41 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:59 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:32:59 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:32:59 AM ::1 GET /index
+ HTTP  3/9/2026 3:32:59 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:32:59 AM ::1 GET /
+ HTTP  3/9/2026 3:32:59 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:59 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:32:59 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:32:59 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:32:59 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:59 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:32:59 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:32:59 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:32:59 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:32:59 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:32:59 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:00 AM ::1 GET /
+ HTTP  3/9/2026 3:33:00 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:33:00 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:33:00 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:33:00 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:33:00 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:00 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:33:00 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:33:00 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:33:00 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:33:00 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:33:00 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:33:00 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:33:00 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:33:00 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:33:00 AM ::1 Returned 200 in 7 ms
+ HTTP  3/9/2026 3:33:00 AM ::1 GET /index
+ HTTP  3/9/2026 3:33:00 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:33:00 AM ::1 GET /
+ HTTP  3/9/2026 3:33:00 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /index
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 200 in 7 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 200 in 9 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /index
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:33:12 AM ::1 GET /
+ HTTP  3/9/2026 3:33:12 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /index
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 200 in 0 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /index
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 GET /
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:33:25 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /index
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 200 in 2 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 200 in 8 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 200 in 8 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 200 in 11 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /index
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:33:36 AM ::1 GET /
+ HTTP  3/9/2026 3:33:36 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:45 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:33:45 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:33:45 AM ::1 GET /index
+ HTTP  3/9/2026 3:33:45 AM ::1 Returned 301 in 3 ms
+ HTTP  3/9/2026 3:33:45 AM ::1 GET /
+ HTTP  3/9/2026 3:33:45 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:45 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:33:45 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:45 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:33:45 AM ::1 Returned 200 in 3 ms
+ HTTP  3/9/2026 3:33:45 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:33:45 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:33:46 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:33:46 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:33:46 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:33:46 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:46 AM ::1 GET /
+ HTTP  3/9/2026 3:33:46 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:46 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:33:46 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:33:46 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:33:46 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:33:46 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:33:46 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:33:46 AM ::1 Returned 200 in 11 ms
+ HTTP  3/9/2026 3:33:46 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:33:46 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:33:46 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:33:46 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:33:46 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:33:46 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:33:46 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:33:46 AM ::1 GET /index
+ HTTP  3/9/2026 3:33:46 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:33:46 AM ::1 GET /
+ HTTP  3/9/2026 3:33:46 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:34:04 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:34:04 AM ::1 Returned 301 in 6 ms
+ HTTP  3/9/2026 3:34:04 AM ::1 GET /index
+ HTTP  3/9/2026 3:34:04 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:34:04 AM ::1 GET /
+ HTTP  3/9/2026 3:34:04 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:34:04 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:34:04 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:34:04 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:34:04 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:34:04 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:34:04 AM ::1 Returned 200 in 6 ms
+ HTTP  3/9/2026 3:34:05 AM ::1 GET /sw.js
+ HTTP  3/9/2026 3:34:05 AM ::1 Returned 200 in 13 ms
+ HTTP  3/9/2026 3:34:05 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:34:05 AM ::1 Returned 200 in 1 ms
+ HTTP  3/9/2026 3:34:05 AM ::1 GET /
+ HTTP  3/9/2026 3:34:05 AM ::1 Returned 200 in 5 ms
+ HTTP  3/9/2026 3:34:05 AM ::1 GET /index.html
+ HTTP  3/9/2026 3:34:05 AM ::1 Returned 301 in 0 ms
+ HTTP  3/9/2026 3:34:05 AM ::1 GET /src/style.css
+ HTTP  3/9/2026 3:34:05 AM ::1 GET /src/script.js
+ HTTP  3/9/2026 3:34:05 AM ::1 Returned 200 in 0 ms
+ HTTP  3/9/2026 3:34:05 AM ::1 Returned 200 in 4 ms
+ HTTP  3/9/2026 3:34:05 AM ::1 GET /src/assets/icon-192.png
+ HTTP  3/9/2026 3:34:05 AM ::1 Returned 200 in 8 ms
+ HTTP  3/9/2026 3:34:05 AM ::1 GET /manifest.json
+ HTTP  3/9/2026 3:34:05 AM ::1 GET /src/assets/icon-512.png
+ HTTP  3/9/2026 3:34:05 AM ::1 GET /src/assets/default_image.png
+ HTTP  3/9/2026 3:34:05 AM ::1 Returned 200 in 8 ms
+ HTTP  3/9/2026 3:34:05 AM ::1 Returned 200 in 11 ms
+ HTTP  3/9/2026 3:34:05 AM ::1 Returned 200 in 9 ms
+ HTTP  3/9/2026 3:34:05 AM ::1 GET /index
+ HTTP  3/9/2026 3:34:05 AM ::1 Returned 301 in 1 ms
+ HTTP  3/9/2026 3:34:05 AM ::1 GET /
+ HTTP  3/9/2026 3:34:05 AM ::1 Returned 200 in 7 ms
