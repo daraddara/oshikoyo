@@ -14,8 +14,8 @@ Thumbs.db
 node_modules/
 
 # Agent data
-.agent/browser_data/
-.agent/browser_test/
+.agents/browser_data/
+.agents/browser_test/
 
 # Playwright
 /test-results/
