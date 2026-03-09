@@ -22,7 +22,12 @@ description: 推しカレのテスト実施ルールと品質ガイドライン
 - エージェントは今後、UIの確認を求められたら「ブラウザの直接操作」ではなく `npm run e2e` を実行し、生成されたレポートや画像ファイルから状態を判断してください。
     - **スナップショット管理**: UIの検証には `expect(page).toHaveScreenshot()` を使用します。
     - **期待値 (Baselines)**: 初回実行時や意図的な変更時は `--update-snapshots` フラグを付けて実行し、生成された `*-snapshots/*.png` ファイルをコミットしてください。
+    - **視覚的許容度**: OS間のフォントレンダリング差を許容するため、`playwright.config.js` の `maxDiffPixelRatio` や `threshold` を適切に設定してください（原則として `maxDiffPixelRatio: 0.1` 程度を許容します）。
     - **実行結果 (Actuals/Diffs)**: テスト失敗時に生成される実際の画像や差分画像は `.gitignore` によりGit管理から除外されます。
+- **堅牢なテスト設計 (Robust Design)**:
+    - **定数の外部注入**: タイムアウト値やリトライ回数は `tests/test-config.js` に集約し、環境変数（`TEST_TIMEOUT_FACTOR` 等）で調整可能にしてください。
+    - **「時間」ではなく「状態」を待つ**: `page.waitForTimeout()` の使用を原則禁止します。代わりに `page.waitForSelector()` や `page.waitForFunction()` を使用し、要素の出現や状態変化を動的に検知してください。
+    - **リソース最適化**: WSL環境などの負荷を考慮し、必要に応じて並列実行数（workers）を制限してください（`playwright.config.js` で自動判定されるように構成します）。
 - Jules 環境においても、UI に変更がある場合は自律的に `npm run e2e` を実行し、必要に応じて `--update-snapshots` で基準画像を更新した上でコミットに含めてください。
 - Playwright等を用いたE2Eの画像レイアウト変動および切り替えの検証には、必ず `tests/fixtures/images/` 配下の専用テスト画像を使用してください。
 - もしテストが失敗した場合は、その原因を分析し、修正案を提示した上で再度テストを実行してください。

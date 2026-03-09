@@ -1,18 +1,25 @@
 import { test, expect } from '@playwright/test';
+import { TEST_CONFIG } from '../test-config.js';
 import path from 'path';
 
 test.describe('Layout Auto-Optimization & Glassmorphism', () => {
     test.beforeEach(async ({ page }) => {
-        await page.goto('http://localhost:8081/index.html');
+        await page.goto('/index.html');
+        await page.waitForLoadState('networkidle');
+
         // Ensure auto layout is ON
+        await page.waitForSelector('#btnSettings', { state: 'visible' });
         await page.click('#btnSettings');
+
         const autoLayoutCheckbox = page.locator('#checkAutoLayout');
+        await expect(autoLayoutCheckbox).toBeVisible();
+
         if (!(await autoLayoutCheckbox.isChecked())) {
             await autoLayoutCheckbox.check();
         }
         await page.click('#btnSave');
-        // Wait for modal to be fully ready
-        await page.waitForTimeout(500);
+        // Wait for modal to be fully closed
+        await page.waitForSelector('#settingsModal', { state: 'hidden' });
     });
 
     test('should optimize layout for landscape images with glassmorphism backdrop', async ({ page }) => {
@@ -68,7 +75,7 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
         const backdrop = page.locator('.media-backdrop').first();
         await expect(backdrop).toBeAttached();
 
-        await page.screenshot({ path: 'tests/e2e/screenshots/landscape_auto_layout.png', fullPage: true });
+        await expect(page).toHaveScreenshot('landscape_auto_layout.png');
     });
 
     test('should optimize layout for portrait images', async ({ page }) => {
@@ -114,7 +121,7 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
         const calendarWrapper = page.locator('#calendarWrapper');
         await expect(calendarWrapper).toHaveCSS('flex-direction', 'column');
 
-        await page.screenshot({ path: 'tests/e2e/screenshots/portrait_auto_layout.png', fullPage: true });
+        await expect(page).toHaveScreenshot('portrait_auto_layout.png');
     });
 
     test('should respect manual settings when auto-layout is OFF', async ({ page }) => {
