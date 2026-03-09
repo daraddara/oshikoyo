@@ -1,10 +1,10 @@
 # Google Jules — 環境固有の追加指示
 
 > このファイルは、**Google Jules** が本リポジトリで作業する際に、
-> [AGENTS.md](../AGENTS.md) の共通ルールに**追加**して従うべき、
+> [docs/AGENTS.md](../docs/AGENTS.md) の共通ルールに**追加**して従うべき、
 > Jules 固有の指示を定義します。
 >
-> **共通ルール（コーディング規約・テスト・Git運用等）は [AGENTS.md](../AGENTS.md) を参照してください。**
+> **共通ルール（コーディング規約・テスト・Git運用等）は [docs/AGENTS.md](../docs/AGENTS.md) を参照してください。**
 
 ---
 
