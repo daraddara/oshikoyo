@@ -10,8 +10,8 @@
 
 | エージェント / 環境 | 参照先 |
 |---|---|
-| **Google Jules**（GitHub 自律エージェント / Linux） | [.google-jules/instructions.md](.google-jules/instructions.md) |
-| **Antigravity**（ローカル IDE / Windows） | [.agents/rules/](.agents/rules/) ディレクトリ内の各ルールファイル |
+| **Google Jules**（GitHub 自律エージェント / Linux） | [../.google-jules/instructions.md](../.google-jules/instructions.md) |
+| **Antigravity**（ローカル IDE / Windows） | [../.agents/rules/](../.agents/rules/) ディレクトリ内の各ルールファイル |
 
 ---
 
