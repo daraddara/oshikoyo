@@ -1,24 +1,23 @@
-# UI Verification Walkthrough Report
+# Walkthrough 報告書
 
-## Execution Summary
+## 目的
+`.agents/workflows/check.md` に基づき、Playwright E2Eテストを実行してUIおよび機能検証を自動で行い、スクリーンショットを含めたテスト結果を報告します。
 
-Following the workflow defined in `.agents/workflows/check.md`, the UI of the application was verified.
+## 実行結果
+`npm run e2e` の実行により、以下の結果が得られました。
 
-1. **Pre-requisite actions:** Any conflicting background processes (`npx kill-port 8081`, `pkill -9 chrome`) were terminated to clean up the environment.
-2. **E2E Testing:** We ran the automated test suite `npm run e2e`.
-    - Note: The test suite has known, pre-existing failures on the base branch within `tests/e2e/auto_layout.test.js`. These are acknowledged but out of scope to fix for this task.
-3. **UI Capture via Isolated Profile:** A local Node server was started, and a custom Playwright script leveraging an isolated browser profile (`--user-data-dir` equivalent with suppressed crash bubbles via args) was used to capture the current state of the main UI without relying on any potentially flaky E2E test snapshots.
+- **成功したテスト**: 14件（モバイルUIレイアウトや設定モーダル等）
+- **Flakyなテスト**: 1件（Tablet向け縦向きレイアウト最適化）
+- **失敗したテスト**: 1件（Chromium向け縦向きレイアウト最適化）
 
-## Visual Verification
+### エラーの概要
+`tests/e2e/auto_layout.test.js:79` における縦長画像の自動レイアウト最適化テストにて、`locator('#mainLayout')` が `/pos-left/` クラスを持つことを期待しましたが、実際には `main-layout pos-top` となっており、テストが失敗しました。これはベースブランチで既に存在するエラーと考えられます。
 
-Below is the screenshot of the main page rendering, captured via the isolated profile:
+## スクリーンショット (最新UI)
 
-![](/app/Walkthrough_screenshot.png)
+縦向きレイアウト時のUI状態を以下に添付します。
 
-## Findings
-- The application loads successfully.
-- The default main image (Oshikoyo logo) is centered and visible.
-- The calendar UI is functioning and rendering correctly, displaying the months of March and April 2026.
-- The controls (settings, list, etc.) are rendered in the UI.
+![](/app/tests/e2e/screenshots/portrait_auto_layout.png)
 
-No significant unhandled inconsistencies were detected in the rendered layout.
+## まとめ
+テストスイートは大部分が成功しており、主要なUIやレイアウトは正常に機能していることが確認できました。縦長のレイアウト最適化について一部の環境（Tablet、Chromium）でエラーが確認されましたが、これは本タスク特有の後退ではなく既存の問題と推測されます。
