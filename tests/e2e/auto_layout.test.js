@@ -21,6 +21,7 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
     test('should optimize layout for landscape images with glassmorphism backdrop', async ({ page }) => {
         await page.evaluate(async () => {
             if (window.mediaTimer) { clearInterval(window.mediaTimer); clearTimeout(window.mediaTimer); }
+            window.updateMediaArea = async () => {}; // Stub background load
             if (window.localImageDB) {
                 window.localImageDB.getAllKeys = async () => [1];
                 window.localImageDB.getImage = async () => {
@@ -54,12 +55,17 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
             displayArea.appendChild(img);
 
             // Bypass early returns for missing src
-            img.src = '/src/assets/default_image.png';
+            // Trigger the auto-layout logic deterministically
+            window.appSettings.autoLayoutMode = true; // Ensure auto-layout is enabled
+            window.applyAutoLayout(img);
 
-            // Explicitly evaluate logic to prevent Chromium race conditions
-            window.appSettings.mediaPosition = 'top';
-            window.appSettings.layoutDirection = 'row';
+            // Re-enable updateMediaArea for updateView to work correctly
+            window.updateMediaArea = async () => {};
             window.updateView();
+
+            // Bypass background image load from overwriting test state
+            img.onload = null;
+            img.src = '/src/assets/default_image.png';
         });
 
         await page.waitForTimeout(1000);
@@ -79,6 +85,7 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
     test('should optimize layout for portrait images', async ({ page }) => {
         await page.evaluate(async () => {
             if (window.mediaTimer) { clearInterval(window.mediaTimer); clearTimeout(window.mediaTimer); }
+            window.updateMediaArea = async () => {}; // Stub background load
             if (window.localImageDB) {
                 window.localImageDB.getAllKeys = async () => [1];
                 window.localImageDB.getImage = async () => {
@@ -110,12 +117,17 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
             displayArea.innerHTML = '';
             displayArea.appendChild(img);
 
-            img.src = '/src/assets/default_image.png';
+            // Trigger the auto-layout logic deterministically
+            window.appSettings.autoLayoutMode = true; // Ensure auto-layout is enabled
+            window.applyAutoLayout(img);
 
-            // Explicitly set
-            window.appSettings.mediaPosition = 'left';
-            window.appSettings.layoutDirection = 'column';
+            // Re-enable updateMediaArea for updateView to work correctly
+            window.updateMediaArea = async () => {};
             window.updateView();
+
+            // Bypass background image load from overwriting test state
+            img.onload = null;
+            img.src = '/src/assets/default_image.png';
         });
 
         await page.waitForTimeout(1000);
@@ -133,6 +145,7 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
     test('should respect manual settings when auto-layout is OFF', async ({ page }) => {
         await page.evaluate(async () => {
             if (window.mediaTimer) { clearInterval(window.mediaTimer); clearTimeout(window.mediaTimer); }
+            window.updateMediaArea = async () => {}; // Stub background load
             if (window.localImageDB) {
                 window.localImageDB.getAllKeys = async () => [1];
                 window.localImageDB.getImage = async () => {
@@ -164,12 +177,20 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
             displayArea.innerHTML = '';
             displayArea.appendChild(img);
 
-            img.src = '/src/assets/default_image.png';
-
             window.appSettings.autoLayoutMode = false;
             window.appSettings.mediaPosition = 'top';
             window.appSettings.layoutDirection = 'row';
+
+            // Trigger the auto-layout logic deterministically
+            window.applyAutoLayout(img);
+
+            // Re-enable updateMediaArea for updateView to work correctly
+            window.updateMediaArea = async () => {};
             window.updateView();
+
+            // Bypass background image load from overwriting test state
+            img.onload = null;
+            img.src = '/src/assets/default_image.png';
         });
 
         await page.waitForTimeout(1000);
