@@ -14,7 +14,7 @@ Start-Sleep -Seconds 2
 
 
 
-$agentDataRoot = Join-Path (Get-Location).Path ".agent"
+$agentDataRoot = Join-Path (Get-Location).Path ".agents"
 # ユーザー名に依存しない形でシステムレベルのプロファイルパスを定義
 $systemProfileRoot = Join-Path $env:USERPROFILE ".gemini\antigravity-browser-profile"
 
