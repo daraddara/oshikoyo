@@ -12,7 +12,7 @@ Oshigoto-Calendar（推しカレ）は、あなたの大切な「推し」の予
 
 ---
 
-![Main Interface](./docs/screenshot_main.png)
+<!-- ![Main Interface](./docs/screenshot_main.png) -->
 *洗練されたガラスモーフィズムデザインのメインUI*
 
 ---
@@ -57,7 +57,7 @@ Oshigoto-Calendar（推しカレ）は、あなたの大切な「推し」の予
 
 ---
 
-![Settings UI](./docs/screenshot_settings.png)
+<!-- ![Settings UI](./docs/screenshot_settings.png) -->
 *直感的に操作できる設定メニュー*
 
 ---
