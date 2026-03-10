@@ -77,21 +77,38 @@ body {
     gap: 24px;
     flex: 1;
     min-width: 0;
+    position: relative; /* added relative positioning so the floating .controls stay inside */
 }
 
 .controls {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 20px;
-    position: relative;
+    gap: 16px;
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: var(--z-sticky);
-    /* Removed padding to fit better in flow */
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    padding: 8px 20px;
+    box-shadow: var(--shadow-soft);
+}
+
+@media (prefers-color-scheme: dark) {
+    .controls {
+        background: rgba(30, 41, 59, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
 }
 
 .nav-btn {
-    background: var(--card-bg);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    border: none;
     border-radius: 50%;
     width: 40px;
     height: 40px;
@@ -100,14 +117,14 @@ body {
     justify-content: center;
     cursor: pointer;
     color: var(--text-primary);
-    box-shadow: var(--shadow-soft);
+    box-shadow: none;
     transition: all 0.2s ease;
 }
 
 .nav-btn:hover {
     transform: scale(1.1);
-    background: white;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    background: transparent;
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
 }
 
 .nav-btn:active {
@@ -129,14 +146,13 @@ body {
     color: var(--text-secondary);
     font-weight: 400;
     cursor: pointer;
-    transition: color 0.2s;
-    padding: 4px 8px;
-    border-radius: 8px;
+    transition: background 0.2s, color 0.2s;
+    padding: 6px 16px;
+    border-radius: 999px;
 }
 
 .current-date-display:hover {
-    color: var(--accent-color);
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 /* Main Layout */
@@ -298,6 +314,7 @@ body {
     align-items: center;
     width: fit-content;
     flex: 0 0 auto;
+    position: relative;
     /* Don't shrink/grow */
     /* Prevent growing to fill space */
 }
@@ -310,6 +327,7 @@ body {
     /* Default to row but wrapping allowed for responsiveness */
     flex-wrap: wrap;
     min-width: 0;
+    padding-top: 70px; /* Space for the floating pill controls */
 }
 
 /* Media Area */
