@@ -83,12 +83,11 @@ body {
 .controls {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 16px;
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    justify-content: space-evenly;
+    gap: 8px;
+    position: relative;
+    width: 100%;
+    max-width: 550px;
     z-index: var(--z-sticky);
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(12px);
@@ -97,6 +96,7 @@ body {
     border-radius: 999px;
     padding: 8px 20px;
     box-shadow: var(--shadow-soft);
+    margin: 0 auto;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -327,7 +327,6 @@ body {
     /* Default to row but wrapping allowed for responsiveness */
     flex-wrap: wrap;
     min-width: 0;
-    padding-top: 70px; /* Space for the floating pill controls */
 }
 
 /* Media Area */
@@ -2360,5 +2359,27 @@ details[open]>summary::before {
     .layout-dropzone,
     .media-drag-handle {
         display: none !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .controls {
+        max-width: 100%;
+        padding: 6px 12px;
+        gap: 4px;
+    }
+
+    .nav-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .nav-btn i {
+        font-size: 14px;
+    }
+
+    #currentDate {
+        font-size: 0.9em;
+        padding: 4px 8px;
     }
 }
