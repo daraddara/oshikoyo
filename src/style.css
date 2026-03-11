@@ -7,19 +7,24 @@
     --text-secondary: #666;
     --accent-color: #3b82f6;
     /* Nice Blue */
-    --accent-glow: rgba(59, 130, 246, 0.3);
-    --holiday-color: #ef4444;
-    /* Red */
-    --saturday-color: #3b82f6;
-    /* Blue for Sat */
-    --sunday-color: #ef4444;
-    /* Red for Sun */
-    --today-bg: #3b82f6;
-    --today-text: white;
+    --accent-glow: rgba(255, 183, 197, 0.4);
+    --holiday-color: #e07090;
+    /* Pastel Red-Pink for holidays/Sun */
+    --saturday-color: #7ab0e8;
+    /* Pastel Sky Blue for Sat */
+    --sunday-color: #e07090;
+    /* Pastel Red-Pink for Sun */
+    --today-bg: rgba(255, 183, 197, 0.75);
+    /* Pastel Pink, semi-transparent */
+    --today-text: #5a3040;
+    /* Deep pink for readability */
+    --today-border-radius: 12px;
+    /* Synced with logo roundness */
     --border-radius: 20px;
     --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.05);
     --font-jp: 'Noto Sans JP', sans-serif;
     --font-en: 'Outfit', sans-serif;
+    --font-rounded: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
 
     /* Z-Index Hierarchy */
     --z-base: 1;
@@ -36,6 +41,10 @@
         --text-primary: #f8fafc;
         --text-secondary: #94a3b8;
         --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.2);
+        --today-bg: rgba(255, 160, 185, 0.8);
+        /* Slightly stronger pink for dark bg */
+        --today-text: #fff0f5;
+        /* Near-white for dark mode */
     }
 }
 
@@ -173,6 +182,7 @@ body {
     font-size: 1rem;
     color: var(--text-secondary);
     font-weight: 400;
+    font-family: var(--font-rounded);
     cursor: pointer;
     transition: background 0.2s, color 0.2s;
     padding: 6px 16px;
@@ -863,8 +873,9 @@ body {
 
 .month-title {
     font-size: 1.25rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    font-family: var(--font-rounded);
 }
 
 /* Grid System */
@@ -883,7 +894,8 @@ body {
 .weekday-header span {
     font-size: 0.85rem;
     color: var(--text-secondary);
-    font-weight: 600;
+    font-weight: 500;
+    font-family: var(--font-rounded);
 }
 
 .weekday-header .sunday {
@@ -918,7 +930,7 @@ body {
 }
 
 .day-cell:hover {
-    background: rgba(125, 125, 125, 0.05);
+    background: rgba(255, 183, 197, 0.08);
 }
 
 /* Date Number - Absolute to save space */
@@ -927,7 +939,8 @@ body {
     top: 2px;
     left: 4px;
     font-size: 0.75rem;
-    font-weight: 500;
+    font-weight: 400;
+    font-family: var(--font-rounded);
     z-index: var(--z-base);
     line-height: 1;
     pointer-events: none;
@@ -1018,7 +1031,10 @@ body {
 /* Today Highlight */
 .day-cell.is-today {
     background: var(--today-bg) !important;
+    border-radius: var(--today-border-radius) !important;
     box-shadow: 0 4px 12px var(--accent-glow);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 
 .day-cell.is-today .day-number,
