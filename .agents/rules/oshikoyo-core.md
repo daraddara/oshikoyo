@@ -3,10 +3,10 @@ trigger: always_on
 ---
 
 ---
-description: 推しカレの基本開発規約（JS/CSS）
+description: おしこよの基本開発規約（JS/CSS）
 ---
 # プロジェクト概要
-- プロジェクト名: 推しカレ
+- プロジェクト名: おしこよ
 - 技術スタック: 純粋なJavaScript (Vanilla JS), CSS3, HTML5
 
 # JavaScript 規約
