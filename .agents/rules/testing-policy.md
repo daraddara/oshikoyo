@@ -24,6 +24,7 @@ description: 推しカレのテスト実施ルールと品質ガイドライン
     - **期待値 (Baselines)**: 初回実行時や意図的な変更時は `--update-snapshots` フラグを付けて実行し、生成された `*-snapshots/*.png` ファイルをコミットしてください。
     - **視覚的許容度**: OS間のフォントレンダリング差を許容するため、`playwright.config.js` の `maxDiffPixelRatio` や `threshold` を適切に設定してください（原則として `maxDiffPixelRatio: 0.1` 程度を許容します）。
     - **実行結果 (Actuals/Diffs)**: テスト失敗時に生成される実際の画像や差分画像は `.gitignore` によりGit管理から除外されます。
+    - **基準日 (Baseline Date)**: スクリーンショットの差分をなくすため、E2Eテスト内では必ず `2024-01-01T00:00:00Z` をモック日時として設定してください。
 - **堅牢なテスト設計 (Robust Design)**:
     - **定数の外部注入**: タイムアウト値やリトライ回数は `tests/test-config.js` に集約し、環境変数（`TEST_TIMEOUT_FACTOR` 等）で調整可能にしてください。
     - **「時間」ではなく「状態」を待つ**: `page.waitForTimeout()` の使用を原則禁止します。代わりに `page.waitForSelector()` や `page.waitForFunction()` を使用し、要素の出現や状態変化を動的に検知してください。
