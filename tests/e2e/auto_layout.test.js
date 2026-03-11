@@ -24,14 +24,11 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
             if (window.localImageDB) {
                 window.localImageDB.getAllKeys = async () => [1];
                 window.localImageDB.getImage = async () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 1200; canvas.height = 600;
-                    const ctx = canvas.getContext('2d');
-                    ctx.fillStyle = '#ccc'; ctx.fillRect(0, 0, 1200, 600);
-                    return { file: new Blob([atob(canvas.toDataURL('image/png').split(',')[1])].map(c => new Uint8Array(c.split('').map(x => x.charCodeAt(0))))[0], {type: 'image/png'}) };
+                    const response = await fetch('/tests/fixtures/images/test_landscape.png');
+                    const blob = await response.blob();
+                    return { file: blob };
                 };
             }
-            // Manually recreate the applyAutoLayout logic just for the manual element to bypass browser-specific loading weirdness.
             const img = document.createElement('img');
             img.className = 'media-main-img';
             Object.defineProperty(img, 'naturalWidth', { get: () => 1200, configurable: true });
@@ -53,19 +50,15 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
             displayArea.innerHTML = '';
             displayArea.appendChild(img);
 
-            // Bypass early returns for missing src
-            img.src = '/src/assets/default_image.png';
+            img.src = '/tests/fixtures/images/test_landscape.png';
 
-            // Explicitly evaluate logic to prevent Chromium race conditions
             window.appSettings.mediaPosition = 'top';
             window.appSettings.layoutDirection = 'row';
             window.updateView();
         });
 
-        // wait for layout to be applied (updateView)
         const mainLayout = page.locator('#mainLayout');
         await expect(mainLayout).toHaveClass(/pos-top/);
-
 
         const calendarWrapper = page.locator('#calendarWrapper');
         const isMobile = await page.evaluate(() => window.innerWidth <= 768);
@@ -82,11 +75,9 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
             if (window.localImageDB) {
                 window.localImageDB.getAllKeys = async () => [1];
                 window.localImageDB.getImage = async () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 600; canvas.height = 1200;
-                    const ctx = canvas.getContext('2d');
-                    ctx.fillStyle = '#ccc'; ctx.fillRect(0, 0, 600, 1200);
-                    return { file: new Blob([atob(canvas.toDataURL('image/png').split(',')[1])].map(c => new Uint8Array(c.split('').map(x => x.charCodeAt(0))))[0], {type: 'image/png'}) };
+                    const response = await fetch('/tests/fixtures/images/test_portrait.png');
+                    const blob = await response.blob();
+                    return { file: blob };
                 };
             }
             const img = document.createElement('img');
@@ -110,9 +101,8 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
             displayArea.innerHTML = '';
             displayArea.appendChild(img);
 
-            img.src = '/src/assets/default_image.png';
+            img.src = '/tests/fixtures/images/test_portrait.png';
 
-            // Explicitly set
             window.appSettings.mediaPosition = 'left';
             window.appSettings.layoutDirection = 'column';
             window.updateView();
@@ -124,7 +114,6 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
             await expect(mainLayout).toHaveClass(/pos-left/);
         }
 
-
         const calendarWrapper = page.locator('#calendarWrapper');
         await expect(calendarWrapper).toHaveCSS('flex-direction', 'column');
     });
@@ -135,11 +124,9 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
             if (window.localImageDB) {
                 window.localImageDB.getAllKeys = async () => [1];
                 window.localImageDB.getImage = async () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 600; canvas.height = 1200;
-                    const ctx = canvas.getContext('2d');
-                    ctx.fillStyle = '#ccc'; ctx.fillRect(0, 0, 600, 1200);
-                    return { file: new Blob([atob(canvas.toDataURL('image/png').split(',')[1])].map(c => new Uint8Array(c.split('').map(x => x.charCodeAt(0))))[0], {type: 'image/png'}) };
+                    const response = await fetch('/tests/fixtures/images/test_portrait.png');
+                    const blob = await response.blob();
+                    return { file: blob };
                 };
             }
             const img = document.createElement('img');
@@ -163,7 +150,7 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
             displayArea.innerHTML = '';
             displayArea.appendChild(img);
 
-            img.src = '/src/assets/default_image.png';
+            img.src = '/tests/fixtures/images/test_portrait.png';
 
             window.appSettings.autoLayoutMode = false;
             window.appSettings.mediaPosition = 'top';
@@ -173,6 +160,5 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
 
         const mainLayout = page.locator('#mainLayout');
         await expect(mainLayout).not.toHaveClass(/pos-left/);
-
     });
 });
