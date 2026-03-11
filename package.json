@@ -2,6 +2,10 @@
     "name": "oshikoyo",
     "version": "1.0.0",
     "description": "Oshikoyo",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/daraddara/oshikoyo"
+    },
     "scripts": {
         "test": "vitest run",
         "serve": "npx serve . -p 8081",
