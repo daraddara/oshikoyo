@@ -354,34 +354,38 @@ body {
     box-shadow: var(--shadow-soft);
     border-radius: var(--border-radius);
     padding: 12px;
-    /* Standardize padding */
-
-    /* Dynamic Height via JS removed, handled by flex now */
     width: 100%;
     height: 100%;
-    /* Fill media-area */
     min-height: 200px;
 
     display: flex;
     flex-direction: column;
-    /* Stack controls and content */
     align-items: center;
     justify-content: flex-start;
-    overflow: visible;
-    /* 改正：ドロップダウンメニューが領域外に出られるようにする */
+    overflow: hidden; /* メニューの飛び出しは下の要素で制御 */
+    position: relative;
 }
 
 .media-controls-wrapper {
-    width: 100%;
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
-    /* Space between controls and image */
-    flex-shrink: 0;
-    position: relative;
     z-index: var(--z-sticky);
-    /* 画像レイヤー(z-index未指定=0)より前面にする */
+    opacity: 0.1; /* 通常時はステルス（薄く表示） */
+    transition: opacity 0.3s ease;
+    pointer-events: none; /* 下の要素の操作を邪魔しない */
+}
+
+.media-container:hover .media-controls-wrapper {
+    opacity: 1;
+}
+
+.media-controls-wrapper > * {
+    pointer-events: auto; /* 子要素はクリック可能に */
 }
 
 .media-content-layer {
@@ -399,19 +403,28 @@ body {
 /* Drag Handle */
 .media-drag-handle {
     cursor: grab;
-    color: var(--text-secondary);
-    opacity: 0.5;
-    transition: opacity 0.2s;
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    padding: 6px;
     display: flex;
     align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.2s ease;
 }
 
 .media-drag-handle:hover {
-    opacity: 1;
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.25);
 }
 
 .media-drag-handle:active {
     cursor: grabbing;
+    transform: scale(0.95);
 }
 
 /* 画面全体のドロップゾーン */
@@ -484,17 +497,43 @@ body {
 /* Quick Media Mode Controls */
 .quick-media-controls {
     display: flex;
-    align-items: stretch;
-    /* Stretch to fill height of container */
+    align-items: center;
     gap: 4px;
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    padding: 4px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-soft);
+}
+
+@media (prefers-color-scheme: dark) {
+    .quick-media-controls,
+    .media-drag-handle {
+        background: rgba(30, 41, 59, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+}
+
+.global-paste-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-primary);
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s;
+    opacity: 0.7;
+}
+
+.global-paste-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    opacity: 1;
 }
 
 .media-mode-wrapper {
