@@ -3,7 +3,7 @@ trigger: always_on
 ---
 
 ---
-description: 推しカレにおけるテストコードの記述規約
+description: おしこよにおけるテストコードの記述規約
 ---
 # テスト方針
 - テストフレームワークは **Vitest**（または Jest）を使用してください。

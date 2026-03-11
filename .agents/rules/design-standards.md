@@ -3,7 +3,7 @@ trigger: always_on
 ---
 
 ---
-description: 推しカレのUIおよびスタイリングの制約
+description: おしこよのUIおよびスタイリングの制約
 ---
 # スタイル管理
 - z-index の値は直接指定せず、変数を介して階層管理してください。

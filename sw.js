@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oshigoto-calendar-v6';
+const CACHE_NAME = 'oshikoyo-v1';
 const ASSETS = [
     './',
     './index.html',

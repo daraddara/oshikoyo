@@ -8,7 +8,7 @@ Thumbs.db
 *.swp
 
 # Local settings
-.oshigoto-calendar-settings
+.oshikoyo-settings
 
 # Node dependencies
 node_modules/

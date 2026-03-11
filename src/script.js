@@ -1,5 +1,5 @@
 /**
- * Oshikoyo Logic & App
+ * おしこよ (Oshikoyo) ロジック & アプリケーション
  */
 
 // --- Settings State ---
@@ -31,7 +31,7 @@ class LocalImageDB {
      * @param {string} dbName - The name of the IndexedDB.
      * @param {string} storeName - The name of the object store.
      */
-    constructor(dbName = 'OshigotoCalendarDB', storeName = 'images') {
+    constructor(dbName = 'OshikoyoDB', storeName = 'images') {
         this.dbName = dbName;
         this.storeName = storeName;
         this.db = null;
@@ -313,7 +313,7 @@ const localImageDB = new LocalImageDB();
 
 
 let appSettings = { ...DEFAULT_SETTINGS };
-const STORAGE_KEY = 'oshigoto_calendar_settings';
+const STORAGE_KEY = 'oshikoyo_settings';
 
 // Helper: Blob to Base64
 /**
@@ -431,7 +431,7 @@ function escapeHTML(str) {
 }
 
 // --- State Persistence (Separate from Settings) ---
-const STATE_KEY = 'oshigoto_calendar_state';
+const STATE_KEY = 'oshikoyo_state';
 let appState = {
     lastMediaKey: null,
     // Cycle mode specific state
