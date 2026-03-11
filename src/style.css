@@ -25,6 +25,8 @@
     --font-jp: 'Noto Sans JP', sans-serif;
     --font-en: 'Outfit', sans-serif;
     --font-rounded: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
+    --icon-pink: #e07090;
+    --icon-gold: #b8860b;
 
     /* Z-Index Hierarchy */
     --z-base: 1;
@@ -973,6 +975,8 @@ body {
     line-height: 1.25;
     background: var(--event-bg, #eee);
     color: var(--event-text, #333);
+    font-weight: 600;
+    border: 1px solid rgba(0, 0, 0, 0.05);
     min-height: 12px;
     cursor: help;
     /* Indicate tooltip */
@@ -981,7 +985,22 @@ body {
 .oshi-event-icon {
     font-size: 8px;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
+.oshi-event-svg {
+    width: 10px;
+    height: 10px;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+.icon-pink { stroke: var(--icon-pink); }
+.icon-gold { stroke: var(--icon-gold); }
 
 /* Holiday / Weekend Styling */
 .day-cell.is-sunday .day-number,
@@ -1536,6 +1555,8 @@ body {
     line-height: 1.25;
     background: var(--event-bg, #eee);
     color: var(--event-text, #333);
+    font-weight: 600;
+    border: 1px solid rgba(0, 0, 0, 0.05);
     min-height: 12px;
     cursor: help;
     /* Indicate tooltip */
@@ -1544,6 +1565,9 @@ body {
 .oshi-event-icon {
     font-size: 8px;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Holiday / Weekend Styling */
@@ -2042,14 +2066,14 @@ details[open]>summary::before {
 #date-hover-popup {
     position: fixed;
     z-index: var(--z-popup);
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: var(--card-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     padding: 16px;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    min-width: 220px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    min-width: 200px;
     max-width: 300px;
     pointer-events: none;
     /* See through clicks */
