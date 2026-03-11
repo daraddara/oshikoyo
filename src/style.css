@@ -83,18 +83,18 @@ body {
 .controls {
     display: flex;
     align-items: center;
-    justify-content: space-evenly;
-    gap: 8px;
+    justify-content: center;
+    gap: 0;
     position: relative;
-    width: 100%;
-    max-width: 550px;
+    width: fit-content;
+    max-width: 95vw;
     z-index: var(--z-sticky);
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 999px;
-    padding: 8px 20px;
+    padding: 4px 8px;
     box-shadow: var(--shadow-soft);
     margin: 0 auto;
 }
@@ -110,25 +110,53 @@ body {
     background: transparent;
     border: none;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     color: var(--text-primary);
     box-shadow: none;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
 .nav-btn:hover {
-    transform: scale(1.1);
-    background: transparent;
-    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
+    transform: translateY(-2px);
+    color: var(--accent-color);
+    filter: drop-shadow(0 0 8px var(--accent-glow));
+}
+
+/* Glow Effect for Logo (Pinkish) */
+.logo-btn:hover {
+    color: #ff85a2;
+    filter: drop-shadow(0 0 12px rgba(255, 133, 162, 0.6));
 }
 
 .nav-btn:active {
-    transform: scale(0.95);
+    transform: translateY(0) scale(0.95);
+}
+
+/* Control Groups & Separators */
+.control-group {
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    gap: 4px;
+}
+
+.control-separator {
+    width: 1px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0 4px;
+}
+
+@media (prefers-color-scheme: dark) {
+    .control-separator {
+        background: rgba(255, 255, 255, 0.1);
+    }
 }
 
 /* Toggle Months Button */

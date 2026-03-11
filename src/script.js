@@ -2060,14 +2060,20 @@ function init() {
     setupPreviewModal();
 
     const dateDisplay = document.getElementById('currentDateDisplay');
+    const resetToToday = () => {
+        currentRefDate = new Date();
+        updateView();
+    };
+
     if (dateDisplay) {
         const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
         dateDisplay.textContent = TODAY.toLocaleDateString('ja-JP', options);
+        dateDisplay.addEventListener('click', resetToToday);
+    }
 
-        dateDisplay.addEventListener('click', () => {
-            currentRefDate = new Date();
-            updateView();
-        });
+    const btnTodayLogo = document.getElementById('btnTodayLogo');
+    if (btnTodayLogo) {
+        btnTodayLogo.addEventListener('click', resetToToday);
     }
 
     updateView();
@@ -2153,9 +2159,28 @@ function init() {
  * トグルボタンのSVGテキストを現在のmonthCountに同期する。
  */
 function updateToggleMonthsUI() {
-    const textEl = document.getElementById('toggleMonthsText');
-    if (textEl) {
-        textEl.textContent = appSettings.monthCount;
+    const btn = document.getElementById('btnToggleMonths');
+    if (!btn) return;
+
+    if (appSettings.monthCount === 1) {
+        // 1ヶ月表示: 1枚のカード
+        btn.innerHTML = `
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="5" width="14" height="14" rx="2" ry="2"></rect>
+                <path d="M5 10h14"></path>
+            </svg>
+        `;
+    } else {
+        // 2ヶ月表示: 2枚のカードが重なっている
+        btn.innerHTML = `
+            <svg class="icon-multi-month" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="7" width="14" height="14" rx="2" ry="2" opacity="0.5"></rect>
+                <rect x="7" y="3" width="14" height="14" rx="2" ry="2"></rect>
+                <path d="M7 10h14" opacity="0.8"></path>
+            </svg>
+        `;
     }
 }
 
@@ -2166,18 +2191,19 @@ function updateLayoutToggleUI() {
     const layoutIcon = document.getElementById('layoutIcon');
     if (!layoutIcon) return;
 
-    // 現在のレイアウト（row または column）に応じてアイコンを描画
     if (appSettings.layoutDirection === 'row') {
-        // 横並び: 左右に２つの四角形
+        // 現在：横並び -> 次のクリックで「縦並び」を想起させるアイコン（回転、または向きが異なる長方形）
         layoutIcon.innerHTML = `
-            <rect x="3" y="3" width="8" height="18" rx="2" ry="2"></rect>
-            <rect x="13" y="3" width="8" height="18" rx="2" ry="2"></rect>
+            <rect x="3" y="5" width="18" height="6" rx="1.5" fill="currentColor" fill-opacity="0.2"></rect>
+            <rect x="3" y="13" width="18" height="6" rx="1.5" fill="currentColor"></rect>
+            <path d="M12 2v20" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2" opacity="0.3"></path>
         `;
     } else {
-        // 縦並び: 上下に２つの四角形
+        // 現在：縦並び -> 次のクリックで「横並び」を想起させるアイコン
         layoutIcon.innerHTML = `
-            <rect x="3" y="3" width="18" height="8" rx="2" ry="2"></rect>
-            <rect x="3" y="13" width="18" height="8" rx="2" ry="2"></rect>
+            <rect x="5" y="3" width="6" height="18" rx="1.5" fill="currentColor" fill-opacity="0.2"></rect>
+            <rect x="13" y="3" width="6" height="18" rx="1.5" fill="currentColor"></rect>
+            <path d="M2 12h20" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2" opacity="0.3"></path>
         `;
     }
 }
