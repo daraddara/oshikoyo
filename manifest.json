@@ -1,7 +1,7 @@
 {
-    "name": "Oshikoyo",
-    "short_name": "Oshikoyo",
-    "description": "お仕事や推し事の予定を管理するための、美しく機能的なカレンダー。",
+    "name": "おしこよ",
+    "short_name": "おしこよ",
+    "description": "あなたの大切な「推し」の予定や記念日を管理するためにデザインされた、洗練されたモダンカレンダー。",
     "start_url": "./",
     "display": "standalone",
     "background_color": "#f0f2f5",
