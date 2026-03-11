@@ -1,19 +1,18 @@
-# 🗓️ Oshikoyo (おしこよ)
+<p align="center">
+  <img src="assets/logo/logo.png" width="400" alt="Oshikoyo Logo">
+</p>
 
-**「推し」との日常を、もっと美しく、もっと身近に。**
+<h1 align="center">Oshikoyo (おしこよ)</h1>
 
-Oshikoyo（おしこよ）は、あなたの大切な「推し」の予定や記念日を管理するためにデザインされた、洗練されたモダンカレンダーアプリケーションです。
+<p align="center">
+  <strong>「推し」との日常を、もっと美しく、もっと身近に。</strong>
+</p>
 
----
-
-### 🚀 今すぐ使ってみる
-インストール不要、ブラウザだけで今すぐあなたの「推し活」が始まります。
-**[👉 アプリを開く (GitHub Pages URL Placeholder)](https://yourusername.github.io/oshikoyo/)**
-
----
-
-<!-- ![Main Interface](./docs/screenshot_main.png) -->
-*洗練されたガラスモーフィズムデザインのメインUI*
+<p align="center">
+  <a href="https://daraddara.github.io/oshikoyo/">
+    <img src="https://img.shields.io/badge/🚀%20今すぐ使ってみる-Oshikoyo-FF69B4?style=for-the-badge&logo=rocket" alt="Try Now">
+  </a>
+</p>
 
 ---
 
