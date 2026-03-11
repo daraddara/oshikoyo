@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Layout Auto-Optimization & Glassmorphism', () => {
     test.beforeEach(async ({ page }) => {
-        await page.clock.install({ time: new Date('2026-03-08T00:00:00Z') });
+        await page.clock.install({ time: new Date('2024-01-01T00:00:00Z') });
         await page.goto('/index.html');
         await page.waitForLoadState('networkidle');
 
@@ -62,10 +62,10 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
             window.updateView();
         });
 
-        await page.waitForTimeout(1000);
-
+        // wait for layout to be applied (updateView)
         const mainLayout = page.locator('#mainLayout');
         await expect(mainLayout).toHaveClass(/pos-top/);
+
 
         const calendarWrapper = page.locator('#calendarWrapper');
         const isMobile = await page.evaluate(() => window.innerWidth <= 768);
@@ -118,13 +118,12 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
             window.updateView();
         });
 
-        await page.waitForTimeout(1000);
-
         const mainLayout = page.locator('#mainLayout');
         const isMobile = await page.evaluate(() => window.innerWidth <= 768);
         if (!isMobile) {
             await expect(mainLayout).toHaveClass(/pos-left/);
         }
+
 
         const calendarWrapper = page.locator('#calendarWrapper');
         await expect(calendarWrapper).toHaveCSS('flex-direction', 'column');
@@ -172,9 +171,8 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
             window.updateView();
         });
 
-        await page.waitForTimeout(1000);
-
         const mainLayout = page.locator('#mainLayout');
         await expect(mainLayout).not.toHaveClass(/pos-left/);
+
     });
 });

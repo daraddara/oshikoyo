@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Smoke Test & Layout Verification', () => {
     test('should load the index page and verify layout and scrollability', async ({ page }, testInfo) => {
         // 固定の日付を設定（スクリーンショットの差分をなくすため）
-        await page.clock.install({ time: new Date('2026-03-08T00:00:00Z') });
+        await page.clock.install({ time: new Date('2024-01-01T00:00:00Z') });
 
         await page.goto('http://localhost:8081/index.html');
 
