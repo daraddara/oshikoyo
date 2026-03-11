@@ -19,7 +19,8 @@ description: おしこよのテスト実施ルールと品質ガイドライン
 
 # 自律実行ルール (Autonomous Execution)
 - `script.js` または `logic.test.js` を変更した後は、ユーザーからの指示を待たずに、自律的に `npm test` を実行して結果を確認してください。
-- エージェントは今後、UIの確認を求められたら「ブラウザの直接操作」ではなく `npm run e2e` を実行し、生成されたレポートや画像ファイルから状態を判断してください。
+- エージェントは、UIの確認が必要な際、**原則として「ブラウザサブエージェントによる手動操作（browser_subagent）」を禁止**し、必ず `npm run e2e` または特定のPlaywrightテストファイルを直接実行して検証してください。
+    - **理由**: ブラウザサブエージェントはサーバー接続エラーやキャッシュの同期問題など不安定な要素が多く、自動化された E2E テストの方が再現性と信頼性が高いためです。
     - **スナップショット管理**: UIの検証には `expect(page).toHaveScreenshot()` を使用します。
     - **期待値 (Baselines)**: 初回実行時や意図的な変更時は `--update-snapshots` フラグを付けて実行し、生成された `*-snapshots/*.png` ファイルをコミットしてください。
     - **視覚的許容度**: OS間のフォントレンダリング差を許容するため、`playwright.config.js` の `maxDiffPixelRatio` や `threshold` を適切に設定してください（原則として `maxDiffPixelRatio: 0.1` 程度を許容します）。
