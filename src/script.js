@@ -489,6 +489,28 @@ function getContrastColor(hex) {
     return (yiq >= 140) ? '#1a1a1a' : '#ffffff'; // 140 threshold, using dark gray for black for softer look
 }
 
+/**
+ * Converts hex color to rgba.
+ * @param {string} hex 
+ * @param {number} alpha 
+ * @returns {string}
+ */
+function hexToRgba(hex, alpha) {
+    if (!hex || !hex.startsWith('#')) return hex;
+    hex = hex.replace('#', '');
+    let r, g, b;
+    if (hex.length === 3) {
+        r = parseInt(hex[0] + hex[0], 16);
+        g = parseInt(hex[1] + hex[1], 16);
+        b = parseInt(hex[2] + hex[2], 16);
+    } else {
+        r = parseInt(hex.substring(0, 2), 16);
+        g = parseInt(hex.substring(2, 4), 16);
+        b = parseInt(hex.substring(4, 6), 16);
+    }
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 // Helper: Parse Date String to {month, day}
 function parseDateString(str) {
     if (!str) return null;
@@ -768,15 +790,19 @@ function renderCalendar(container, year, month) {
 
             if (oshi.color) {
                 const escapedColor = escapeHTML(oshi.color);
-                baseStyle = `background-color: ${escapedColor}; color: ${textColor}; text-shadow: ${textShadow};`;
+                const rgbaBg = hexToRgba(escapedColor, 0.85);
+                baseStyle = `background-color: ${rgbaBg}; color: ${textColor}; text-shadow: ${textShadow};`;
             }
+
+            const cakeIcon = `<span class="oshi-event-icon"><svg class="oshi-event-svg icon-pink" viewBox="0 0 24 24"><path d="M18 20H6c-1.1 0-2-.9-2-2V9c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2v9c0 1.1-.9 2-2 2z"/><path d="M4 13h16"/><path d="M12 7V4"/><path d="M12 4c.5 0 1-.5 1-1s-.5-1-1-1-1 .5-1 1 .5 1 1 1z"/></svg></span>`;
+            const crackerIcon = `<span class="oshi-event-icon"><svg class="oshi-event-svg icon-gold" viewBox="0 0 24 24"><path d="M5.8 11.3L2 22l10.7-3.8"/><path d="M4 3l.01.01"/><path d="M9 2l.01.01"/><path d="M15 4l.01.01"/><path d="M12 9l.01.01"/><path d="M16 14l.01.01"/><path d="M19 10l.01.01"/><path d="M21 7l.01.01"/><path d="M21 14l.01.01"/></svg></span>`;
 
             // Birthday Check
             const bd = parseDateString(oshi.birthday);
             if (bd && bd.month === month && bd.day === d) {
                 const escapedName = escapeHTML(oshi.name);
-                oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="誕生日: ${escapedName}"><span class="oshi-event-icon">🎂</span>${escapedName}</div>`);
-                oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">🎂 ${escapedName} 誕生日</div>`);
+                oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="誕生日: ${escapedName}">${cakeIcon}${escapedName}</div>`);
+                oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">${cakeIcon} ${escapedName} 誕生日</div>`);
             }
 
             // Anniversary Check
