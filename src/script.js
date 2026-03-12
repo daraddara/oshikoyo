@@ -800,22 +800,28 @@ function renderCalendar(container, year, month) {
             const cakeIcon = `<span class="oshi-event-icon ${isDarkIcon ? 'is-dark' : ''}"><svg class="oshi-event-svg icon-pink" viewBox="0 0 24 24"><path d="M12 7v5"/><path d="M9 12h6v4H9z"/><path d="M5 16h14v4H5z"/><path d="M12 3a1 1 0 0 1 0 2 1 1 0 0 1 0-2z"/></svg></span>`;
             const crackerIcon = `<span class="oshi-event-icon ${isDarkIcon ? 'is-dark' : ''}"><svg class="oshi-event-svg icon-gold" viewBox="0 0 24 24"><path d="M8 12L2 22l10-6"/><path d="M14 6l.01.01"/><path d="M10 2l.01.01"/><path d="M18 10l.01.01"/><path d="M22 6l.01.01"/><path d="M17 3l.01.01"/><path d="M11 7l.01.01"/><path d="M20 14l.01.01"/></svg></span>`;
 
+            let eventTypes = [];
+            const escapedName = escapeHTML(oshi.name);
+
             // Birthday Check
             const bd = parseDateString(oshi.birthday);
             if (bd && bd.month === month && bd.day === d) {
-                const escapedName = escapeHTML(oshi.name);
                 dayIcons.add('birthday');
-                oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="誕生日: ${escapedName}">${escapedName}</div>`);
+                eventTypes.push('誕生日');
                 oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">${cakeIcon} ${escapedName} 誕生日</div>`);
             }
 
             // Anniversary Check
             const dd = parseDateString(oshi.debutDate);
             if (dd && dd.month === month && dd.day === d) {
-                const escapedName = escapeHTML(oshi.name);
                 dayIcons.add('anniversary');
-                oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="記念日: ${escapedName}">${escapedName}</div>`);
+                eventTypes.push('記念日');
                 oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">${crackerIcon} ${escapedName} 記念日</div>`);
+            }
+
+            if (eventTypes.length > 0) {
+                const titleText = `${eventTypes.join('・')}: ${escapedName}`;
+                oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="${titleText}">${escapedName}</div>`);
             }
         });
 
