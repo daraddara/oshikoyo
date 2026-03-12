@@ -935,15 +935,10 @@ body {
     background: rgba(255, 183, 197, 0.08);
 }
 
-/* Date Number - Absolute to save space */
 .day-number {
-    position: absolute;
-    top: 2px;
-    left: 4px;
     font-size: 0.75rem;
     font-weight: 400;
     font-family: var(--font-rounded);
-    z-index: var(--z-base);
     line-height: 1;
     pointer-events: none;
 }
