@@ -5,6 +5,23 @@ test.describe('Smoke Test & Layout Verification', () => {
         // 固定の日付を設定（スクリーンショットの差分をなくすため）
         await page.clock.install({ time: new Date('2024-01-01T00:00:00Z') });
 
+        // テスト用データをlocalStorageに挿入
+        await page.addInitScript(() => {
+            const testSettings = {
+                startOfWeek: 0,
+                monthCount: 2,
+                layoutDirection: 'row',
+                oshiList: [
+                    { name: 'テスト長めの名前', birthday: '01/05', debutDate: '01/15', color: '#ffb7c5' },
+                    { name: 'テスト推し２', birthday: '02/10', debutDate: '', color: '#3b82f6' }
+                ],
+                mediaMode: 'single',
+                mediaPosition: 'top',
+                autoLayoutMode: true
+            };
+            window.localStorage.setItem('oshikoyo_settings', JSON.stringify(testSettings));
+        });
+
         await page.goto('http://localhost:8081/index.html');
 
         // Verify calendar visibility

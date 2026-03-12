@@ -935,15 +935,10 @@ body {
     background: rgba(255, 183, 197, 0.08);
 }
 
-/* Date Number - Absolute to save space */
 .day-number {
-    position: absolute;
-    top: 2px;
-    left: 4px;
     font-size: 0.75rem;
     font-weight: 400;
     font-family: var(--font-rounded);
-    z-index: var(--z-base);
     line-height: 1;
     pointer-events: none;
 }
@@ -954,24 +949,20 @@ body {
     flex-direction: column;
     gap: 1px;
     width: 100%;
-    margin-bottom: 1px;
+    margin-bottom: 2px;
     z-index: 10;
     padding: 0 1px;
 }
 
 .oshi-event {
     font-size: 8.5px;
-    /* Reduced for better fit */
-    padding: 0 1px;
-    /* Tighter padding */
+    padding: 0 2px 0 4px;
     border-radius: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     display: flex;
     align-items: center;
-    gap: 1px;
-    /* Tighter gap */
     line-height: 1.25;
     background: var(--event-bg, #eee);
     color: var(--event-text, #333);
@@ -979,24 +970,36 @@ body {
     border: 1px solid rgba(0, 0, 0, 0.05);
     min-height: 12px;
     cursor: help;
-    /* Indicate tooltip */
 }
 
 .oshi-event-icon {
     font-size: 8px;
-    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    border: 0.5px solid rgba(0, 0, 0, 0.1);
 }
 
 .oshi-event-svg {
-    width: 10px;
-    height: 10px;
-    stroke-width: 1.8;
+    width: 7px;
+    height: 7px;
+    stroke-width: 2.0;
     stroke-linecap: round;
     stroke-linejoin: round;
     fill: none;
+}
+
+.oshi-event-icon.is-dark .icon-gold {
+    stroke: #b87300;
+}
+
+.oshi-event-icon.is-dark .icon-pink {
+    stroke: #c24065;
 }
 
 .icon-pink { stroke: var(--icon-pink); }
@@ -1516,16 +1519,48 @@ body {
     background: rgba(125, 125, 125, 0.05);
 }
 
-/* Date Number - Absolute to save space */
-.day-number {
+/* Date Header (Number + Icons) - Absolute to save space */
+.day-header {
     position: absolute;
     top: 2px;
     left: 4px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.day-number {
     font-size: 0.75rem;
     font-weight: 500;
-    z-index: 5;
     line-height: 1;
-    pointer-events: none;
+}
+
+.day-icons {
+    display: flex;
+    gap: 1px;
+}
+
+.day-icon-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+    border: 0.5px solid rgba(0, 0, 0, 0.1);
+}
+
+.day-icon-svg {
+    width: 7px;
+    height: 7px;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
 }
 
 /* Oshi Event Styles */
@@ -1560,14 +1595,6 @@ body {
     min-height: 12px;
     cursor: help;
     /* Indicate tooltip */
-}
-
-.oshi-event-icon {
-    font-size: 8px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 /* Holiday / Weekend Styling */
