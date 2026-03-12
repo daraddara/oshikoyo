@@ -952,19 +952,19 @@ body {
 .oshi-events-container {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 1px;
     width: 100%;
     margin-bottom: 2px;
     z-index: 10;
-    padding: 0 1px 0 8px;
+    padding: 0 1px;
 }
 
 .oshi-event {
     font-size: 8.5px;
-    padding: 0 2px 0 10px;
+    padding: 0 2px;
     border-radius: 2px;
     white-space: nowrap;
-    overflow: visible;
+    overflow: hidden;
     text-overflow: ellipsis;
     display: flex;
     align-items: center;
@@ -975,7 +975,6 @@ body {
     border: 1px solid rgba(0, 0, 0, 0.05);
     min-height: 12px;
     cursor: help;
-    position: relative;
 }
 
 .oshi-event-icon {
@@ -983,31 +982,21 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.8);
     border-radius: 50%;
-    width: 14px;
-    height: 14px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+    width: 12px;
+    height: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     border: 0.5px solid rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    position: absolute;
-    top: -3px;
-    left: -7px;
-    z-index: 10;
-}
-
-.oshi-event-icon:hover {
-    transform: translateY(-2px) scale(1.1);
 }
 
 .oshi-event-svg {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     stroke-width: 2.0;
     stroke-linecap: round;
     stroke-linejoin: round;
     fill: none;
-    transition: stroke 0.2s ease;
 }
 
 .oshi-event-icon.is-dark .icon-gold {
@@ -1535,16 +1524,48 @@ body {
     background: rgba(125, 125, 125, 0.05);
 }
 
-/* Date Number - Absolute to save space */
-.day-number {
+/* Date Header (Number + Icons) - Absolute to save space */
+.day-header {
     position: absolute;
     top: 2px;
     left: 4px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.day-number {
     font-size: 0.75rem;
     font-weight: 500;
-    z-index: 5;
     line-height: 1;
-    pointer-events: none;
+}
+
+.day-icons {
+    display: flex;
+    gap: 1px;
+}
+
+.day-icon-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+    border: 0.5px solid rgba(0, 0, 0, 0.1);
+}
+
+.day-icon-svg {
+    width: 7px;
+    height: 7px;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
 }
 
 /* Oshi Event Styles */
