@@ -808,7 +808,6 @@ function renderCalendar(container, year, month) {
             if (bd && bd.month === month && bd.day === d) {
                 dayIcons.add('birthday');
                 eventTypes.push('誕生日');
-                oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">${cakeIcon} ${escapedName} 誕生日</div>`);
             }
 
             // Anniversary Check
@@ -816,12 +815,17 @@ function renderCalendar(container, year, month) {
             if (dd && dd.month === month && dd.day === d) {
                 dayIcons.add('anniversary');
                 eventTypes.push('記念日');
-                oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">${crackerIcon} ${escapedName} 記念日</div>`);
             }
 
             if (eventTypes.length > 0) {
                 const titleText = `${eventTypes.join('・')}: ${escapedName}`;
                 oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="${titleText}">${escapedName}</div>`);
+                
+                let iconsHtml = [];
+                if (eventTypes.includes('誕生日')) iconsHtml.push(cakeIcon);
+                if (eventTypes.includes('記念日')) iconsHtml.push(crackerIcon);
+                
+                oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">${iconsHtml.join(' ')} ${escapedName} ${eventTypes.join('・')}</div>`);
             }
         });
 
