@@ -956,12 +956,12 @@ body {
     width: 100%;
     margin-bottom: 2px;
     z-index: 10;
-    padding: 0 1px 0 6px;
+    padding: 0 1px 0 8px;
 }
 
 .oshi-event {
     font-size: 8.5px;
-    padding: 0 2px 0 6px;
+    padding: 0 2px 0 10px;
     border-radius: 2px;
     white-space: nowrap;
     overflow: visible;
@@ -991,8 +991,8 @@ body {
     border: 0.5px solid rgba(0, 0, 0, 0.1);
     transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: absolute;
-    top: -2px;
-    left: -5px;
+    top: -3px;
+    left: -7px;
     z-index: 10;
 }
 
