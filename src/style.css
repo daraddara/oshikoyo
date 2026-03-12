@@ -956,7 +956,7 @@ body {
 
 .oshi-event {
     font-size: 8.5px;
-    padding: 0 2px;
+    padding: 0 2px 0 4px;
     border-radius: 2px;
     white-space: nowrap;
     overflow: hidden;
