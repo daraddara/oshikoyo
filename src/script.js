@@ -795,8 +795,8 @@ function renderCalendar(container, year, month) {
             }
 
             const isDarkIcon = textColor === '#1a1a1a';
-            const cakeIcon = `<span class="oshi-event-icon ${isDarkIcon ? 'is-dark' : ''}"><svg class="oshi-event-svg icon-pink" viewBox="0 0 24 24"><path d="M18 20H6c-1.1 0-2-.9-2-2V9c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2v9c0 1.1-.9 2-2 2z"/><path d="M4 13h16"/><path d="M12 7V4"/><path d="M12 4c.5 0 1-.5 1-1s-.5-1-1-1-1 .5-1 1 .5 1 1 1z"/></svg></span>`;
-            const crackerIcon = `<span class="oshi-event-icon ${isDarkIcon ? 'is-dark' : ''}"><svg class="oshi-event-svg icon-gold" viewBox="0 0 24 24"><path d="M5.8 11.3L2 22l10.7-3.8"/><path d="M4 3l.01.01"/><path d="M9 2l.01.01"/><path d="M15 4l.01.01"/><path d="M12 9l.01.01"/><path d="M16 14l.01.01"/><path d="M19 10l.01.01"/><path d="M21 7l.01.01"/><path d="M21 14l.01.01"/></svg></span>`;
+            const cakeIcon = `<span class="oshi-event-icon ${isDarkIcon ? 'is-dark' : ''}"><svg class="oshi-event-svg icon-pink" viewBox="0 0 24 24"><path d="M12 7v5"/><path d="M9 12h6v4H9z"/><path d="M5 16h14v4H5z"/><path d="M12 3a1 1 0 0 1 0 2 1 1 0 0 1 0-2z"/></svg></span>`;
+            const crackerIcon = `<span class="oshi-event-icon ${isDarkIcon ? 'is-dark' : ''}"><svg class="oshi-event-svg icon-gold" viewBox="0 0 24 24"><path d="M8 12L2 22l10-6"/><path d="M14 6l.01.01"/><path d="M10 2l.01.01"/><path d="M18 10l.01.01"/><path d="M22 6l.01.01"/><path d="M17 3l.01.01"/><path d="M11 7l.01.01"/><path d="M20 14l.01.01"/></svg></span>`;
 
             // Birthday Check
             const bd = parseDateString(oshi.birthday);
