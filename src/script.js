@@ -810,9 +810,8 @@ function renderCalendar(container, year, month) {
             const dd = parseDateString(oshi.debutDate);
             if (dd && dd.month === month && dd.day === d) {
                 const escapedName = escapeHTML(oshi.name);
-                // Using 🎉 as it is universally celebratory.
-                oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="記念日: ${escapedName}"><span class="oshi-event-icon">🎉</span>${escapedName}</div>`);
-                oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">🎉 ${escapedName} 記念日</div>`);
+                oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="記念日: ${escapedName}">${crackerIcon}${escapedName}</div>`);
+                oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">${crackerIcon} ${escapedName} 記念日</div>`);
             }
         });
 

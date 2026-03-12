@@ -12,8 +12,8 @@ test.describe('Smoke Test & Layout Verification', () => {
                 monthCount: 2,
                 layoutDirection: 'row',
                 oshiList: [
-                    { name: 'テスト長めの名前', birthday: '01/05', debutDay: '01/15', color: '#ffb7c5' },
-                    { name: 'テスト推し２', birthday: '02/10', debutDay: '', color: '#3b82f6' }
+                    { name: 'テスト長めの名前', birthday: '01/05', debutDate: '01/15', color: '#ffb7c5' },
+                    { name: 'テスト推し２', birthday: '02/10', debutDate: '', color: '#3b82f6' }
                 ],
                 mediaMode: 'single',
                 mediaPosition: 'top',
