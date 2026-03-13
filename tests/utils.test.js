@@ -3,7 +3,7 @@ import { extractCode, loadModule } from './test-utils.js';
 
 // Extract getContrastColor from script.js
 const utilsLogic = extractCode('// Helper: Get Contrast Color (Black or White)', '// --- Holiday Logic ---');
-const { getContrastColor, parseDateString } = loadModule([utilsLogic], ['getContrastColor', 'parseDateString']);
+const { getContrastColor, parseDateString, hexToRgba } = loadModule([utilsLogic], ['getContrastColor', 'parseDateString', 'hexToRgba']);
 
 // Extract getWeekdayHeaderHTML from script.js
 const weekdayHeaderLogic = extractCode('// Generate Weekday Header HTML based on startOfWeek', '// --- Popup Logic ---');
@@ -68,6 +68,30 @@ describe('getContrastColor', () => {
         // #8b8b8b (139, 139, 139)
         // YIQ = 139
         expect(getContrastColor('#8b8b8b')).toBe('#ffffff');
+    });
+});
+
+describe('hexToRgba', () => {
+    it('should return the original string if missing hash or invalid', () => {
+        expect(hexToRgba(null, 1)).toBeNull();
+        expect(hexToRgba(undefined, 1)).toBeUndefined();
+        expect(hexToRgba('', 1)).toBe('');
+        expect(hexToRgba('ff0000', 1)).toBe('ff0000');
+    });
+
+    it('should correctly parse 3-character hex codes', () => {
+        expect(hexToRgba('#f00', 0.5)).toBe('rgba(255, 0, 0, 0.5)');
+        expect(hexToRgba('#0f0', 1)).toBe('rgba(0, 255, 0, 1)');
+        expect(hexToRgba('#00f', 0)).toBe('rgba(0, 0, 255, 0)');
+        expect(hexToRgba('#fff', 0.8)).toBe('rgba(255, 255, 255, 0.8)');
+    });
+
+    it('should correctly parse 6-character hex codes', () => {
+        expect(hexToRgba('#ff0000', 0.5)).toBe('rgba(255, 0, 0, 0.5)');
+        expect(hexToRgba('#00ff00', 1)).toBe('rgba(0, 255, 0, 1)');
+        expect(hexToRgba('#0000ff', 0)).toBe('rgba(0, 0, 255, 0)');
+        expect(hexToRgba('#ffffff', 0.8)).toBe('rgba(255, 255, 255, 0.8)');
+        expect(hexToRgba('#8c8c8c', 0.3)).toBe('rgba(140, 140, 140, 0.3)');
     });
 });
 
