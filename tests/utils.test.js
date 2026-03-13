@@ -5,6 +5,10 @@ import { extractCode, loadModule } from './test-utils.js';
 const utilsLogic = extractCode('// Helper: Get Contrast Color (Black or White)', '// --- Holiday Logic ---');
 const { getContrastColor, parseDateString } = loadModule([utilsLogic], ['getContrastColor', 'parseDateString']);
 
+// Extract blobToBase64 from script.js
+const base64Logic = extractCode('// Helper: Blob to Base64', '// Helper: Base64 to Blob');
+const { blobToBase64 } = loadModule([base64Logic], ['blobToBase64']);
+
 // Extract getWeekdayHeaderHTML from script.js
 const weekdayHeaderLogic = extractCode('// Generate Weekday Header HTML based on startOfWeek', '// --- Popup Logic ---');
 const { getWeekdayHeaderHTML } = loadModule([weekdayHeaderLogic], ['getWeekdayHeaderHTML']);
@@ -115,5 +119,49 @@ describe('parseDateString', () => {
         expect(parseDateString('2023/13/45')).toEqual({ month: 13, day: 45 }); // Regex matches, semantic validation is not part of parseDateString as currently written.
         expect(parseDateString('23-05-12')).toBeNull(); // Missing digits in year
         expect(parseDateString('2023-05')).toBeNull(); // Incomplete
+    });
+});
+
+describe('blobToBase64', () => {
+    it('should convert a Blob to a Base64 string', async () => {
+        // Create a simple text blob
+        const textData = 'test data';
+        const blob = new Blob([textData], { type: 'text/plain' });
+
+        // Wait for the conversion
+        const base64String = await blobToBase64(blob);
+
+        // Assert it starts with the correct data URI prefix and contains the correct encoded text
+        expect(base64String).toMatch(/^data:text\/plain;base64,/);
+
+        // "test data" in base64 is "dGVzdCBkYXRh"
+        expect(base64String).toBe('data:text/plain;base64,dGVzdCBkYXRh');
+    });
+
+    it('should reject the promise if FileReader encounters an error', async () => {
+        // We'll mock FileReader's readAsDataURL to simulate an error
+        const originalFileReader = global.FileReader;
+
+        // A minimal mock FileReader that just throws an error when readAsDataURL is called
+        class MockFileReader {
+            constructor() {
+                this.error = new Error('Simulated FileReader error');
+            }
+            readAsDataURL() {
+                if (this.onerror) {
+                    this.onerror(this.error);
+                }
+            }
+        }
+
+        global.FileReader = MockFileReader;
+
+        try {
+            const blob = new Blob(['error test'], { type: 'text/plain' });
+            await expect(blobToBase64(blob)).rejects.toThrow('Simulated FileReader error');
+        } finally {
+            // Restore original FileReader
+            global.FileReader = originalFileReader;
+        }
     });
 });
