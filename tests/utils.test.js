@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { extractCode, loadModule } from './test-utils.js';
+import { extractCode, loadModule, setupTestEnvironment } from './test-utils.js';
+
+// Ensure test environment is setup (polyfills Blob.arrayBuffer, etc)
+setupTestEnvironment();
 
 // Extract getContrastColor from script.js
 const utilsLogic = extractCode('// Helper: Get Contrast Color (Black or White)', '// --- Holiday Logic ---');
@@ -12,6 +15,10 @@ const { blobToBase64 } = loadModule([base64Logic], ['blobToBase64']);
 // Extract getWeekdayHeaderHTML from script.js
 const weekdayHeaderLogic = extractCode('// Generate Weekday Header HTML based on startOfWeek', '// --- Popup Logic ---');
 const { getWeekdayHeaderHTML } = loadModule([weekdayHeaderLogic], ['getWeekdayHeaderHTML']);
+
+// Extract base64ToBlob from script.js
+const base64ToBlobLogic = extractCode('// Helper: Base64 to Blob', '// Helper: Compare Blobs');
+const { base64ToBlob } = loadModule([base64ToBlobLogic], ['base64ToBlob']);
 
 describe('getWeekdayHeaderHTML', () => {
     it('should generate headers starting with Sunday when startOfWeek is 0', () => {
@@ -30,6 +37,70 @@ describe('getWeekdayHeaderHTML', () => {
         const expectedHTML = '<span class="sunday">日</span><span class="">月</span><span class="">火</span><span class="">水</span><span class="">木</span><span class="">金</span><span class="saturday">土</span>';
         expect(getWeekdayHeaderHTML(undefined)).toBe(expectedHTML);
         expect(getWeekdayHeaderHTML(2)).toBe(expectedHTML);
+    });
+});
+
+describe('base64ToBlob', () => {
+    it('should throw an error for invalid base64 data types', () => {
+        expect(() => base64ToBlob(null, 'image/png')).toThrow('Invalid base64 data');
+        expect(() => base64ToBlob(undefined, 'image/png')).toThrow('Invalid base64 data');
+        expect(() => base64ToBlob('', 'image/png')).toThrow('Invalid base64 data');
+        expect(() => base64ToBlob(123, 'image/png')).toThrow('Invalid base64 data');
+        expect(() => base64ToBlob({}, 'image/png')).toThrow('Invalid base64 data');
+    });
+
+    it('should throw an error for invalid Data URI missing a comma', () => {
+        const invalidDataUri = 'data:image/png;base64SGVsbG8gV29ybGQ=';
+        expect(() => base64ToBlob(invalidDataUri, 'image/png')).toThrow('Invalid Data URI: no comma found');
+    });
+
+    it('should throw an error for invalid base64 encoding (atob failure)', () => {
+        // 'invalid_base64!' contains invalid characters for base64
+        expect(() => base64ToBlob('invalid_base64!', 'image/png')).toThrow('Failed to decode base64 string');
+    });
+
+    it('should convert raw base64 string to a Blob with the specified mimeType', async () => {
+        // "Hello World" in base64 is "SGVsbG8gV29ybGQ="
+        const rawBase64 = 'SGVsbG8gV29ybGQ=';
+        const blob = base64ToBlob(rawBase64, 'text/plain');
+
+        expect(blob).toBeInstanceOf(Blob);
+        expect(blob.type).toBe('text/plain');
+
+        const buffer = await blob.arrayBuffer();
+        const text = new TextDecoder().decode(buffer);
+        expect(text).toBe('Hello World');
+    });
+
+    it('should convert a data URI to a Blob and extract the mimeType from the URI', async () => {
+        // "Hello World" encoded as a text/plain data URI
+        const dataUri = 'data:text/plain;base64,SGVsbG8gV29ybGQ=';
+        // Passing a different fallback mimeType to verify it uses the one from the URI
+        const blob = base64ToBlob(dataUri, 'image/png');
+
+        expect(blob).toBeInstanceOf(Blob);
+        expect(blob.type).toBe('text/plain');
+
+        const buffer = await blob.arrayBuffer();
+        const text = new TextDecoder().decode(buffer);
+        expect(text).toBe('Hello World');
+    });
+
+    it('should fallback to provided mimeType if data URI parsing fails to find mimeType', async () => {
+        // Data URI missing the mime part before the semicolon, e.g., "data:;base64,..."
+        // The regex in the function is `/:(.*?);/` so "data:;base64," matches empty string
+        // Actually, "data:;base64," has metadata "data:" which doesn't contain a semicolon.
+        // Wait, the code does `metadata.match(/:(.*?);/)`. If metadata is "data:base64", it might fail.
+        // Let's test a simple valid case without mime type in data uri.
+        const dataUri = 'data:base64,SGVsbG8gV29ybGQ=';
+        const blob = base64ToBlob(dataUri, 'application/octet-stream');
+
+        expect(blob).toBeInstanceOf(Blob);
+        expect(blob.type).toBe('application/octet-stream');
+
+        const buffer = await blob.arrayBuffer();
+        const text = new TextDecoder().decode(buffer);
+        expect(text).toBe('Hello World');
     });
 });
 
