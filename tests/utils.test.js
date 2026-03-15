@@ -1,13 +1,44 @@
 import { describe, it, expect } from 'vitest';
 import { extractCode, loadModule } from './test-utils.js';
 
-// Extract getContrastColor from script.js
-const utilsLogic = extractCode('// Helper: Get Contrast Color (Black or White)', '// --- Holiday Logic ---');
-const { getContrastColor, parseDateString } = loadModule([utilsLogic], ['getContrastColor', 'parseDateString']);
+// Extract utils from script.js
+const utilsLogic = extractCode('// Helper: Escape HTML', '// --- Holiday Logic ---');
+const { escapeHTML, getContrastColor, parseDateString } = loadModule([utilsLogic], ['escapeHTML', 'getContrastColor', 'parseDateString']);
 
 // Extract getWeekdayHeaderHTML from script.js
 const weekdayHeaderLogic = extractCode('// Generate Weekday Header HTML based on startOfWeek', '// --- Popup Logic ---');
 const { getWeekdayHeaderHTML } = loadModule([weekdayHeaderLogic], ['getWeekdayHeaderHTML']);
+
+describe('escapeHTML', () => {
+    it('should escape special characters', () => {
+        expect(escapeHTML('&')).toBe('&amp;');
+        expect(escapeHTML('<')).toBe('&lt;');
+        expect(escapeHTML('>')).toBe('&gt;');
+        expect(escapeHTML('"')).toBe('&quot;');
+        expect(escapeHTML("'")).toBe('&#039;');
+        expect(escapeHTML('&<>"\'')).toBe('&amp;&lt;&gt;&quot;&#039;');
+    });
+
+    it('should return an empty string for falsy inputs', () => {
+        expect(escapeHTML('')).toBe('');
+        expect(escapeHTML(null)).toBe('');
+        expect(escapeHTML(undefined)).toBe('');
+    });
+
+    it('should not change strings without special characters', () => {
+        expect(escapeHTML('Hello World')).toBe('Hello World');
+        expect(escapeHTML('12345')).toBe('12345');
+    });
+
+    it('should handle mixed strings correctly', () => {
+        expect(escapeHTML('Hello <script>alert("XSS")</script> & more'))
+            .toBe('Hello &lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt; &amp; more');
+    });
+
+    it('should escape already escaped entities', () => {
+        expect(escapeHTML('&amp;')).toBe('&amp;amp;');
+    });
+});
 
 describe('getWeekdayHeaderHTML', () => {
     it('should generate headers starting with Sunday when startOfWeek is 0', () => {
