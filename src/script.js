@@ -1314,6 +1314,8 @@ async function renderLocalImageManager() {
         return;
     }
 
+    const fragment = document.createDocumentFragment();
+
     allImages.forEach(item => {
         const div = document.createElement('div');
         div.style.position = 'relative';
@@ -1392,8 +1394,10 @@ async function renderLocalImageManager() {
 
         div.appendChild(img);
         div.appendChild(btnDel);
-        list.appendChild(div);
+        fragment.appendChild(div);
     });
+
+    list.appendChild(fragment);
 }
 
 async function handleLocalImageImport(files) {
