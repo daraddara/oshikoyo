@@ -846,7 +846,7 @@ function renderCalendar(container, year, month) {
         }
         html += `</div>`;
         if (holidayName) {
-            html += `<span class="holiday-name">${holidayName}</span>`;
+            html += `<span class="holiday-name">${escapeHTML(holidayName)}</span>`;
         }
 
         // Append Oshi Events
@@ -862,7 +862,7 @@ function renderCalendar(container, year, month) {
 
         let popupHtml = `<div class="popup-header"><span class="popup-date">${month}月${d}日 (${dayLabel})</span>`;
         if (holidayName) {
-            popupHtml += `<span class="popup-holiday">${holidayName}</span>`;
+            popupHtml += `<span class="popup-holiday">${escapeHTML(holidayName)}</span>`;
         }
         popupHtml += `</div>`;
 
