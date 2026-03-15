@@ -2599,12 +2599,9 @@ function applyAutoLayout(img) {
     const ratio = w / h;
     const invRatio = h / w;
 
-    console.log(`[AutoLayout] Image Loaded: ${w}x${h} (Ratio: ${ratio.toFixed(2)}, InvRatio: ${invRatio.toFixed(2)})`);
-
     let changed = false;
     if (ratio >= 1.2) {
         // Landscape -> Top Photo + Row Calendar
-        console.log("[AutoLayout] Decision: Landscape");
         if (appSettings.mediaPosition !== 'top' || appSettings.layoutDirection !== 'row') {
             appSettings.mediaPosition = 'top';
             appSettings.layoutDirection = 'row';
@@ -2612,7 +2609,6 @@ function applyAutoLayout(img) {
         }
     } else if (invRatio >= 1.2) {
         // Portrait -> Left Photo + Column Calendar
-        console.log("[AutoLayout] Decision: Portrait");
         if (appSettings.mediaPosition !== 'left' || appSettings.layoutDirection !== 'column') {
             appSettings.mediaPosition = 'left';
             appSettings.layoutDirection = 'column';
@@ -2620,7 +2616,6 @@ function applyAutoLayout(img) {
         }
     } else {
         // Default/Square -> Standard Top + Row
-        console.log("[AutoLayout] Decision: Default");
         if (appSettings.mediaPosition !== 'top' || appSettings.layoutDirection !== 'row') {
             appSettings.mediaPosition = 'top';
             appSettings.layoutDirection = 'row';
@@ -2629,7 +2624,6 @@ function applyAutoLayout(img) {
     }
 
     if (changed) {
-        console.log(`[AutoLayout] Applying new settings: Pos=${appSettings.mediaPosition}, Dir=${appSettings.layoutDirection}`);
         saveSettingsSilently();
         updateLayoutToggleUI();
         updateView(); // Re-render everything with new layout classes
