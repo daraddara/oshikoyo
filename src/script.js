@@ -754,6 +754,13 @@ function renderCalendar(container, year, month) {
         daysGrid.appendChild(emptyCell);
     }
 
+    // Pre-calculate parsed dates for oshi events to avoid redundant parsing in the day loop
+    const oshiEventDates = (appSettings.oshiList || []).map(oshi => ({
+        ...oshi,
+        parsedBirthday: parseDateString(oshi.birthday),
+        parsedDebutDate: parseDateString(oshi.debutDate)
+    }));
+
     // Days
     for (let d = 1; d <= daysInMonth; d++) {
         const currentDate = new Date(year, month - 1, d);
@@ -782,7 +789,7 @@ function renderCalendar(container, year, month) {
         let dayIcons = new Set();
 
         // Loop through all oshis
-        (appSettings.oshiList || []).forEach(oshi => {
+        oshiEventDates.forEach(oshi => {
             if (!oshi.name) return;
 
             const textColor = oshi.color ? getContrastColor(oshi.color) : '#333';
@@ -804,14 +811,14 @@ function renderCalendar(container, year, month) {
             const escapedName = escapeHTML(oshi.name);
 
             // Birthday Check
-            const bd = parseDateString(oshi.birthday);
+            const bd = oshi.parsedBirthday;
             if (bd && bd.month === month && bd.day === d) {
                 dayIcons.add('birthday');
                 eventTypes.push('誕生日');
             }
 
             // Anniversary Check
-            const dd = parseDateString(oshi.debutDate);
+            const dd = oshi.parsedDebutDate;
             if (dd && dd.month === month && dd.day === d) {
                 dayIcons.add('anniversary');
                 eventTypes.push('記念日');
