@@ -4,9 +4,9 @@ import { extractCode, loadModule, setupTestEnvironment } from './test-utils.js';
 // Ensure test environment is setup (polyfills Blob.arrayBuffer, etc)
 setupTestEnvironment();
 
-// Extract getContrastColor from script.js
-const utilsLogic = extractCode('// Helper: Get Contrast Color (Black or White)', '// --- Holiday Logic ---');
-const { getContrastColor, parseDateString, hexToRgba } = loadModule([utilsLogic], ['getContrastColor', 'parseDateString', 'hexToRgba']);
+// Extract utils from script.js
+const utilsLogic = extractCode('// Helper: Escape HTML', '// --- Holiday Logic ---');
+const { escapeHTML, getContrastColor, parseDateString, hexToRgba } = loadModule([utilsLogic], ['escapeHTML', 'getContrastColor', 'parseDateString', 'hexToRgba']);
 
 // Extract blobToBase64 from script.js
 const base64Logic = extractCode('// Helper: Blob to Base64', '// Helper: Base64 to Blob');
@@ -19,6 +19,37 @@ const { getWeekdayHeaderHTML } = loadModule([weekdayHeaderLogic], ['getWeekdayHe
 // Extract base64ToBlob from script.js
 const base64ToBlobLogic = extractCode('// Helper: Base64 to Blob', '// Helper: Compare Blobs');
 const { base64ToBlob } = loadModule([base64ToBlobLogic], ['base64ToBlob']);
+
+describe('escapeHTML', () => {
+    it('should escape special characters', () => {
+        expect(escapeHTML('&')).toBe('&amp;');
+        expect(escapeHTML('<')).toBe('&lt;');
+        expect(escapeHTML('>')).toBe('&gt;');
+        expect(escapeHTML('"')).toBe('&quot;');
+        expect(escapeHTML("'")).toBe('&#039;');
+        expect(escapeHTML('&<>"\'')).toBe('&amp;&lt;&gt;&quot;&#039;');
+    });
+
+    it('should return an empty string for falsy inputs', () => {
+        expect(escapeHTML('')).toBe('');
+        expect(escapeHTML(null)).toBe('');
+        expect(escapeHTML(undefined)).toBe('');
+    });
+
+    it('should not change strings without special characters', () => {
+        expect(escapeHTML('Hello World')).toBe('Hello World');
+        expect(escapeHTML('12345')).toBe('12345');
+    });
+
+    it('should handle mixed strings correctly', () => {
+        expect(escapeHTML('Hello <script>alert("XSS")</script> & more'))
+            .toBe('Hello &lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt; &amp; more');
+    });
+
+    it('should escape already escaped entities', () => {
+        expect(escapeHTML('&amp;')).toBe('&amp;amp;');
+    });
+});
 
 describe('getWeekdayHeaderHTML', () => {
     it('should generate headers starting with Sunday when startOfWeek is 0', () => {
