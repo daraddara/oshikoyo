@@ -14,6 +14,7 @@ const DEFAULT_SETTINGS = {
     mediaPosition: 'top', // 'top', 'bottom', 'left', 'right'
     mediaSize: null,      // size of media area (width or height depending on position)
     mediaIntervalPreset: '1m', // '10s', '30s', '1m', '10m', '1h', '0:00', '4:00', 'startup'
+    lastActiveInterval: '1m',
     autoLayoutMode: true,  // Automatically optimize layout based on image aspect ratio
 };
 
@@ -2051,6 +2052,11 @@ function loadSettings() {
                 delete appSettings.mediaIntervalRandom;
                 delete appSettings.mediaIntervalCycle;
             }
+
+            // Migration: Initialize lastActiveInterval if it doesn't exist
+            if (!appSettings.lastActiveInterval) {
+                appSettings.lastActiveInterval = appSettings.mediaIntervalPreset || '1m';
+            }
         } catch (e) { }
     }
     // updateView(); // Removed to prevent double rendering on init
@@ -2144,7 +2150,8 @@ function saveSettings() {
  * Updates the active state of Quick Media Mode buttons based on current settings.
  */
 function updateQuickMediaButtons() {
-    const mediaModeBtns = document.querySelectorAll('.media-mode-btn');
+    // Legacy support (if any old buttons remain, though we replaced them)
+    const mediaModeBtns = document.querySelectorAll('.media-mode-btn:not(.display-mode-btn)');
     mediaModeBtns.forEach(btn => {
         if (btn.getAttribute('data-mode') === appSettings.mediaMode) {
             btn.classList.add('active');
@@ -2152,6 +2159,29 @@ function updateQuickMediaButtons() {
             btn.classList.remove('active');
         }
     });
+
+    // Update unified Display Mode Button
+    const displayBtn = document.querySelector('.display-mode-btn');
+    if (displayBtn) {
+        const iconRandom = displayBtn.querySelector('.icon-random');
+        const iconCycle = displayBtn.querySelector('.icon-cycle');
+        const iconSingle = displayBtn.querySelector('.icon-single');
+
+        if (iconRandom) iconRandom.style.display = appSettings.mediaMode === 'random' ? 'block' : 'none';
+        if (iconCycle) iconCycle.style.display = appSettings.mediaMode === 'cycle' ? 'block' : 'none';
+        if (iconSingle) iconSingle.style.display = appSettings.mediaMode === 'single' ? 'block' : 'none';
+
+        if (appSettings.mediaMode === 'random') {
+            displayBtn.setAttribute('title', '表示モードの設定（現在はランダム中）');
+            displayBtn.setAttribute('data-original-title', '表示モードの設定（現在はランダム中）');
+        } else if (appSettings.mediaMode === 'cycle') {
+            displayBtn.setAttribute('title', '表示モードの設定（現在はサイクル中）');
+            displayBtn.setAttribute('data-original-title', '表示モードの設定（現在はサイクル中）');
+        } else {
+            displayBtn.setAttribute('title', '表示モードの設定（現在は固定中）');
+            displayBtn.setAttribute('data-original-title', '表示モードの設定（現在は固定中）');
+        }
+    }
 
     updateIntervalMenu();
 }
@@ -2161,10 +2191,33 @@ function updateQuickMediaButtons() {
  */
 function updateIntervalMenu() {
     const isFixed = appSettings.mediaMode === 'single';
+
+    // Update Mode Items
+    const modeItems = document.querySelectorAll('.mode-item');
+    modeItems.forEach(item => {
+        if (item.getAttribute('data-mode') === appSettings.mediaMode) {
+            item.classList.add('is-active');
+        } else {
+            item.classList.remove('is-active');
+        }
+    });
+
+    // Update Interval Section State
+    const intervalSection = document.querySelector('.interval-section');
+    if (intervalSection) {
+        if (isFixed) {
+            intervalSection.classList.add('disabled');
+        } else {
+            intervalSection.classList.remove('disabled');
+        }
+    }
+
+    // Update Interval Items based on lastActiveInterval
     const intervalItems = document.querySelectorAll('.interval-item');
+    const targetInterval = isFixed ? null : appSettings.lastActiveInterval;
 
     intervalItems.forEach(item => {
-        if (!isFixed && item.getAttribute('data-value') === appSettings.mediaIntervalPreset) {
+        if (targetInterval && item.getAttribute('data-value') === targetInterval) {
             item.classList.add('is-active');
         } else {
             item.classList.remove('is-active');
@@ -2235,8 +2288,30 @@ function init() {
         updateView();
     });
 
-    // Quick Media Mode Buttons and Interval Dropdown
-    const mediaModeBtns = document.querySelectorAll('.media-mode-btn');
+    // Unified Display Mode Control logic
+    const displayModeBtn = document.querySelector('.display-mode-btn');
+    if (displayModeBtn) {
+        if (displayModeBtn.hasAttribute('title')) {
+            displayModeBtn.setAttribute('data-original-title', displayModeBtn.getAttribute('title'));
+        }
+
+        displayModeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const dropdown = e.currentTarget.nextElementSibling;
+            if (dropdown && dropdown.classList.contains('interval-dropdown')) {
+                const isOpen = dropdown.classList.contains('is-open');
+                if (!isOpen) {
+                    dropdown.classList.add('is-open');
+                    e.currentTarget.removeAttribute('title');
+                } else {
+                    dropdown.classList.remove('is-open');
+                    if (e.currentTarget.hasAttribute('data-original-title')) {
+                        e.currentTarget.setAttribute('title', e.currentTarget.getAttribute('data-original-title'));
+                    }
+                }
+            }
+        });
+    }
 
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
@@ -2251,64 +2326,38 @@ function init() {
         }
     });
 
-    mediaModeBtns.forEach(btn => {
-        // Save original title for tooltip management
-        if (btn.hasAttribute('title')) {
-            btn.setAttribute('data-original-title', btn.getAttribute('title'));
-        }
-
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent document click listener from immediately closing it
-
-            const mode = e.currentTarget.getAttribute('data-mode');
-
-            // Handle dropdown toggle for Random/Cycle
-            const dropdown = e.currentTarget.nextElementSibling;
-            if (dropdown && dropdown.classList.contains('interval-dropdown')) {
-                const isOpen = dropdown.classList.contains('is-open');
-
-                // Close all other dropdowns
-                document.querySelectorAll('.interval-dropdown.is-open').forEach(menu => {
-                    menu.classList.remove('is-open');
-                    const otherBtn = menu.previousElementSibling;
-                    if (otherBtn && otherBtn.hasAttribute('data-original-title')) {
-                        otherBtn.setAttribute('title', otherBtn.getAttribute('data-original-title'));
-                    }
-                });
-
-                if (!isOpen) {
-                    dropdown.classList.add('is-open');
-                    // Hide tooltip when menu is open
-                    e.currentTarget.removeAttribute('title');
-                } else {
-                    dropdown.classList.remove('is-open');
-                    if (e.currentTarget.hasAttribute('data-original-title')) {
-                        e.currentTarget.setAttribute('title', e.currentTarget.getAttribute('data-original-title'));
-                    }
-                }
-            }
-
-            if (mode) {
-                appSettings.mediaMode = mode;
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
-                updateQuickMediaButtons();
-                setupMediaTimer(true); // Reset timer and refresh image
-                updateView();
-            }
-        });
-    });
-
-    // Quick Media Interval Options (Custom Dropdown via Delegation)
+    // Handle Delegation for Mode Items and Interval Items
     const quickControls = document.getElementById('quickMediaControls');
     if (quickControls) {
         quickControls.addEventListener('click', (e) => {
-            const opt = e.target.closest('.interval-item');
-            if (opt) {
+            const modeItem = e.target.closest('.mode-item');
+            const intervalItem = e.target.closest('.interval-item');
+
+            if (modeItem) {
                 e.stopPropagation();
                 e.preventDefault();
 
-                // Close the dropdown after selection
-                const dropdown = opt.closest('.interval-dropdown');
+                const mode = modeItem.getAttribute('data-mode');
+                if (mode && mode !== appSettings.mediaMode) {
+                    if (appSettings.mediaMode === 'single' && (mode === 'random' || mode === 'cycle')) {
+                        // Restore interval when leaving single mode
+                        appSettings.mediaIntervalPreset = appSettings.lastActiveInterval || '1m';
+                    }
+
+                    appSettings.mediaMode = mode;
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+                    updateQuickMediaButtons();
+                    setupMediaTimer(true);
+                    updateView();
+                }
+            } else if (intervalItem) {
+                e.stopPropagation();
+                e.preventDefault();
+
+                if (appSettings.mediaMode === 'single') return; // Disabled in single mode
+
+                // Close the dropdown after interval selection
+                const dropdown = intervalItem.closest('.interval-dropdown');
                 if (dropdown) {
                     dropdown.classList.remove('is-open');
                     const btn = dropdown.previousElementSibling;
@@ -2317,13 +2366,14 @@ function init() {
                     }
                 }
 
-                const val = opt.getAttribute('data-value');
+                const val = intervalItem.getAttribute('data-value');
                 if (val) {
                     appSettings.mediaIntervalPreset = val;
+                    appSettings.lastActiveInterval = val;
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
                     updateQuickMediaButtons();
                     setupMediaTimer(false); // Restart timer
-                    showToast(`間隔を ${opt.textContent} に設定しました`);
+                    showToast(`間隔を ${intervalItem.textContent} に設定しました`);
                     updateView();
                 }
             }
