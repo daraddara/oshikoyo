@@ -6,7 +6,7 @@ import { extractCode, loadModule, setupTestEnvironment } from './test-utils.js';
 setupTestEnvironment();
 
 // script.js からロジックを抽出
-const mediaUpdateCode = extractCode('async function updateMediaArea', 'function adjustMediaLayout');
+const mediaUpdateCode = extractCode('function prepareMediaContentLayer', 'function adjustMediaLayout');
 const { updateMediaArea } = loadModule([mediaUpdateCode], ['updateMediaArea']);
 
 describe('updateMediaArea ロジック (メディア表示更新)', () => {
