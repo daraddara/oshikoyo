@@ -666,41 +666,6 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.media-interval-select {
-    background: rgba(0, 0, 0, 0.05);
-    border: none;
-    border-radius: 6px;
-    color: var(--text-primary);
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 0 6px;
-    margin-right: 2px;
-    outline: none;
-    cursor: pointer;
-    transition: all 0.2s;
-    height: 24px;
-    max-width: 70px;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    text-align: center;
-}
-
-.media-interval-select:hover {
-    background: rgba(0, 0, 0, 0.1);
-}
-
-.media-interval-select option {
-    background: #fff;
-    color: #333;
-    font-size: 0.9rem;
-}
-
-/* Interval Select hidden (legacy or if used in modal) */
-.media-interval-select {
-    display: none;
-}
-
 /* Quick Search Palette */
 .media-search-btn {
     position: absolute;
