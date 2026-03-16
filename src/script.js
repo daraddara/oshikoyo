@@ -2153,13 +2153,21 @@ function updateQuickMediaButtons() {
         }
     });
 
-    // Synchronize Interval Menu Active State
-    const intervalOptions = document.querySelectorAll('.interval-option');
-    intervalOptions.forEach(opt => {
-        if (opt.getAttribute('data-value') === appSettings.mediaIntervalPreset) {
-            opt.classList.add('active');
+    updateIntervalMenu();
+}
+
+/**
+ * Updates the active state of Interval dropdown items based on current settings and mode.
+ */
+function updateIntervalMenu() {
+    const isFixed = appSettings.mediaMode === 'single';
+    const intervalItems = document.querySelectorAll('.interval-item');
+
+    intervalItems.forEach(item => {
+        if (!isFixed && item.getAttribute('data-value') === appSettings.mediaIntervalPreset) {
+            item.classList.add('is-active');
         } else {
-            opt.classList.remove('active');
+            item.classList.remove('is-active');
         }
     });
 }
@@ -2227,11 +2235,59 @@ function init() {
         updateView();
     });
 
-    // Quick Media Mode Buttons
+    // Quick Media Mode Buttons and Interval Dropdown
     const mediaModeBtns = document.querySelectorAll('.media-mode-btn');
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.media-mode-wrapper')) {
+            document.querySelectorAll('.interval-dropdown.is-open').forEach(menu => {
+                menu.classList.remove('is-open');
+                const btn = menu.previousElementSibling;
+                if (btn && btn.hasAttribute('data-original-title')) {
+                    btn.setAttribute('title', btn.getAttribute('data-original-title'));
+                }
+            });
+        }
+    });
+
     mediaModeBtns.forEach(btn => {
+        // Save original title for tooltip management
+        if (btn.hasAttribute('title')) {
+            btn.setAttribute('data-original-title', btn.getAttribute('title'));
+        }
+
         btn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent document click listener from immediately closing it
+
             const mode = e.currentTarget.getAttribute('data-mode');
+
+            // Handle dropdown toggle for Random/Cycle
+            const dropdown = e.currentTarget.nextElementSibling;
+            if (dropdown && dropdown.classList.contains('interval-dropdown')) {
+                const isOpen = dropdown.classList.contains('is-open');
+
+                // Close all other dropdowns
+                document.querySelectorAll('.interval-dropdown.is-open').forEach(menu => {
+                    menu.classList.remove('is-open');
+                    const otherBtn = menu.previousElementSibling;
+                    if (otherBtn && otherBtn.hasAttribute('data-original-title')) {
+                        otherBtn.setAttribute('title', otherBtn.getAttribute('data-original-title'));
+                    }
+                });
+
+                if (!isOpen) {
+                    dropdown.classList.add('is-open');
+                    // Hide tooltip when menu is open
+                    e.currentTarget.removeAttribute('title');
+                } else {
+                    dropdown.classList.remove('is-open');
+                    if (e.currentTarget.hasAttribute('data-original-title')) {
+                        e.currentTarget.setAttribute('title', e.currentTarget.getAttribute('data-original-title'));
+                    }
+                }
+            }
+
             if (mode) {
                 appSettings.mediaMode = mode;
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
@@ -2246,10 +2302,21 @@ function init() {
     const quickControls = document.getElementById('quickMediaControls');
     if (quickControls) {
         quickControls.addEventListener('click', (e) => {
-            const opt = e.target.closest('.interval-option');
+            const opt = e.target.closest('.interval-item');
             if (opt) {
                 e.stopPropagation();
                 e.preventDefault();
+
+                // Close the dropdown after selection
+                const dropdown = opt.closest('.interval-dropdown');
+                if (dropdown) {
+                    dropdown.classList.remove('is-open');
+                    const btn = dropdown.previousElementSibling;
+                    if (btn && btn.hasAttribute('data-original-title')) {
+                        btn.setAttribute('title', btn.getAttribute('data-original-title'));
+                    }
+                }
+
                 const val = opt.getAttribute('data-value');
                 if (val) {
                     appSettings.mediaIntervalPreset = val;
