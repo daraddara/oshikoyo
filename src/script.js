@@ -2369,25 +2369,12 @@ if ('serviceWorker' in navigator) {
 // --- Media Logic ---
 let currentMediaObjectURL = null;
 
-async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'|'restore'|'layout'
-    const area = document.getElementById('mediaArea');
-    const container = document.getElementById('mediaContainer');
-    if (!area || !container) return;
-
-    area.style.display = 'block';
-
-
-    adjustMediaLayout();
-
-    if (mode === 'layout') return; // Stop here if only layout update is requested
-
-    // Clean up previous ObjectURL if exists
-    if (currentMediaObjectURL) {
-        URL.revokeObjectURL(currentMediaObjectURL);
-        currentMediaObjectURL = null;
-    }
-
-    // Prepare Container Structure (Content Layer + UI Layer)
+/**
+ * プレースホルダーを削除し、コンテンツレイヤーを作成・取得する
+ * @param {HTMLElement} container メディアコンテナ
+ * @returns {HTMLElement} コンテンツレイヤー
+ */
+function prepareMediaContentLayer(container) {
     let contentLayer = container.querySelector('.media-content-layer');
     if (!contentLayer) {
         // Remove placeholder instead of full reset to preserve drag handle
@@ -2403,19 +2390,15 @@ async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'
         contentLayer.style.justifyContent = 'center';
         container.appendChild(contentLayer);
     }
+    return contentLayer;
+}
 
-    // --- Manual Navigation Logic ---
-    const handleNavigation = async (direction) => { // 'next' or 'prev'
-        await updateMediaArea(direction === 'next' ? 'next' : 'prev');
-
-        // Reset timer if it's an interval-based preset to prevent immediate switch
-        const preset = appSettings.mediaIntervalPreset || '1m';
-        if (preset.includes('s') || preset.includes('m') || preset.includes('h')) {
-            setupMediaTimer(false);
-        }
-    };
-
-    // Render Navigation Buttons (if not present)
+/**
+ * 手動ナビゲーションボタン（前後）の描画・削除を行う
+ * @param {HTMLElement} contentLayer コンテンツレイヤー
+ * @param {Function} handleNavigation ナビゲーション処理関数
+ */
+function updateMediaNavigation(contentLayer, handleNavigation) {
     if (appSettings.mediaMode === 'random' || appSettings.mediaMode === 'cycle') {
         if (!contentLayer.querySelector('.media-nav-btn.prev')) {
             const btnPrev = document.createElement('div');
@@ -2436,8 +2419,14 @@ async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'
         const existing = contentLayer.querySelectorAll('.media-nav-btn');
         existing.forEach(el => el.remove());
     }
+}
 
-    // Helper to get or create image display area (to preserve buttons)
+/**
+ * 画像・動画を表示するためのディスプレイエリアを作成・取得する
+ * @param {HTMLElement} contentLayer コンテンツレイヤー
+ * @returns {HTMLElement} ディスプレイエリア
+ */
+function getOrCreateMediaDisplayArea(contentLayer) {
     let displayArea = contentLayer.querySelector('.media-display-area');
     if (!displayArea) {
         displayArea = document.createElement('div');
@@ -2449,168 +2438,232 @@ async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'
         displayArea.style.justifyContent = 'center';
         contentLayer.appendChild(displayArea);
     }
+    return displayArea;
+}
 
+/**
+ * 次に表示するメディアのキーを決定する
+ * @param {string[]} keys ローカルDBのキー配列
+ * @param {string} mode 更新モード('advance', 'restore', 'prev', 'next')
+ * @returns {string|null} 対象のキー
+ */
+function determineTargetMediaKey(keys, mode) {
+    let targetKey = null;
 
+    if (mode === 'restore' && appState.lastMediaKey && keys.includes(appState.lastMediaKey)) {
+        // Restore last state on boot
+        targetKey = appState.lastMediaKey;
+
+        // Sync index if in cycle mode
+        if (appSettings.mediaMode === 'cycle') {
+            currentCycleIndex = keys.indexOf(targetKey);
+        }
+
+        // Re-initialize history if empty but we have a restore key
+        if (appState.mediaHistory.length === 0) {
+            appState.mediaHistory = [targetKey];
+            appState.mediaHistoryIndex = 0;
+        } else {
+            // If history exists, ensure index is valid
+            if (appState.mediaHistoryIndex === -1 || appState.mediaHistoryIndex >= appState.mediaHistory.length) {
+                appState.mediaHistoryIndex = appState.mediaHistory.length - 1;
+            }
+        }
+
+    } else if (mode === 'prev') {
+        // --- Previous Action ---
+        if (appSettings.mediaMode === 'random') {
+            if (appState.mediaHistoryIndex > 0) {
+                appState.mediaHistoryIndex--;
+                targetKey = appState.mediaHistory[appState.mediaHistoryIndex];
+            } else {
+                // Start of history
+                targetKey = appState.mediaHistory[0];
+            }
+        } else if (appSettings.mediaMode === 'cycle') {
+            // Simple decrement
+            if (currentCycleIndex === -1) currentCycleIndex = 0;
+            currentCycleIndex = (currentCycleIndex - 1 + keys.length) % keys.length;
+            targetKey = keys[currentCycleIndex];
+        }
+
+    } else if (mode === 'next' || mode === 'advance') {
+        // --- Next/Advance Action ---
+
+        if (appSettings.mediaMode === 'random') {
+            // Check if we are browsing history
+            if (appState.mediaHistoryIndex < appState.mediaHistory.length - 1) {
+                // Move forward in history
+                appState.mediaHistoryIndex++;
+                targetKey = appState.mediaHistory[appState.mediaHistoryIndex];
+            } else {
+                // Generate NEW random
+                let nextKey;
+                let attempts = 0;
+                do {
+                    nextKey = keys[Math.floor(Math.random() * keys.length)];
+                    attempts++;
+                } while (nextKey === appState.lastMediaKey && keys.length > 1 && attempts < 5);
+
+                targetKey = nextKey;
+
+                // Push to history
+                appState.mediaHistory.push(targetKey);
+                appState.mediaHistoryIndex = appState.mediaHistory.length - 1;
+
+                // Limit history size
+                if (appState.mediaHistory.length > 50) {
+                    appState.mediaHistory.shift();
+                    appState.mediaHistoryIndex--;
+                }
+            }
+
+        } else if (appSettings.mediaMode === 'cycle') {
+            // State-based rotation
+            if (currentCycleIndex === -1) {
+                currentCycleIndex = 0;
+            } else {
+                currentCycleIndex = (currentCycleIndex + 1) % keys.length;
+            }
+            targetKey = keys[currentCycleIndex];
+        } else if (appSettings.mediaMode === 'single') {
+            targetKey = keys[0];
+        }
+    } else {
+        // Fallback/Default
+        if (keys.length > 0) targetKey = keys[0];
+    }
+
+    return targetKey;
+}
+
+/**
+ * デフォルトの画像を描画する
+ * @param {HTMLElement} displayArea ディスプレイエリア
+ */
+function renderDefaultMedia(displayArea) {
+    displayArea.innerHTML = '';
+    const defaultImg = document.createElement('img');
+    defaultImg.alt = "Default Image";
+    defaultImg.style.cssText = 'width:100%; height:100%; object-fit:contain;';
+
+    // Apply auto layout even for default image
+    defaultImg.onload = () => {
+        applyAutoLayout(defaultImg);
+    };
+    defaultImg.src = 'src/assets/default_image.png';
+
+    displayArea.appendChild(defaultImg);
+}
+
+/**
+ * 画像や動画などのメディアレコードを描画する
+ * @param {Object} record ローカルDBから取得したメディア情報
+ * @param {HTMLElement} displayArea ディスプレイエリア
+ */
+function renderMediaRecord(record, displayArea) {
+    currentMediaObjectURL = URL.createObjectURL(record.file || record); // Handle File object safely
+
+    // Determine content type
+    const mime = (record.file ? record.file.type : record.type) || 'image/png';
+
+    // Important: DO NOT clear contentLayer entirely, as it contains nav buttons and displayArea.
+    // Clear ONLY the displayArea content.
+    if (displayArea) {
+        displayArea.innerHTML = '';
+    }
+
+    if (mime.startsWith('image/')) {
+        // Create Background Layer (Blur)
+        const backdrop = document.createElement('img');
+        backdrop.className = 'media-backdrop';
+        backdrop.src = currentMediaObjectURL;
+
+        // Create Main Image Layer
+        const mainImg = document.createElement('img');
+        mainImg.className = 'media-main-img';
+        mainImg.alt = "Oshi Media";
+
+        // Aspect Ratio Detection & Auto Layout - Set handler BEFORE src
+        mainImg.onload = () => {
+            applyAutoLayout(mainImg);
+        };
+        mainImg.src = currentMediaObjectURL;
+
+        if (displayArea) {
+            displayArea.appendChild(backdrop);
+            displayArea.appendChild(mainImg);
+        }
+    } else if (mime.startsWith('video/')) {
+        const video = document.createElement('video');
+        video.src = currentMediaObjectURL;
+        video.autoplay = true;
+        video.muted = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'contain';
+        if (displayArea) {
+            displayArea.appendChild(video);
+        }
+    }
+}
+
+async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'|'restore'|'layout'
+    const area = document.getElementById('mediaArea');
+    const container = document.getElementById('mediaContainer');
+    if (!area || !container) return;
+
+    area.style.display = 'block';
+    adjustMediaLayout();
+
+    if (mode === 'layout') return; // Stop here if only layout update is requested
+
+    // Clean up previous ObjectURL if exists
+    if (currentMediaObjectURL) {
+        URL.revokeObjectURL(currentMediaObjectURL);
+        currentMediaObjectURL = null;
+    }
+
+    // Prepare Container Structure (Content Layer + UI Layer)
+    const contentLayer = prepareMediaContentLayer(container);
+
+    // --- Manual Navigation Logic ---
+    const handleNavigation = async (direction) => { // 'next' or 'prev'
+        await updateMediaArea(direction === 'next' ? 'next' : 'prev');
+
+        // Reset timer if it's an interval-based preset to prevent immediate switch
+        const preset = appSettings.mediaIntervalPreset || '1m';
+        if (preset.includes('s') || preset.includes('m') || preset.includes('h')) {
+            setupMediaTimer(false);
+        }
+    };
+
+    // Render Navigation Buttons (if not present)
+    updateMediaNavigation(contentLayer, handleNavigation);
+
+    // Helper to get or create image display area (to preserve buttons)
+    const displayArea = getOrCreateMediaDisplayArea(contentLayer);
 
     // --- Logic: Local Only ---
     try {
         const keys = await localImageDB.getAllKeys();
         if (keys.length === 0) {
-            displayArea.innerHTML = '';
-            const defaultImg = document.createElement('img');
-            defaultImg.alt = "Default Image";
-            defaultImg.style.cssText = 'width:100%; height:100%; object-fit:contain;';
-
-            // Apply auto layout even for default image
-            defaultImg.onload = () => {
-                applyAutoLayout(defaultImg);
-            };
-            defaultImg.src = 'src/assets/default_image.png';
-
-            displayArea.appendChild(defaultImg);
+            renderDefaultMedia(displayArea);
             return;
         }
 
-        let targetKey = null;
-
-        if (mode === 'restore' && appState.lastMediaKey && keys.includes(appState.lastMediaKey)) {
-            // Restore last state on boot
-            targetKey = appState.lastMediaKey;
-
-            // Sync index if in cycle mode
-            if (appSettings.mediaMode === 'cycle') {
-                currentCycleIndex = keys.indexOf(targetKey);
-            }
-
-            // Re-initialize history if empty but we have a restore key
-            if (appState.mediaHistory.length === 0) {
-                appState.mediaHistory = [targetKey];
-                appState.mediaHistoryIndex = 0;
-            } else {
-                // If history exists, ensure index is valid
-                if (appState.mediaHistoryIndex === -1 || appState.mediaHistoryIndex >= appState.mediaHistory.length) {
-                    appState.mediaHistoryIndex = appState.mediaHistory.length - 1;
-                }
-            }
-
-        } else if (mode === 'prev') {
-            // --- Previous Action ---
-            if (appSettings.mediaMode === 'random') {
-                if (appState.mediaHistoryIndex > 0) {
-                    appState.mediaHistoryIndex--;
-                    targetKey = appState.mediaHistory[appState.mediaHistoryIndex];
-                } else {
-                    // Start of history
-                    targetKey = appState.mediaHistory[0];
-                }
-            } else if (appSettings.mediaMode === 'cycle') {
-                // Simple decrement
-                if (currentCycleIndex === -1) currentCycleIndex = 0;
-                currentCycleIndex = (currentCycleIndex - 1 + keys.length) % keys.length;
-                targetKey = keys[currentCycleIndex];
-            }
-
-        } else if (mode === 'next' || mode === 'advance') {
-            // --- Next/Advance Action ---
-
-            if (appSettings.mediaMode === 'random') {
-                // Check if we are browsing history
-                if (appState.mediaHistoryIndex < appState.mediaHistory.length - 1) {
-                    // Move forward in history
-                    appState.mediaHistoryIndex++;
-                    targetKey = appState.mediaHistory[appState.mediaHistoryIndex];
-                } else {
-                    // Generate NEW random
-                    let nextKey;
-                    let attempts = 0;
-                    do {
-                        nextKey = keys[Math.floor(Math.random() * keys.length)];
-                        attempts++;
-                    } while (nextKey === appState.lastMediaKey && keys.length > 1 && attempts < 5);
-
-                    targetKey = nextKey;
-
-                    // Push to history
-                    appState.mediaHistory.push(targetKey);
-                    appState.mediaHistoryIndex = appState.mediaHistory.length - 1;
-
-                    // Limit history size
-                    if (appState.mediaHistory.length > 50) {
-                        appState.mediaHistory.shift();
-                        appState.mediaHistoryIndex--;
-                    }
-                }
-
-            } else if (appSettings.mediaMode === 'cycle') {
-                // State-based rotation
-                if (currentCycleIndex === -1) {
-                    currentCycleIndex = 0;
-                } else {
-                    currentCycleIndex = (currentCycleIndex + 1) % keys.length;
-                }
-                targetKey = keys[currentCycleIndex];
-            } else if (appSettings.mediaMode === 'single') {
-                targetKey = keys[0];
-            }
-        } else {
-            // Fallback/Default
-            if (keys.length > 0) targetKey = keys[0];
-        }
+        const targetKey = determineTargetMediaKey(keys, mode);
 
         // Save State
         if (targetKey) {
             appState.lastMediaKey = targetKey;
-
             saveState();
 
             const record = await localImageDB.getImage(targetKey);
             if (record) {
-                currentMediaObjectURL = URL.createObjectURL(record.file || record); // Handle File object safely
-
-                // Determine content type
-                const mime = (record.file ? record.file.type : record.type) || 'image/png';
-
-                // Important: DO NOT clear contentLayer entirely, as it contains nav buttons and displayArea.
-                // Clear ONLY the displayArea content.
-                if (displayArea) {
-                    displayArea.innerHTML = '';
-                }
-
-                if (mime.startsWith('image/')) {
-                    // Create Background Layer (Blur)
-                    const backdrop = document.createElement('img');
-                    backdrop.className = 'media-backdrop';
-                    backdrop.src = currentMediaObjectURL;
-
-                    // Create Main Image Layer
-                    const mainImg = document.createElement('img');
-                    mainImg.className = 'media-main-img';
-                    mainImg.alt = "Oshi Media";
-
-                    // Aspect Ratio Detection & Auto Layout - Set handler BEFORE src
-                    mainImg.onload = () => {
-                        applyAutoLayout(mainImg);
-                    };
-                    mainImg.src = currentMediaObjectURL;
-
-                    if (displayArea) {
-                        displayArea.appendChild(backdrop);
-                        displayArea.appendChild(mainImg);
-                    }
-                } else if (mime.startsWith('video/')) {
-                    const video = document.createElement('video');
-                    video.src = currentMediaObjectURL;
-                    video.autoplay = true;
-                    video.muted = true;
-                    video.loop = true;
-                    video.playsInline = true;
-                    video.style.width = '100%';
-                    video.style.height = '100%';
-                    video.style.objectFit = 'contain';
-                    if (displayArea) {
-                        displayArea.appendChild(video);
-                    }
-                }
+                renderMediaRecord(record, displayArea);
             }
         }
     } catch (e) {
