@@ -9,11 +9,6 @@ const DEFAULT_SETTINGS = {
     layoutDirection: 'row', // 'row', 'column'
     // Oshi Settings (New List Structure)
     oshiList: [],
-    // Legacy support (to be migrated)
-    oshiName: '',
-    oshiBirthday: '',
-    oshiDebutDay: '',
-    oshiColor: '#3b82f6',
     // Media Settings
     mediaMode: 'single', // 'single', 'random', 'cycle'
     mediaPosition: 'top', // 'top', 'bottom', 'left', 'right'
@@ -1993,9 +1988,12 @@ function loadSettings() {
                     color: appSettings.oshiColor,
                     source: 'legacy'
                 }];
-                // Clear legacy
-                appSettings.oshiName = '';
             }
+            // Clear legacy properties explicitly as they are no longer in DEFAULT_SETTINGS
+            delete appSettings.oshiName;
+            delete appSettings.oshiBirthday;
+            delete appSettings.oshiDebutDay;
+            delete appSettings.oshiColor;
 
             // Fallback for removed 'none' mode
             if (appSettings.mediaMode === 'none') {
