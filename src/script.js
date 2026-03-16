@@ -76,6 +76,32 @@ class LocalImageDB {
     }
 
     /**
+     * Adds multiple image files to the database in a single transaction.
+     * @param {File[]} files - The image files to add.
+     * @returns {Promise<Array<number>>} The keys of the added images.
+     */
+    async addImages(files) {
+        if (!files || files.length === 0) return [];
+        await this.open();
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            const keys = [];
+
+            tx.oncomplete = () => resolve(keys);
+            tx.onerror = () => reject(tx.error);
+            tx.onabort = () => reject(new Error('Transaction aborted'));
+
+            for (const file of files) {
+                const request = store.add(file);
+                request.onsuccess = (e) => {
+                    keys.push(e.target.result);
+                };
+            }
+        });
+    }
+
+    /**
      * Retrieves all images and their keys from the database.
      * @returns {Promise<Array<{id: number, file: File}>>}
      */
@@ -259,6 +285,8 @@ class LocalImageDB {
             existingSignatures.get(key).push(img.file);
         }
 
+        const filesToAdd = [];
+
         for (const item of jsonData.images) {
             const blob = base64ToBlob(item.data, item.type);
 
@@ -286,13 +314,17 @@ class LocalImageDB {
                 lastModified: item.lastModified || Date.now()
             });
 
-            await this.addImage(file);
+            filesToAdd.push(file);
 
             // Add to ephemeral signature list to prevent duplicates within the same import batch
             if (!existingSignatures.has(key)) existingSignatures.set(key, []);
             existingSignatures.get(key).push(file);
 
             addedCount++;
+        }
+
+        if (filesToAdd.length > 0) {
+            await this.addImages(filesToAdd);
         }
 
         return { added: addedCount, skipped: skippedCount };
@@ -1411,9 +1443,7 @@ async function handleLocalImageImport(files) {
     if (!files || files.length === 0) return;
 
     const fileArray = Array.from(files).filter(f => f.type.startsWith('image/'));
-    const importPromises = fileArray.map(file => localImageDB.addImage(file));
-
-    await Promise.all(importPromises);
+    await localImageDB.addImages(fileArray);
     const addedCount = fileArray.length;
 
     showToast(`${addedCount} 枚の画像を追加しました`);
@@ -1720,8 +1750,7 @@ function setupPreviewModal() {
         modal.close(); // Close first
 
         // Actually save
-        const importPromises = pendingPreviewFiles.map(file => localImageDB.addImage(file));
-        const results = await Promise.all(importPromises);
+        const results = await localImageDB.addImages(pendingPreviewFiles);
         const count = results.length;
         const lastKey = results[results.length - 1];
 
