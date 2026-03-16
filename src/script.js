@@ -1465,15 +1465,53 @@ function handleExportSettings() {
     URL.revokeObjectURL(url);
 }
 
+// Helper: Validate Imported Settings
+function validateImportedSettings(data) {
+    if (!data || typeof data !== 'object') return null;
+
+    const validated = {};
+
+    // Root properties
+    if (typeof data.startOfWeek === 'number') validated.startOfWeek = data.startOfWeek;
+    if (typeof data.monthCount === 'number') validated.monthCount = data.monthCount;
+    if (typeof data.layoutDirection === 'string') validated.layoutDirection = data.layoutDirection;
+    if (typeof data.mediaMode === 'string') validated.mediaMode = data.mediaMode;
+    if (typeof data.mediaPosition === 'string') validated.mediaPosition = data.mediaPosition;
+    if (typeof data.mediaSize === 'number' || data.mediaSize === null) validated.mediaSize = data.mediaSize;
+    if (typeof data.mediaIntervalPreset === 'string') validated.mediaIntervalPreset = data.mediaIntervalPreset;
+    if (typeof data.autoLayoutMode === 'boolean') validated.autoLayoutMode = data.autoLayoutMode;
+
+    // Validate oshiList
+    if (Array.isArray(data.oshiList)) {
+        validated.oshiList = data.oshiList.map(item => {
+            if (!item || typeof item !== 'object') return null;
+            return {
+                name: typeof item.name === 'string' ? item.name : 'Unknown',
+                birthday: typeof item.birthday === 'string' ? item.birthday : '',
+                debutDate: typeof item.debutDate === 'string' ? item.debutDate : '',
+                color: typeof item.color === 'string' ? item.color : '#3b82f6',
+                fanArtTag: typeof item.fanArtTag === 'string' ? item.fanArtTag : '',
+                source: typeof item.source === 'string' ? item.source : ''
+            };
+        }).filter(item => item !== null);
+    } else {
+        return null; // Reject if oshiList is missing or not an array
+    }
+
+    return validated;
+}
+// --- Validation Logic End ---
+
 function handleImportSettings(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
         try {
             const data = JSON.parse(e.target.result);
-            // Basic validation
-            if (data.oshiList) {
+            const validatedData = validateImportedSettings(data);
+
+            if (validatedData) {
                 if (confirm('現在の設定を上書きします。よろしいですか？')) {
-                    appSettings = { ...DEFAULT_SETTINGS, ...data };
+                    appSettings = { ...DEFAULT_SETTINGS, ...validatedData };
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
                     alert('設定を復元しました。画面を更新します。');
                     location.reload();
