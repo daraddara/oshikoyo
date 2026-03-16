@@ -603,13 +603,13 @@ body {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.media-mode-wrapper:hover .interval-dropdown {
+.interval-dropdown.is-open {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
 }
 
-.interval-option {
+.interval-item {
     padding: 6px 12px;
     border-radius: 6px;
     font-size: 0.85rem;
@@ -619,11 +619,11 @@ body {
     white-space: nowrap;
 }
 
-.interval-option:hover {
+.interval-item:hover {
     background: rgba(0, 0, 0, 0.05);
 }
 
-.interval-option.active {
+.interval-item.is-active {
     background: var(--accent-color);
     color: white;
 }
