@@ -2290,6 +2290,13 @@ function init() {
 
     // Unified Display Mode Control logic
     const displayModeBtn = document.querySelector('.display-mode-btn');
+    const dropdown = document.querySelector('.interval-dropdown');
+
+    // Move the dropdown to document.body to break out of overflow:hidden containers
+    if (dropdown) {
+        document.body.appendChild(dropdown);
+    }
+
     if (displayModeBtn) {
         if (displayModeBtn.hasAttribute('title')) {
             displayModeBtn.setAttribute('data-original-title', displayModeBtn.getAttribute('title'));
@@ -2297,10 +2304,16 @@ function init() {
 
         displayModeBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const dropdown = e.currentTarget.nextElementSibling;
-            if (dropdown && dropdown.classList.contains('interval-dropdown')) {
+            if (dropdown) {
                 const isOpen = dropdown.classList.contains('is-open');
                 if (!isOpen) {
+                    // Position the dropdown before showing it
+                    const btnRect = e.currentTarget.getBoundingClientRect();
+                    dropdown.style.top = `${btnRect.bottom + 8}px`;
+                    // Align the right side of the dropdown with the right side of the button
+                    dropdown.style.left = 'auto'; // Reset left just in case
+                    dropdown.style.right = `${window.innerWidth - btnRect.right}px`;
+
                     dropdown.classList.add('is-open');
                     e.currentTarget.removeAttribute('title');
                 } else {
@@ -2313,23 +2326,37 @@ function init() {
         });
     }
 
+    const closeAllDropdowns = () => {
+        document.querySelectorAll('.interval-dropdown.is-open').forEach(menu => {
+            menu.classList.remove('is-open');
+            // Check button title attribute restoration (the button is no longer a direct sibling due to body append)
+            if (displayModeBtn && displayModeBtn.hasAttribute('data-original-title')) {
+                displayModeBtn.setAttribute('title', displayModeBtn.getAttribute('data-original-title'));
+            }
+        });
+    };
+
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('.media-mode-wrapper')) {
-            document.querySelectorAll('.interval-dropdown.is-open').forEach(menu => {
-                menu.classList.remove('is-open');
-                const btn = menu.previousElementSibling;
-                if (btn && btn.hasAttribute('data-original-title')) {
-                    btn.setAttribute('title', btn.getAttribute('data-original-title'));
-                }
-            });
+        if (!e.target.closest('.interval-dropdown') && !e.target.closest('.display-mode-btn')) {
+            closeAllDropdowns();
         }
     });
 
+    // Close dropdown when scrolling main layout
+    const mainLayout = document.getElementById('mainLayout');
+    if (mainLayout) {
+        mainLayout.addEventListener('scroll', closeAllDropdowns, { passive: true });
+    }
+    // Also close on window scroll or resize
+    window.addEventListener('scroll', closeAllDropdowns, { passive: true });
+    window.addEventListener('resize', closeAllDropdowns, { passive: true });
+
     // Handle Delegation for Mode Items and Interval Items
-    const quickControls = document.getElementById('quickMediaControls');
-    if (quickControls) {
-        quickControls.addEventListener('click', (e) => {
+    // Because the dropdown is now attached to the body, it won't be caught by quickControls delegation.
+    // We must attach an event listener directly to the dropdown or document body.
+    if (dropdown) {
+        dropdown.addEventListener('click', (e) => {
             const modeItem = e.target.closest('.mode-item');
             const intervalItem = e.target.closest('.interval-item');
 
@@ -2357,14 +2384,7 @@ function init() {
                 if (appSettings.mediaMode === 'single') return; // Disabled in single mode
 
                 // Close the dropdown after interval selection
-                const dropdown = intervalItem.closest('.interval-dropdown');
-                if (dropdown) {
-                    dropdown.classList.remove('is-open');
-                    const btn = dropdown.previousElementSibling;
-                    if (btn && btn.hasAttribute('data-original-title')) {
-                        btn.setAttribute('title', btn.getAttribute('data-original-title'));
-                    }
-                }
+                closeAllDropdowns();
 
                 const val = intervalItem.getAttribute('data-value');
                 if (val) {
@@ -2377,6 +2397,14 @@ function init() {
                     updateView();
                 }
             }
+        });
+    }
+
+    const quickControls = document.getElementById('quickMediaControls');
+    if (quickControls) {
+        quickControls.addEventListener('click', (e) => {
+            // modeItem and intervalItem logic moved to the dropdown itself
+            // since it was appended to the body
         });
     }
     updateQuickMediaButtons(); // Initialize active state
