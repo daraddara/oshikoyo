@@ -628,6 +628,46 @@ body {
     color: white;
 }
 
+.menu-section-title {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    padding: 4px 12px;
+    font-weight: 600;
+}
+
+.mode-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.mode-item:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.mode-item.is-active {
+    background: var(--accent-color);
+    color: white;
+}
+
+.interval-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.interval-section.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
 .interval-divider {
     height: 1px;
     background: rgba(0, 0, 0, 0.05);
