@@ -1,0 +1,16 @@
+--- tests/state.test.js
++++ tests/state.test.js
+@@ -34,6 +34,13 @@
+         // Reset state before each test
+         setAppState({ ...defaultState });
+         vi.clearAllMocks();
++
++        global.localStorage = {
++            getItem: vi.fn(),
++            setItem: vi.fn(),
++            removeItem: vi.fn(),
++            clear: vi.fn()
++        };
+         // Clear any previous error logs
+         vi.spyOn(console, 'error').mockImplementation(() => {});
+     });
