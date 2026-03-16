@@ -434,11 +434,23 @@ async function areBlobsEqual(blob1, blob2) {
     const buf1 = await blob1.arrayBuffer();
     const buf2 = await blob2.arrayBuffer();
 
-    const arr1 = new Uint8Array(buf1);
-    const arr2 = new Uint8Array(buf2);
+    const len = buf1.byteLength;
+    const remainder = len % 8;
+    const mainLength = len - remainder;
 
-    for (let i = 0; i < arr1.length; i++) {
-        if (arr1[i] !== arr2[i]) return false;
+    const view1 = new BigInt64Array(buf1, 0, mainLength / 8);
+    const view2 = new BigInt64Array(buf2, 0, mainLength / 8);
+
+    for (let i = 0; i < view1.length; i++) {
+        if (view1[i] !== view2[i]) return false;
+    }
+
+    if (remainder > 0) {
+        const tail1 = new Uint8Array(buf1, mainLength, remainder);
+        const tail2 = new Uint8Array(buf2, mainLength, remainder);
+        for (let i = 0; i < remainder; i++) {
+            if (tail1[i] !== tail2[i]) return false;
+        }
     }
 
     return true;
