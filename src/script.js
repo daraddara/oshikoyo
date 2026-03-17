@@ -1889,7 +1889,7 @@ function applyImmersiveState() {
 function setupImmersiveControlsTimer() {
     if (controlsTimer) clearTimeout(controlsTimer);
     controlsTimer = setTimeout(() => {
-        if (!document.body.classList.contains('show-overlay') && !document.querySelector('.quick-media-controls:hover')) {
+        if (!document.body.classList.contains('show-overlay') && !document.querySelector('.quick-media-controls:hover') && !document.querySelector('.layout-dropdown.is-open') && !document.querySelector('.interval-dropdown.is-open')) {
             document.body.classList.remove('controls-visible');
         }
     }, 3000);

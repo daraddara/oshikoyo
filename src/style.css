@@ -2563,6 +2563,12 @@ body.is-immersive .media-container {
 }
 
 body.is-immersive .media-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover; /* Ensure it covers 100% seamlessly */
     filter: blur(30px) brightness(0.8);
     transform: scale(1.1); /* Prevent blurred edges from leaking empty space */
 }
@@ -2650,21 +2656,21 @@ body.is-immersive .calendar-section {
     z-index: 20;
     bottom: 24px;
     right: 24px;
-    width: 300px;
+    width: 220px; /* Reduced by ~30% from 300px */
     max-width: 90vw;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    padding: 12px;
+    background: rgba(255, 255, 255, 0.4); /* Increased transparency */
+    backdrop-filter: blur(12px); /* Slightly lower blur to let image through more */
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 12px; /* Slightly smaller radius */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    padding: 8px; /* Tighter padding */
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
 }
 
 @media (prefers-color-scheme: dark) {
     body.is-immersive .calendar-section {
-        background: rgba(30, 41, 59, 0.7);
+        background: rgba(30, 41, 59, 0.4);
     }
 }
 
@@ -2678,11 +2684,7 @@ body.is-immersive .controls {
 }
 
 /* Simplify month header */
-body.is-immersive .month-header {
-    font-size: 1.1rem;
-    padding: 4px 0;
-    margin-bottom: 8px;
-}
+body.is-immersive .month-header { display: none; }
 
 /* Hide extra months if monthCount > 1 but we are in mini mode */
 body.is-immersive .calendar-month:not(:first-child) {
@@ -2696,12 +2698,12 @@ body.is-immersive .calendar-wrapper {
 
 /* Mini grid cells */
 body.is-immersive .calendar-day {
-    min-height: 36px;
-    padding: 4px;
+    min-height: 24px;
+    padding: 2px;
 }
 
 body.is-immersive .date-number {
-    font-size: 0.9rem;
+    font-size: 0.7rem;
 }
 
 /* Hide text events */
@@ -2716,12 +2718,12 @@ body.is-immersive .events-container {
 
 body.is-immersive .event-item {
     font-size: 0; /* Hide text */
-    width: 6px;
-    height: 6px;
+    width: 4px; /* 3-4px as requested */
+    height: 4px;
     padding: 0;
     border-radius: 50%;
-    margin: 0;
-    opacity: 0.8;
+    margin: 0 1px;
+    opacity: 0.9;
 }
 
 body.is-immersive .event-item .event-icon {
