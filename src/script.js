@@ -2711,7 +2711,7 @@ function setupLayoutMenu() {
         });
     }
 
-    const layoutItems = document.querySelectorAll('.layout-item');
+    const layoutItems = document.querySelectorAll('.layout-item:not(.toggle-immersive)');
     layoutItems.forEach(item => {
         item.addEventListener('click', (e) => {
             const mode = e.currentTarget.getAttribute('data-layout');
