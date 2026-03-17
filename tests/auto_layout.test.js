@@ -11,7 +11,7 @@ describe('applyAutoLayout', () => {
         global.appSettings = {
             layoutMode: 'smart',
             mediaPosition: 'top',
-            layoutDirection: 'row'
+            layoutDirection: 'column'
         };
 
         // Mock dependencies
@@ -32,55 +32,55 @@ describe('applyAutoLayout', () => {
         delete global.updateView;
     });
 
-    it('should change layout to Top/Row for Landscape image (ratio >= 1.2)', () => {
+    it('should change layout to Top/Column for Landscape image (ratio >= 1.2)', () => {
         global.appSettings.mediaPosition = 'left';
-        global.appSettings.layoutDirection = 'column';
+        global.appSettings.layoutDirection = 'row';
 
         const mockImg = { naturalWidth: 1200, naturalHeight: 600 };
         applyAutoLayout(mockImg);
 
         expect(global.appSettings.mediaPosition).toBe('top');
-        expect(global.appSettings.layoutDirection).toBe('row');
-        expect(global.saveSettingsSilently).toHaveBeenCalled();
-        expect(global.updateLayoutToggleUI).toHaveBeenCalled();
-        expect(global.updateView).toHaveBeenCalled();
-    });
-
-    it('should change layout to Left/Column for Portrait image (invRatio >= 1.2)', () => {
-        const mockImg = { naturalWidth: 600, naturalHeight: 1200 };
-        applyAutoLayout(mockImg);
-
-        expect(global.appSettings.mediaPosition).toBe('left');
         expect(global.appSettings.layoutDirection).toBe('column');
         expect(global.saveSettingsSilently).toHaveBeenCalled();
         expect(global.updateLayoutToggleUI).toHaveBeenCalled();
         expect(global.updateView).toHaveBeenCalled();
     });
 
-    it('should change layout to Top/Row for Default/Square image', () => {
-        global.appSettings.mediaPosition = 'left';
-        global.appSettings.layoutDirection = 'column';
-
-        const mockImg = { naturalWidth: 1000, naturalHeight: 1000 };
+    it('should change layout to Left/Row for Portrait image (invRatio >= 1.2)', () => {
+        const mockImg = { naturalWidth: 600, naturalHeight: 1200 };
         applyAutoLayout(mockImg);
 
-        expect(global.appSettings.mediaPosition).toBe('top');
+        expect(global.appSettings.mediaPosition).toBe('left');
         expect(global.appSettings.layoutDirection).toBe('row');
         expect(global.saveSettingsSilently).toHaveBeenCalled();
         expect(global.updateLayoutToggleUI).toHaveBeenCalled();
         expect(global.updateView).toHaveBeenCalled();
     });
 
-    it('should not change layout if layoutMode is not smart', () => {
-        global.appSettings.layoutMode = 'top';
-        global.appSettings.mediaPosition = 'top';
+    it('should change layout to Top/Column for Default/Square image', () => {
+        global.appSettings.mediaPosition = 'left';
         global.appSettings.layoutDirection = 'row';
 
-        const mockImg = { naturalWidth: 600, naturalHeight: 1200 }; // Portrait, normally triggers Left/Column
+        const mockImg = { naturalWidth: 1000, naturalHeight: 1000 };
         applyAutoLayout(mockImg);
 
         expect(global.appSettings.mediaPosition).toBe('top');
-        expect(global.appSettings.layoutDirection).toBe('row');
+        expect(global.appSettings.layoutDirection).toBe('column');
+        expect(global.saveSettingsSilently).toHaveBeenCalled();
+        expect(global.updateLayoutToggleUI).toHaveBeenCalled();
+        expect(global.updateView).toHaveBeenCalled();
+    });
+
+    it('should not change layout if layoutMode is not smart', () => {
+        global.appSettings.layoutMode = 'left';
+        global.appSettings.mediaPosition = 'top';
+        global.appSettings.layoutDirection = 'column';
+
+        const mockImg = { naturalWidth: 600, naturalHeight: 1200 }; // Portrait
+        applyAutoLayout(mockImg);
+
+        expect(global.appSettings.mediaPosition).toBe('top');
+        expect(global.appSettings.layoutDirection).toBe('column');
         expect(global.saveSettingsSilently).not.toHaveBeenCalled();
     });
 
@@ -98,9 +98,8 @@ describe('applyAutoLayout', () => {
     });
 
     it('should not call update functions if layout is already optimal', () => {
-        // Landscape image, already Top/Row
         global.appSettings.mediaPosition = 'top';
-        global.appSettings.layoutDirection = 'row';
+        global.appSettings.layoutDirection = 'column';
 
         const mockImg = { naturalWidth: 1200, naturalHeight: 600 };
         applyAutoLayout(mockImg);

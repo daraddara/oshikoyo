@@ -15,8 +15,7 @@ const DEFAULT_SETTINGS = {
     mediaSize: null,      // size of media area (width or height depending on position)
     mediaIntervalPreset: '1m', // '10s', '30s', '1m', '10m', '1h', '0:00', '4:00', 'startup'
     lastActiveInterval: '1m',
-    layoutMode: 'smart', // 'smart', 'top', 'bottom', 'left', 'right'
-    immersiveMode: false,
+    autoLayoutMode: true,  // Automatically optimize layout based on image aspect ratio
 };
 
 // --- IndexedDB Management ---
@@ -1488,8 +1487,7 @@ function validateImportedSettings(data) {
     if (typeof data.mediaPosition === 'string') validated.mediaPosition = data.mediaPosition;
     if (typeof data.mediaSize === 'number' || data.mediaSize === null) validated.mediaSize = data.mediaSize;
     if (typeof data.mediaIntervalPreset === 'string') validated.mediaIntervalPreset = data.mediaIntervalPreset;
-    if (typeof data.layoutMode === 'string') validated.layoutMode = data.layoutMode;
-    if (typeof data.immersiveMode === 'boolean') validated.immersiveMode = data.immersiveMode;
+    if (typeof data.autoLayoutMode === 'boolean') validated.autoLayoutMode = data.autoLayoutMode;
 
     // Validate oshiList
     if (Array.isArray(data.oshiList)) {
@@ -1706,7 +1704,8 @@ function setupDragAndDrop() {
             } else {
                 direction = 'vertical';
                 startPos = e.clientY;
-                startSize = mediaArea.offsetHeight;
+                const container = document.getElementById('mediaContainer');
+                startSize = container ? container.offsetHeight : mediaArea.offsetHeight;
             }
             e.preventDefault();
         });
@@ -1719,13 +1718,13 @@ function setupDragAndDrop() {
 
             if (direction === 'horizontal') {
                 const deltaX = e.clientX - startPos;
-                // 'left' layout: image is on left, drag right (positive deltaX) increases width
-                // 'right' layout: image is on right, drag left (negative deltaX) increases width
+                // 'left' layout: image is on left, drag right increases width
+                // 'right' layout: image is on right, drag right DECREASES width
                 newSize = pos === 'left' ? startSize + deltaX : startSize - deltaX;
             } else {
                 const deltaY = e.clientY - startPos;
-                // 'top' layout: image is top, drag down (positive deltaY) increases height
-                // 'bottom' layout: image is bottom, drag up (negative deltaY) increases height
+                // 'top' layout: image is top, drag down increases height
+                // 'bottom' layout: image is bottom, drag down DECREASES height
                 newSize = pos === 'top' ? startSize + deltaY : startSize - deltaY;
             }
 
@@ -1830,76 +1829,6 @@ function setupPreviewModal() {
 }
 
 
-
-function toggleImmersiveMode() {
-    appSettings.immersiveMode = !appSettings.immersiveMode;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
-
-    applyImmersiveState();
-    updateLayoutMenuUI();
-        applyImmersiveState();
-}
-
-let controlsTimer = null;
-function applyImmersiveState() {
-    const calendarSection = document.querySelector('.calendar-section');
-    if (appSettings.immersiveMode) {
-        document.body.classList.add('is-immersive');
-
-        // Auto-hide controls
-        document.body.classList.add('controls-visible');
-        setupImmersiveControlsTimer();
-
-        document.addEventListener('mousemove', handleImmersiveMouseMove);
-
-        // Create dismiss zone if not exists
-        if (!document.querySelector('.overlay-dismiss-zone')) {
-            const dismissZone = document.createElement('div');
-            dismissZone.className = 'overlay-dismiss-zone';
-            dismissZone.addEventListener('click', () => {
-                document.body.classList.remove('show-overlay');
-            });
-            document.body.appendChild(dismissZone);
-        }
-
-    } else {
-        document.body.classList.remove('is-immersive');
-        document.body.classList.remove('show-overlay');
-        document.body.classList.remove('controls-visible');
-        document.removeEventListener('mousemove', handleImmersiveMouseMove);
-        if (controlsTimer) clearTimeout(controlsTimer);
-
-        // Reset calendar section styles
-        if (calendarSection) {
-            calendarSection.style.top = '';
-            calendarSection.style.bottom = '';
-            calendarSection.style.left = '';
-            calendarSection.style.right = '';
-            calendarSection.style.transform = '';
-        }
-    }
-
-    // Save original direction for full overlay restoring
-    const calendarWrapper = document.getElementById('calendarWrapper');
-    if (calendarWrapper) {
-        calendarWrapper.style.setProperty('--original-direction', appSettings.layoutDirection);
-    }
-}
-
-function setupImmersiveControlsTimer() {
-    if (controlsTimer) clearTimeout(controlsTimer);
-    controlsTimer = setTimeout(() => {
-        if (!document.body.classList.contains('show-overlay') && !document.querySelector('.quick-media-controls:hover') && !document.querySelector('.layout-dropdown.is-open') && !document.querySelector('.interval-dropdown.is-open')) {
-            document.body.classList.remove('controls-visible');
-        }
-    }, 3000);
-}
-
-function handleImmersiveMouseMove() {
-    document.body.classList.add('controls-visible');
-    setupImmersiveControlsTimer();
-}
-
 function initSettings() {
     // Open Modal
     document.getElementById('btnSettings').addEventListener('click', () => {
@@ -1913,9 +1842,6 @@ function initSettings() {
 
         // Media Button State Update
         updateQuickMediaButtons();
-        setupLayoutMenu();
-    setupMiniCalendarInteractions();
-        updateLayoutMenuUI();
 
         // Interval Settings (Sync Custom UI)
         updateQuickMediaButtons();
@@ -2298,6 +2224,16 @@ function updateIntervalMenu() {
             item.classList.remove('is-active');
         }
     });
+
+    // Update Layout Mode Items
+    const layoutItems = document.querySelectorAll('.layout-item');
+    layoutItems.forEach(item => {
+        if (item.getAttribute('data-layout') === appSettings.layoutMode) {
+            item.classList.add('is-active');
+        } else {
+            item.classList.remove('is-active');
+        }
+    });
 }
 
 /**
@@ -2412,17 +2348,6 @@ function init() {
     };
 
     // Close dropdown when clicking outside
-    const toggleImmersive = document.getElementById('btnToggleImmersive');
-    if (toggleImmersive) {
-        toggleImmersive.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleImmersiveMode();
-            if (layoutDropdown) {
-                layoutDropdown.classList.remove('is-open');
-            }
-        });
-    }
-
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.interval-dropdown') && !e.target.closest('.display-mode-btn')) {
             closeAllDropdowns();
@@ -2445,8 +2370,35 @@ function init() {
         dropdown.addEventListener('click', (e) => {
             const modeItem = e.target.closest('.mode-item');
             const intervalItem = e.target.closest('.interval-item');
+            const layoutItem = e.target.closest('.layout-item');
 
-            if (modeItem) {
+            if (layoutItem) {
+                e.stopPropagation();
+                e.preventDefault();
+
+                const layout = layoutItem.getAttribute('data-layout');
+                if (layout && layout !== appSettings.layoutMode) {
+                    appSettings.layoutMode = layout;
+
+                    if (layout !== 'smart') {
+                        appSettings.mediaPosition = layout;
+                        if (layout === 'left') appSettings.layoutDirection = 'row';
+                        else if (layout === 'right') appSettings.layoutDirection = 'row-reverse';
+                        else if (layout === 'top') appSettings.layoutDirection = 'column';
+                        else if (layout === 'bottom') appSettings.layoutDirection = 'column-reverse';
+                    } else {
+                        // Reset to standard if switching back to smart without an image triggering it yet
+                        appSettings.mediaPosition = 'top';
+                        appSettings.layoutDirection = 'row';
+                        // The actual auto layout will trigger when an image loads via updateMediaArea
+                        setTimeout(() => updateMediaArea('layout'), 0);
+                    }
+
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+                    updateQuickMediaButtons();
+                    updateView();
+                }
+            } else if (modeItem) {
                 e.stopPropagation();
                 e.preventDefault();
 
@@ -2528,96 +2480,6 @@ function init() {
 /**
  * トグルボタンのSVGテキストを現在のmonthCountに同期する。
  */
-
-// --- Mini Calendar Drag & Snap Logic ---
-function setupMiniCalendarInteractions() {
-    const calendarSection = document.querySelector('.calendar-section');
-    if (!calendarSection) return;
-
-    let isDragging = false;
-    let startX, startY, initialX, initialY;
-
-    // Handle drag
-    calendarSection.addEventListener('mousedown', (e) => {
-        if (!appSettings.immersiveMode || document.body.classList.contains('show-overlay') || window.innerWidth <= 768) return;
-
-        // Don't drag if clicking controls inside the calendar (if any are visible)
-        if (e.target.closest('button') || e.target.tagName.toLowerCase() === 'input') return;
-
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-
-        const rect = calendarSection.getBoundingClientRect();
-        initialX = rect.left;
-        initialY = rect.top;
-
-        calendarSection.classList.add('is-dragging');
-        e.preventDefault(); // Prevent text selection
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-
-        calendarSection.style.left = `${initialX + dx}px`;
-        calendarSection.style.top = `${initialY + dy}px`;
-        calendarSection.style.bottom = 'auto'; // Disable bottom/right to rely on top/left
-        calendarSection.style.right = 'auto';
-    });
-
-    document.addEventListener('mouseup', (e) => {
-        if (!isDragging) return;
-        isDragging = false;
-        calendarSection.classList.remove('is-dragging');
-
-        // Check if it was a click (not a drag)
-        const dx = Math.abs(e.clientX - startX);
-        const dy = Math.abs(e.clientY - startY);
-
-        if (dx < 5 && dy < 5) {
-            // It was a click, trigger overlay
-            document.body.classList.add('show-overlay');
-            return;
-        }
-
-        // Snap logic
-        const rect = calendarSection.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const winW = window.innerWidth;
-        const winH = window.innerHeight;
-
-        const margin = 24;
-
-        if (centerX < winW / 2) {
-            calendarSection.style.left = `${margin}px`;
-            calendarSection.style.right = 'auto';
-        } else {
-            calendarSection.style.right = `${margin}px`;
-            calendarSection.style.left = 'auto';
-        }
-
-        if (centerY < winH / 2) {
-            calendarSection.style.top = `${margin}px`;
-            calendarSection.style.bottom = 'auto';
-        } else {
-            calendarSection.style.bottom = `${margin}px`;
-            calendarSection.style.top = 'auto';
-        }
-    });
-
-    // Also handle click if no drag occurred (for mobile or quick clicks)
-    calendarSection.addEventListener('click', (e) => {
-        if (appSettings.immersiveMode && !document.body.classList.contains('show-overlay') && !isDragging) {
-            // Extra safety to avoid triggering if it was just dragged
-            document.body.classList.add('show-overlay');
-        }
-    });
-}
-
 function updateToggleMonthsUI() {
     const btn = document.getElementById('btnToggleMonths');
     if (!btn) return;
@@ -2647,109 +2509,6 @@ function updateToggleMonthsUI() {
 /**
  * レイアウト切替ボタンのSVGアイコンを現在の状況に合わせて変更する。
  */
-
-function updateLayoutMenuUI() {
-    const layoutModeBtn = document.querySelector('.layout-mode-btn');
-    if (!layoutModeBtn) return;
-
-    // Update main icon based on setting
-    const icons = {
-        smart: layoutModeBtn.querySelector('.icon-layout-smart'),
-        top: layoutModeBtn.querySelector('.icon-layout-top'),
-        bottom: layoutModeBtn.querySelector('.icon-layout-bottom'),
-        left: layoutModeBtn.querySelector('.icon-layout-left'),
-        right: layoutModeBtn.querySelector('.icon-layout-right'),
-    };
-
-    Object.values(icons).forEach(icon => { if (icon) icon.style.display = 'none'; });
-    if (icons[appSettings.layoutMode]) {
-        icons[appSettings.layoutMode].style.display = 'block';
-    }
-
-    // Update active state in dropdown
-    const layoutItems = document.querySelectorAll('.layout-item:not(.toggle-immersive)');
-    layoutItems.forEach(item => {
-        if (item.getAttribute('data-layout') === appSettings.layoutMode) {
-            item.classList.add('is-active');
-        } else {
-            item.classList.remove('is-active');
-        }
-    });
-    const toggleImmersive = document.getElementById('btnToggleImmersive');
-    if (toggleImmersive) {
-        if (appSettings.immersiveMode) {
-            toggleImmersive.classList.add('is-active');
-        } else {
-            toggleImmersive.classList.remove('is-active');
-        }
-    }
-}
-
-function setupLayoutMenu() {
-    const layoutModeBtn = document.querySelector('.layout-mode-btn');
-    const layoutDropdown = document.querySelector('.layout-dropdown');
-
-    if (layoutDropdown) {
-        document.body.appendChild(layoutDropdown);
-    }
-
-    if (layoutModeBtn) {
-        layoutModeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (layoutDropdown) {
-                const isOpen = layoutDropdown.classList.contains('is-open');
-                if (!isOpen) {
-                    const btnRect = e.currentTarget.getBoundingClientRect();
-                    layoutDropdown.style.top = `${btnRect.bottom + 8}px`;
-                    layoutDropdown.style.left = 'auto';
-                    layoutDropdown.style.right = `${window.innerWidth - btnRect.right}px`;
-                    layoutDropdown.classList.add('is-open');
-                } else {
-                    layoutDropdown.classList.remove('is-open');
-                }
-            }
-        });
-    }
-
-    const layoutItems = document.querySelectorAll('.layout-item:not(.toggle-immersive)');
-    layoutItems.forEach(item => {
-        item.addEventListener('click', (e) => {
-            const mode = e.currentTarget.getAttribute('data-layout');
-            appSettings.layoutMode = mode;
-
-            if (mode !== 'smart') {
-                appSettings.mediaPosition = mode;
-                if (mode === 'top' || mode === 'bottom') {
-                    appSettings.layoutDirection = 'row';
-                } else {
-                    appSettings.layoutDirection = 'column';
-                }
-            } else {
-                // If smart, trigger re-evaluation if we have a current image
-                const mainImg = document.querySelector('.media-main-img');
-                if (mainImg) {
-                    applyAutoLayout(mainImg);
-                }
-            }
-
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
-            updateLayoutMenuUI();
-            updateLayoutToggleUI();
-            updateView();
-
-            if (layoutDropdown) {
-                layoutDropdown.classList.remove('is-open');
-            }
-        });
-    });
-
-    document.addEventListener('click', (e) => {
-        if (layoutDropdown && layoutDropdown.classList.contains('is-open') && !e.target.closest('.layout-mode-control') && !e.target.closest('.layout-dropdown')) {
-            layoutDropdown.classList.remove('is-open');
-        }
-    });
-}
-
 function updateLayoutToggleUI() {
     const layoutIcon = document.getElementById('layoutIcon');
     if (!layoutIcon) return;
@@ -3167,23 +2926,23 @@ function applyAutoLayout(img) {
     let changed = false;
     if (ratio >= 1.2) {
         // Landscape -> Top Photo + Row Calendar
-        if (appSettings.mediaPosition !== 'top' || appSettings.layoutDirection !== 'row') {
+        if (appSettings.mediaPosition !== 'top' || appSettings.layoutDirection !== 'column') {
             appSettings.mediaPosition = 'top';
-            appSettings.layoutDirection = 'row';
+            appSettings.layoutDirection = 'column';
             changed = true;
         }
     } else if (invRatio >= 1.2) {
         // Portrait -> Left Photo + Column Calendar
-        if (appSettings.mediaPosition !== 'left' || appSettings.layoutDirection !== 'column') {
+        if (appSettings.mediaPosition !== 'left' || appSettings.layoutDirection !== 'row') {
             appSettings.mediaPosition = 'left';
-            appSettings.layoutDirection = 'column';
+            appSettings.layoutDirection = 'row';
             changed = true;
         }
     } else {
         // Default/Square -> Standard Top + Row
-        if (appSettings.mediaPosition !== 'top' || appSettings.layoutDirection !== 'row') {
+        if (appSettings.mediaPosition !== 'top' || appSettings.layoutDirection !== 'column') {
             appSettings.mediaPosition = 'top';
-            appSettings.layoutDirection = 'row';
+            appSettings.layoutDirection = 'column';
             changed = true;
         }
     }
