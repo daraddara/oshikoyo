@@ -6,16 +6,8 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
         await page.goto('/index.html');
         await page.waitForLoadState('networkidle');
 
-        await page.waitForSelector('#btnSettings', { state: 'visible' });
-        await page.click('#btnSettings');
-
-        const autoLayoutCheckbox = page.locator('#checkAutoLayout');
-        await expect(autoLayoutCheckbox).toBeVisible();
-        if (!(await autoLayoutCheckbox.isChecked())) {
-            await autoLayoutCheckbox.check();
-        }
-        await page.click('#btnSave');
-        await page.waitForSelector('#settingsModal', { state: 'hidden' });
+        const autoLayoutBtn = page.locator('.layout-mode-btn');
+        await expect(autoLayoutBtn).toBeVisible();
     });
 
     test('should optimize layout for landscape images with glassmorphism backdrop', async ({ page }) => {
@@ -152,7 +144,7 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
 
             img.src = '/tests/fixtures/images/test_portrait.png';
 
-            window.appSettings.autoLayoutMode = false;
+            window.appSettings.layoutMode = 'top';
             window.appSettings.mediaPosition = 'top';
             window.appSettings.layoutDirection = 'row';
             window.updateView();

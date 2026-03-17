@@ -81,7 +81,7 @@ describe('Security: Import Settings Validation', () => {
             mediaPosition: 'right',
             mediaSize: 300,
             mediaIntervalPreset: '10m',
-            autoLayoutMode: false,
+            layoutMode: 'top',
             oshiList: [
                 {
                     name: 'Test Oshi',
