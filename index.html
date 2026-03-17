@@ -26,11 +26,6 @@
 
         <div class="main-layout" id="mainLayout">
             <!-- 配置変更用ドロップゾーン -->
-            <div class="layout-dropzone zone-top" data-position="top"></div>
-            <div class="layout-dropzone zone-bottom" data-position="bottom"></div>
-            <div class="layout-dropzone zone-left" data-position="left"></div>
-            <div class="layout-dropzone zone-right" data-position="right"></div>
-
             <div class="calendar-section">
                 <div class="controls">
                     <!-- Group 1: Logo & Today -->
@@ -107,17 +102,6 @@
             <aside class="media-area" id="mediaArea">
                 <div class="media-container" id="mediaContainer">
                     <div class="media-controls-wrapper">
-                        <div class="media-drag-handle" id="mediaDragHandle" draggable="true" title="ドラッグして移動">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="9" cy="12" r="1"></circle>
-                                <circle cx="9" cy="5" r="1"></circle>
-                                <circle cx="9" cy="19" r="1"></circle>
-                                <circle cx="15" cy="12" r="1"></circle>
-                                <circle cx="15" cy="5" r="1"></circle>
-                                <circle cx="15" cy="19" r="1"></circle>
-                            </svg>
-                        </div>
                         <div class="quick-media-controls" id="quickMediaControls">
                             <button type="button" class="global-paste-btn" id="btnGlobalPaste" title="クリップボードから貼り付け">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -126,6 +110,40 @@
                                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                 </svg>
                             </button>
+
+
+                            <div class="layout-mode-wrapper layout-mode-control">
+                                <button type="button" class="layout-mode-btn active" title="レイアウトの設定">
+                                    <svg class="icon-layout-smart" style="display: block;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>
+                                    <svg class="icon-layout-top" style="display: none;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="7" rx="2" ry="2"/><rect x="3" y="14" width="18" height="7" rx="2" ry="2" opacity="0.3"/></svg>
+                                    <svg class="icon-layout-bottom" style="display: none;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="14" width="18" height="7" rx="2" ry="2"/><rect x="3" y="3" width="18" height="7" rx="2" ry="2" opacity="0.3"/></svg>
+                                    <svg class="icon-layout-left" style="display: none;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="2" ry="2"/><rect x="14" y="3" width="7" height="18" rx="2" ry="2" opacity="0.3"/></svg>
+                                    <svg class="icon-layout-right" style="display: none;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="3" width="7" height="18" rx="2" ry="2"/><rect x="3" y="3" width="7" height="18" rx="2" ry="2" opacity="0.3"/></svg>
+                                </button>
+                                <div class="layout-dropdown">
+                                    <div class="menu-section-title">レイアウト</div>
+                                    <div class="layout-item is-active" data-layout="smart">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>
+                                        <span>自動 (Smart)</span>
+                                    </div>
+                                    <div class="layout-item" data-layout="top">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="7" rx="2" ry="2"/><rect x="3" y="14" width="18" height="7" rx="2" ry="2" opacity="0.3"/></svg>
+                                        <span>上配置</span>
+                                    </div>
+                                    <div class="layout-item" data-layout="bottom">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="14" width="18" height="7" rx="2" ry="2"/><rect x="3" y="3" width="18" height="7" rx="2" ry="2" opacity="0.3"/></svg>
+                                        <span>下配置</span>
+                                    </div>
+                                    <div class="layout-item" data-layout="left">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="2" ry="2"/><rect x="14" y="3" width="7" height="18" rx="2" ry="2" opacity="0.3"/></svg>
+                                        <span>左配置</span>
+                                    </div>
+                                    <div class="layout-item" data-layout="right">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="3" width="7" height="18" rx="2" ry="2"/><rect x="3" y="3" width="7" height="18" rx="2" ry="2" opacity="0.3"/></svg>
+                                        <span>右配置</span>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="media-mode-wrapper display-mode-control">
                                 <button type="button" class="media-mode-btn active display-mode-btn" title="表示モードの設定">
@@ -188,15 +206,7 @@
                             <label><input type="radio" name="startOfWeek" value="1"> 月曜日</label>
                         </div>
                     </div>
-                    <div class="setting-group">
-                        <label>レイアウト設定</label>
-                        <div class="checkbox-group">
-                            <label title="画像の形状に合わせて最適な配置を自動選択します">
-                                <input type="checkbox" id="checkAutoLayout" checked>
-                                レイアウトおまかせモード
-                            </label>
-                        </div>
-                    </div>
+
                     <div class="settings-guide">
                         <p>💡 表示月数・レイアウト方向はヘッダーのボタンから直接切り替えできます。</p>
                     </div>

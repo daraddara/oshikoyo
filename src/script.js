@@ -15,7 +15,7 @@ const DEFAULT_SETTINGS = {
     mediaSize: null,      // size of media area (width or height depending on position)
     mediaIntervalPreset: '1m', // '10s', '30s', '1m', '10m', '1h', '0:00', '4:00', 'startup'
     lastActiveInterval: '1m',
-    autoLayoutMode: true,  // Automatically optimize layout based on image aspect ratio
+    layoutMode: 'smart', // 'smart', 'top', 'bottom', 'left', 'right'
 };
 
 // --- IndexedDB Management ---
@@ -1487,7 +1487,7 @@ function validateImportedSettings(data) {
     if (typeof data.mediaPosition === 'string') validated.mediaPosition = data.mediaPosition;
     if (typeof data.mediaSize === 'number' || data.mediaSize === null) validated.mediaSize = data.mediaSize;
     if (typeof data.mediaIntervalPreset === 'string') validated.mediaIntervalPreset = data.mediaIntervalPreset;
-    if (typeof data.autoLayoutMode === 'boolean') validated.autoLayoutMode = data.autoLayoutMode;
+    if (typeof data.layoutMode === 'string') validated.layoutMode = data.layoutMode;
 
     // Validate oshiList
     if (Array.isArray(data.oshiList)) {
@@ -1717,13 +1717,13 @@ function setupDragAndDrop() {
 
             if (direction === 'horizontal') {
                 const deltaX = e.clientX - startPos;
-                // 'left' layout: image is on left, drag right increases width
-                // 'right' layout: image is on right, drag left increases width
+                // 'left' layout: image is on left, drag right (positive deltaX) increases width
+                // 'right' layout: image is on right, drag left (negative deltaX) increases width
                 newSize = pos === 'left' ? startSize + deltaX : startSize - deltaX;
             } else {
                 const deltaY = e.clientY - startPos;
-                // 'top' layout: image is top, drag down increases height
-                // 'bottom' layout: image is bottom, drag up increases height
+                // 'top' layout: image is top, drag down (positive deltaY) increases height
+                // 'bottom' layout: image is bottom, drag up (negative deltaY) increases height
                 newSize = pos === 'top' ? startSize + deltaY : startSize - deltaY;
             }
 
@@ -1841,6 +1841,8 @@ function initSettings() {
 
         // Media Button State Update
         updateQuickMediaButtons();
+        setupLayoutMenu();
+        updateLayoutMenuUI();
 
         // Interval Settings (Sync Custom UI)
         updateQuickMediaButtons();
@@ -2471,6 +2473,101 @@ function updateToggleMonthsUI() {
 /**
  * レイアウト切替ボタンのSVGアイコンを現在の状況に合わせて変更する。
  */
+
+function updateLayoutMenuUI() {
+    const layoutModeBtn = document.querySelector('.layout-mode-btn');
+    if (!layoutModeBtn) return;
+
+    // Update main icon based on setting
+    const icons = {
+        smart: layoutModeBtn.querySelector('.icon-layout-smart'),
+        top: layoutModeBtn.querySelector('.icon-layout-top'),
+        bottom: layoutModeBtn.querySelector('.icon-layout-bottom'),
+        left: layoutModeBtn.querySelector('.icon-layout-left'),
+        right: layoutModeBtn.querySelector('.icon-layout-right'),
+    };
+
+    Object.values(icons).forEach(icon => { if (icon) icon.style.display = 'none'; });
+    if (icons[appSettings.layoutMode]) {
+        icons[appSettings.layoutMode].style.display = 'block';
+    }
+
+    // Update active state in dropdown
+    const layoutItems = document.querySelectorAll('.layout-item');
+    layoutItems.forEach(item => {
+        if (item.getAttribute('data-layout') === appSettings.layoutMode) {
+            item.classList.add('is-active');
+        } else {
+            item.classList.remove('is-active');
+        }
+    });
+}
+
+function setupLayoutMenu() {
+    const layoutModeBtn = document.querySelector('.layout-mode-btn');
+    const layoutDropdown = document.querySelector('.layout-dropdown');
+
+    if (layoutDropdown) {
+        document.body.appendChild(layoutDropdown);
+    }
+
+    if (layoutModeBtn) {
+        layoutModeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (layoutDropdown) {
+                const isOpen = layoutDropdown.classList.contains('is-open');
+                if (!isOpen) {
+                    const btnRect = e.currentTarget.getBoundingClientRect();
+                    layoutDropdown.style.top = `${btnRect.bottom + 8}px`;
+                    layoutDropdown.style.left = 'auto';
+                    layoutDropdown.style.right = `${window.innerWidth - btnRect.right}px`;
+                    layoutDropdown.classList.add('is-open');
+                } else {
+                    layoutDropdown.classList.remove('is-open');
+                }
+            }
+        });
+    }
+
+    const layoutItems = document.querySelectorAll('.layout-item');
+    layoutItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            const mode = e.currentTarget.getAttribute('data-layout');
+            appSettings.layoutMode = mode;
+
+            if (mode !== 'smart') {
+                appSettings.mediaPosition = mode;
+                if (mode === 'top' || mode === 'bottom') {
+                    appSettings.layoutDirection = 'row';
+                } else {
+                    appSettings.layoutDirection = 'column';
+                }
+            } else {
+                // If smart, trigger re-evaluation if we have a current image
+                const mainImg = document.querySelector('.media-main-img');
+                if (mainImg) {
+                    applyAutoLayout(mainImg);
+                }
+            }
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+            updateLayoutMenuUI();
+            updateLayoutToggleUI();
+            updateView();
+
+            if (layoutDropdown) {
+                layoutDropdown.classList.remove('is-open');
+            }
+        });
+    });
+
+    document.addEventListener('click', (e) => {
+        if (layoutDropdown && layoutDropdown.classList.contains('is-open') && !e.target.closest('.layout-mode-control') && !e.target.closest('.layout-dropdown')) {
+            layoutDropdown.classList.remove('is-open');
+        }
+    });
+}
+
 function updateLayoutToggleUI() {
     const layoutIcon = document.getElementById('layoutIcon');
     if (!layoutIcon) return;
@@ -2872,7 +2969,7 @@ async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'
  * @param {HTMLImageElement} img 判定対象の画像エレメント
  */
 function applyAutoLayout(img) {
-    if (!appSettings.autoLayoutMode) return;
+    if (appSettings.layoutMode !== 'smart') return;
 
     const w = img.naturalWidth;
     const h = img.naturalHeight;

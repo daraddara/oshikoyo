@@ -440,100 +440,6 @@ body {
     /* For absolutely positioned nav buttons */
 }
 
-/* Drag Handle */
-.media-drag-handle {
-    cursor: grab;
-    color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 999px;
-    padding: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: var(--shadow-soft);
-    transition: all 0.2s ease;
-}
-
-.media-drag-handle:hover {
-    transform: scale(1.1);
-    background: rgba(255, 255, 255, 0.25);
-}
-
-.media-drag-handle:active {
-    cursor: grabbing;
-    transform: scale(0.95);
-}
-
-/* 画面全体のドロップゾーン */
-.layout-dropzone {
-    position: fixed;
-    z-index: var(--z-overlay);
-    background: rgba(59, 130, 246, 0);
-    /* var(--accent-color) w/ opacity */
-    border: 2px dashed transparent;
-    transition: all 0.3s ease;
-    pointer-events: none;
-    /* ドラッグ中のみ js で auto にする */
-    display: none;
-    /* ドラッグ中のみ flex/block にする */
-    align-items: center;
-    justify-content: center;
-    color: transparent;
-    font-weight: bold;
-    font-size: 1.5rem;
-    backdrop-filter: blur(0px);
-}
-
-/* ドラッグ中の状態 */
-.main-layout.is-dragging-layout .layout-dropzone {
-    display: flex;
-    pointer-events: auto;
-}
-
-/* 各ゾーンの位置・サイズ */
-.layout-dropzone.zone-top {
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 150px;
-}
-
-.layout-dropzone.zone-bottom {
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 150px;
-}
-
-.layout-dropzone.zone-left {
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 150px;
-}
-
-.layout-dropzone.zone-right {
-    top: 0;
-    bottom: 0;
-    right: 0;
-    width: 150px;
-}
-
-/* ホバー(dragenter)時のスタイル */
-.layout-dropzone.drag-over {
-    background: rgba(59, 130, 246, 0.2);
-    border-color: var(--accent-color);
-    color: var(--accent-color);
-    backdrop-filter: blur(4px);
-}
-
-.layout-dropzone.drag-over::after {
-    content: "ここに配置";
-}
-
 /* Quick Media Mode Controls */
 .quick-media-controls {
     display: flex;
@@ -550,8 +456,7 @@ body {
 }
 
 @media (prefers-color-scheme: dark) {
-    .quick-media-controls,
-    .media-drag-handle {
+    .quick-media-controls {
         background: rgba(30, 41, 59, 0.4);
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
@@ -579,6 +484,97 @@ body {
 .media-mode-wrapper {
     position: relative;
     display: flex;
+}
+
+
+/* Layout Mode Controls */
+.layout-mode-wrapper {
+    position: relative;
+    display: flex;
+}
+
+.layout-dropdown {
+    position: fixed;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    padding: 6px;
+    min-width: 120px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.layout-dropdown.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.layout-item {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.layout-item:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.layout-item.is-active {
+    background: var(--accent-color);
+    color: white;
+}
+
+.layout-mode-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-primary);
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s;
+    opacity: 0.7;
+}
+
+.layout-mode-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    opacity: 1;
+}
+
+.layout-mode-btn.active {
+    background: var(--accent-color);
+    color: white;
+    opacity: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+    .layout-dropdown {
+        background: rgba(30, 41, 59, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .layout-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
 }
 
 .interval-dropdown {
@@ -2516,9 +2512,7 @@ details[open]>summary::before {
     /* Hide desktop specific controls */
     .toggle-months-btn,
     #btnToggleLayout,
-    .layout-splitter,
-    .layout-dropzone,
-    .media-drag-handle {
+    .layout-splitter {
         display: none !important;
     }
 }

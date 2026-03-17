@@ -9,7 +9,7 @@ describe('applyAutoLayout', () => {
     beforeEach(() => {
         // Mock global appSettings
         global.appSettings = {
-            autoLayoutMode: true,
+            layoutMode: 'smart',
             mediaPosition: 'top',
             layoutDirection: 'row'
         };
@@ -71,8 +71,8 @@ describe('applyAutoLayout', () => {
         expect(global.updateView).toHaveBeenCalled();
     });
 
-    it('should not change layout if autoLayoutMode is false', () => {
-        global.appSettings.autoLayoutMode = false;
+    it('should not change layout if layoutMode is not smart', () => {
+        global.appSettings.layoutMode = 'top';
         global.appSettings.mediaPosition = 'top';
         global.appSettings.layoutDirection = 'row';
 
