@@ -2579,7 +2579,7 @@ function setupMiniCalendarInteractions() {
         const winW = window.innerWidth;
         const winH = window.innerHeight;
 
-        const margin = 24;
+        const margin = 20;
 
         if (centerX < winW / 2) {
             calendarSection.style.left = `${margin}px`;

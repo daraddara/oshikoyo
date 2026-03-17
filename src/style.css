@@ -2565,8 +2565,8 @@ body.is-immersive .media-container {
 }
 
 body.is-immersive .media-backdrop {
-    filter: blur(30px) brightness(0.8);
-    transform: scale(1.1); /* Prevent blurred edges from leaking empty space */
+    filter: blur(40px) brightness(0.8);
+    transform: scale(1.15); /* Prevent blurred edges from leaking empty space */
 }
 
 body.is-immersive .media-main-img {
@@ -2581,15 +2581,21 @@ body.is-immersive .layout-splitter {
 }
 
 /* Auto-hide controls in immersive mode */
-body.is-immersive .quick-media-controls {
+body.is-immersive .quick-media-controls,
+body.is-immersive .calendar-section {
     opacity: 0;
+    pointer-events: none;
     transition: opacity 0.5s ease;
 }
 
 body.is-immersive.controls-visible .quick-media-controls,
 body.is-immersive .quick-media-controls:hover,
-body.is-immersive .quick-media-controls:focus-within {
+body.is-immersive .quick-media-controls:focus-within,
+body.is-immersive.controls-visible .calendar-section,
+body.is-immersive .calendar-section:hover,
+body.is-immersive .calendar-section:focus-within {
     opacity: 1;
+    pointer-events: auto;
 }
 
 /* Toggle Switch Styling */
@@ -2650,23 +2656,23 @@ body.is-immersive .quick-media-controls:focus-within {
 body.is-immersive .calendar-section {
     position: fixed;
     z-index: 20;
-    bottom: 24px;
-    right: 24px;
-    width: 300px;
+    bottom: 20px;
+    right: 20px;
+    width: 180px;
     max-width: 90vw;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
     border-radius: 16px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    padding: 12px;
+    padding: 8px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
 }
 
 @media (prefers-color-scheme: dark) {
     body.is-immersive .calendar-section {
-        background: rgba(30, 41, 59, 0.7);
+        background: rgba(30, 41, 59, 0.4);
     }
 }
 
@@ -2698,12 +2704,13 @@ body.is-immersive .calendar-wrapper {
 
 /* Mini grid cells */
 body.is-immersive .calendar-day {
-    min-height: 36px;
-    padding: 4px;
+    min-height: 24px;
+    padding: 2px;
 }
 
 body.is-immersive .date-number {
-    font-size: 0.9rem;
+    font-size: 10px;
+    font-weight: 300;
 }
 
 /* Hide text events */
@@ -2711,19 +2718,20 @@ body.is-immersive .events-container {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 2px;
     justify-content: center;
     margin-top: 2px;
 }
 
 body.is-immersive .event-item {
     font-size: 0; /* Hide text */
-    width: 6px;
-    height: 6px;
+    width: 3px;
+    height: 3px;
     padding: 0;
     border-radius: 50%;
     margin: 0;
     opacity: 0.8;
+    display: inline-block;
 }
 
 body.is-immersive .event-item .event-icon {
