@@ -1,0 +1,50 @@
+# .clauderules — おしこよ 常時適用ルール
+
+> 各ルールの詳細は参照先ファイルを確認してください。このファイルには要点のみ記載します。
+
+---
+
+## 言語
+- チャット応答・生成ファイル・コミットメッセージはすべて**日本語**で記述してください。
+- 詳細: [.agents/rules/communication-style.md](./.agents/rules/communication-style.md)
+
+---
+
+## コーディング規約
+- JavaScript: ES6+、JSDoc必須、外部ライブラリ導入前に提案すること。
+- CSS: BEM命名、CSS変数使用、レスポンシブ前提。
+- 詳細: [docs/AGENTS.md §3](./docs/AGENTS.md) / [.agents/rules/oshikoyo-core.md](./.agents/rules/oshikoyo-core.md)
+
+---
+
+## Git 運用
+- `main` への直接コミット**禁止**。編集前に必ず作業ブランチを作成してください。
+- コミット前に `npm test` を実行し、全テストがパスしていること。
+- マージは **Squash Merge** のみ。
+- 詳細: [.agents/rules/git-branching-policy.md](./.agents/rules/git-branching-policy.md)
+
+---
+
+## テスト
+- `script.js` または `*.test.js` 変更後は自律的に `npm test` を実行してください。
+- UI変更の確認は `npm run e2e` を使用し、ブラウザの手動操作は原則禁止。
+- 詳細: [.agents/rules/testing-policy.md](./.agents/rules/testing-policy.md)
+
+---
+
+## 開発環境
+- サーバーは `npm run serve`（ポート `8081`）のみ使用。`python -m http.server` 等は禁止。
+- ブラウザアクセスは `http://localhost:8081` 経由のみ（`file:///` 禁止）。
+- 詳細: [.agents/rules/execute-tests.md](./.agents/rules/execute-tests.md)
+
+---
+
+## ワークスペース衛生
+- 一時ファイル・ログは `/tmp/` に配置し、プロジェクトルートを汚染しないこと。
+- 詳細: [.agents/rules/workspace-hygiene.md](./.agents/rules/workspace-hygiene.md)
+
+---
+
+## ドキュメント更新
+- 機能追加時は `README.md` を更新し、`ISSUES.md` の該当項目ステータスを更新すること。
+- 詳細: [docs/AGENTS.md §7](./docs/AGENTS.md)
