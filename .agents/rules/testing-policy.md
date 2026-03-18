@@ -28,7 +28,7 @@ description: おしこよのテスト実施ルールと品質ガイドライン
     - **基準日 (Baseline Date)**: スクリーンショットの差分をなくすため、E2Eテスト内では必ず `2024-01-01T00:00:00Z` をモック日時として設定してください。
 - **堅牢なテスト設計 (Robust Design)**:
     - **定数の外部注入**: タイムアウト値やリトライ回数は `tests/test-config.js` に集約し、環境変数（`TEST_TIMEOUT_FACTOR` 等）で調整可能にしてください。
-    - **「時間」ではなく「状態」を待つ**: `page.waitForTimeout()` の使用を原則禁止します。代わりに `page.waitForSelector()` や `page.waitForFunction()` を使用し、要素の出現や状態変化を動的に検知してください。
+    - **「時間」ではなく「状態」を待つ**: `page.waitForTimeout()` の使用を原則禁止します。代わりに `page.waitForSelector()` や `page.waitForFunction()` を使用し、要素の出現や状態変化を動的に検知してください。これはサーバーの準備完了確認（Ready Check）にも適用され、固定秒数の待機や `command_status` でのプロセス終了待ちは行わず、HTTPレスポンスの疎通を待ってください。
     - **リソース最適化**: WSL環境などの負荷を考慮し、必要に応じて並列実行数（workers）を制限してください（`playwright.config.js` で自動判定されるように構成します）。
 - Jules 環境においても、UI に変更がある場合は自律的に `npm run e2e` を実行し、必要に応じて `--update-snapshots` で基準画像を更新した上でコミットに含めてください。
 - Playwright等を用いたE2Eの画像レイアウト変動および切り替えの検証には、必ず `tests/fixtures/images/` 配下の専用テスト画像を使用してください。
