@@ -2838,13 +2838,11 @@ body.is-immersive.show-overlay .calendar-section {
     transform: translate(-50%, -50%) !important;
     width: fit-content !important;
     height: fit-content !important;
-    max-width: 90vw !important;
     max-height: 90vh;
     padding: 24px;
     cursor: default;
     z-index: 101;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow: visible !important;
 }
 
 /* Restore normal calendar look in full overlay */
