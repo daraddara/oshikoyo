@@ -2862,6 +2862,7 @@ body.is-immersive.show-overlay .calendar-wrapper {
     gap: 20px !important;
     flex-wrap: wrap !important;
     justify-content: center !important;
+    width: fit-content !important;
 }
 
 body.is-immersive.show-overlay .day-cell {
