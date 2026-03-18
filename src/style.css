@@ -2836,14 +2836,16 @@ body.is-immersive.show-overlay .calendar-section {
     bottom: auto !important;
     right: auto !important;
     transform: translate(-50%, -50%) !important;
-    width: fit-content !important;
+    /* 1ヶ月 or 縦積み: 550px + 左右padding(24px×2) */
+    width: calc(550px + 48px) !important;
     max-width: none !important;
     height: fit-content !important;
     max-height: 90vh;
     padding: 24px;
     cursor: default;
     z-index: 101;
-    overflow: visible !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
 }
 
 /* Restore normal calendar look in full overlay */
@@ -2862,7 +2864,6 @@ body.is-immersive.show-overlay .calendar-wrapper {
     gap: 20px !important;
     flex-wrap: wrap !important;
     justify-content: center !important;
-    width: fit-content !important;
 }
 
 body.is-immersive.show-overlay .day-cell {
@@ -2914,6 +2915,13 @@ body.is-immersive.show-overlay .overlay-dismiss-zone {
     body.is-immersive.show-overlay .calendar-wrapper {
         flex-direction: column !important;
         align-items: center !important;
+    }
+}
+
+/* 2ヶ月横並び時: 550px×2 + gap(20px) + padding(48px) = 1168px */
+@media (min-width: 1201px) {
+    body.is-immersive.show-overlay .calendar-section:has(.calendar-wrapper .calendar-month ~ .calendar-month) {
+        width: calc(550px * 2 + 20px + 48px) !important;
     }
 }
 
