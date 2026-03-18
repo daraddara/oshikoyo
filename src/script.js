@@ -3238,9 +3238,9 @@ function adjustMediaLayout() {
         splitter.style.display = 'flex'; // Reset splitter state
     }
 
-    // Gaps estimate: Header Margin (24) + Layout Gap (24) + Padding (40) + Safety (20)
-    // Adjusted to ensure bottom margin
-    const gaps = 110;
+    // Gaps estimate: body padding (40) + main-layout padding-bottom (40) + 2x gap (48) + safety margin
+    // Adjusted to ensure bottom margin prevents vertical scrollbars
+    const gaps = 150;
 
     if (pos === 'top' || pos === 'bottom') {
         // --- Top/Bottom: Full Width (Centered) & Dynamic Height ---
