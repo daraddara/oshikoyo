@@ -1837,6 +1837,7 @@ let controlsTimer = null;
 function applyImmersiveState() {
     const calendarSection = document.querySelector('.calendar-section');
     if (appSettings.immersiveMode) {
+        document.documentElement.classList.add('is-immersive');
         document.body.classList.add('is-immersive');
 
         // Auto-hide controls
@@ -1856,6 +1857,7 @@ function applyImmersiveState() {
         }
 
     } else {
+        document.documentElement.classList.remove('is-immersive');
         document.body.classList.remove('is-immersive');
         document.body.classList.remove('show-overlay');
         document.body.classList.remove('controls-visible');
