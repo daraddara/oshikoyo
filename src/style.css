@@ -2759,7 +2759,12 @@ body.is-immersive .oshi-events-container {
     margin: 0;
 }
 
+body.is-immersive .day-icons {
+    display: none;
+}
+
 body.is-immersive .oshi-event {
+    min-height: 0;
     font-size: 0; /* Hide text */
     width: 3px;
     height: 3px;
