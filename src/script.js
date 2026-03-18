@@ -2523,6 +2523,9 @@ function setupMiniCalendarInteractions() {
     const calendarSection = document.querySelector('.calendar-section');
     if (!calendarSection) return;
 
+    if (calendarSection.dataset.interactionsSetup) return;
+    calendarSection.dataset.interactionsSetup = 'true';
+
     let isDragging = false;
     let startX, startY, initialX, initialY;
 
