@@ -65,8 +65,8 @@ body {
     background-attachment: fixed;
     color: var(--text-primary);
     min-height: 100vh;
-    min-height: 100vh;
     padding: 20px;
+    box-sizing: border-box;
     transition: background 0.3s ease, color 0.3s ease;
 }
 
@@ -203,11 +203,11 @@ body {
     /* Center horizontally in column mode */
     /* justify-content: center; REMOVED to prevent top clipping in vertical mode */
     width: 100%;
-    height: calc(100vh - 40px);
+    min-height: calc(100vh - 40px);
     /* Viewport height minus body padding */
     padding-bottom: 40px;
     /* Ensure bottom scroll clearance */
-    overflow-y: auto;
+    overflow-y: visible;
     overflow-x: hidden;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -216,11 +216,10 @@ body {
     flex-direction: column;
 }
 
-/* Safe Centering for Top Layout */
+/* Adjust Vertical Flow for Top Layout */
 .main-layout.pos-top .media-area {
     order: 1;
-    margin-top: auto;
-    /* Push down to center */
+    margin-top: 0;
 }
 
 .main-layout.pos-top .layout-splitter {
@@ -229,21 +228,20 @@ body {
 
 .main-layout.pos-top .calendar-section {
     order: 3;
-    margin-bottom: auto;
-    /* Push up to center */
+    margin-bottom: 0;
 }
 
 .main-layout.pos-bottom {
     flex-direction: column;
 }
 
-/* Safe Centering for Bottom Layout */
+/* Adjust Vertical Flow for Bottom Layout */
 .main-layout.pos-bottom .calendar-section {
-    margin-top: auto;
+    margin-top: 0;
 }
 
 .main-layout.pos-bottom .media-area {
-    margin-bottom: auto;
+    margin-bottom: 0;
 }
 
 .main-layout.pos-left {
