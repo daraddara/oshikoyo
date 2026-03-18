@@ -2936,8 +2936,8 @@ body.is-immersive.show-overlay .calendar-section {
 body.is-immersive.show-overlay .calendar-month {
     flex: 0 0 550px !important;
     width: 550px !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
+    max-width: 550px !important;
+    min-width: 550px !important;
     background: transparent !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
