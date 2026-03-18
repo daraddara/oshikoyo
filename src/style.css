@@ -2837,6 +2837,7 @@ body.is-immersive.show-overlay .calendar-section {
     right: auto !important;
     transform: translate(-50%, -50%) !important;
     width: fit-content !important;
+    max-width: none !important;
     height: fit-content !important;
     max-height: 90vh;
     padding: 24px;
