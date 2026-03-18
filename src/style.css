@@ -2660,7 +2660,7 @@ body.is-immersive .calendar-section {
     right: 20px;
     width: 180px !important;
     max-width: 90vw;
-    background: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
     border-radius: 16px;
@@ -2672,7 +2672,7 @@ body.is-immersive .calendar-section {
 
 @media (prefers-color-scheme: dark) {
     body.is-immersive .calendar-section {
-        background: rgba(30, 41, 59, 0.4);
+        background: rgba(30, 41, 59, 0.3);
     }
 }
 
@@ -2714,21 +2714,49 @@ body.is-immersive .calendar-wrapper {
 body.is-immersive .day-cell {
     min-height: 24px;
     padding: 2px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 body.is-immersive .day-number {
     font-size: 10px;
     font-weight: 300;
+    letter-spacing: 0.5px;
+    line-height: 1;
 }
 
-/* Hide text events */
+/* Redesign "Today" indicator for immersive mode */
+body.is-immersive .day-cell.is-today {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+body.is-immersive .day-cell.is-today .day-number {
+    font-weight: 700;
+    color: var(--primary-color) !important;
+}
+
+/* Oshi Date Highlight override for immersive */
+body.is-immersive .day-cell.is-oshi-date {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Indicator dots container placed absolutely at the bottom */
 body.is-immersive .oshi-events-container {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 2px;
     justify-content: center;
-    margin-top: 2px;
+    position: absolute;
+    bottom: 2px;
+    left: 0;
+    right: 0;
+    margin: 0;
 }
 
 body.is-immersive .oshi-event {
