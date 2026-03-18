@@ -2836,8 +2836,8 @@ body.is-immersive.show-overlay .calendar-section {
     bottom: auto !important;
     right: auto !important;
     transform: translate(-50%, -50%) !important;
-    /* 1ヶ月 or 縦積み: 550px + 左右padding(24px×2) */
-    width: calc(550px + 48px) !important;
+    /* ビューポートに収まる範囲で最大598px */
+    width: min(calc(550px + 48px), calc(100vw - 40px)) !important;
     max-width: none !important;
     height: fit-content !important;
     max-height: 90vh;
@@ -2915,10 +2915,10 @@ body.is-immersive.show-overlay .overlay-dismiss-zone {
     }
 }
 
-/* 2ヶ月横並び時: 550px×2 + gap(20px) + padding(48px) = 1168px */
+/* 2ヶ月横並び時: 1168px or ビューポート幅に収まる範囲 */
 @media (min-width: 1201px) {
     body.is-immersive.show-overlay .calendar-section:has(.calendar-wrapper .calendar-month ~ .calendar-month) {
-        width: calc(550px * 2 + 20px + 48px) !important;
+        width: min(calc(550px * 2 + 20px + 48px), calc(100vw - 40px)) !important;
     }
 }
 
@@ -2940,10 +2940,10 @@ body.is-immersive.show-overlay .calendar-section {
 }
 
 body.is-immersive.show-overlay .calendar-month {
-    flex: 0 0 550px !important;
-    width: 550px !important;
-    max-width: 550px !important;
-    min-width: 550px !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
     background: transparent !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
