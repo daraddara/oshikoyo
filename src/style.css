@@ -2866,9 +2866,6 @@ body.is-immersive.show-overlay .calendar-wrapper {
     justify-content: center !important;
 }
 
-body.is-immersive.show-overlay .day-cell {
-    min-height: 80px;
-}
 
 body.is-immersive.show-overlay .oshi-events-container {
     flex-direction: column;
