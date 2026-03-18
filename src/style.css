@@ -2658,7 +2658,7 @@ body.is-immersive .calendar-section {
     z-index: 20;
     bottom: 20px;
     right: 20px;
-    width: 180px;
+    width: 180px !important;
     max-width: 90vw;
     background: rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(30px);
@@ -2690,6 +2690,14 @@ body.is-immersive .month-header {
     font-size: 1.1rem;
     padding: 4px 0;
     margin-bottom: 8px;
+}
+
+/* Prevent fixed sizing from breaking the widget */
+body.is-immersive .calendar-month {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+    min-width: 0 !important;
 }
 
 /* Hide extra months if monthCount > 1 but we are in mini mode */
