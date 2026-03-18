@@ -2867,6 +2867,16 @@ body.is-immersive.show-overlay .day-cell {
     min-height: 80px;
 }
 
+body.is-immersive.show-overlay .oshi-events-container {
+    flex-direction: column;
+    position: static;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    margin-top: auto;
+    margin-bottom: 2px;
+}
+
 body.is-immersive.show-overlay .oshi-event {
     font-size: 0.75rem;
     width: auto;
