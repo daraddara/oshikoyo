@@ -2848,6 +2848,7 @@ body.is-immersive.show-overlay .calendar-section {
 /* Restore normal calendar look in full overlay */
 body.is-immersive.show-overlay .controls {
     display: flex;
+    max-width: 550px !important;
 }
 
 body.is-immersive.show-overlay .calendar-month:not(:first-child) {
