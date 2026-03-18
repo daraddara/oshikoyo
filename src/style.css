@@ -2836,13 +2836,14 @@ body.is-immersive.show-overlay .calendar-section {
     bottom: auto !important;
     right: auto !important;
     transform: translate(-50%, -50%) !important;
-    width: auto !important;
-    max-width: 95vw;
+    width: fit-content !important;
+    max-width: 90vw !important;
     max-height: 90vh;
     padding: 24px;
     cursor: default;
     z-index: 101;
     overflow-y: auto;
+    overflow-x: hidden !important;
 }
 
 /* Restore normal calendar look in full overlay */
@@ -2855,8 +2856,11 @@ body.is-immersive.show-overlay .calendar-month:not(:first-child) {
 }
 
 body.is-immersive.show-overlay .calendar-wrapper {
-    /* Allow original row/column layout to return */
-    flex-direction: var(--original-direction, row) !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 20px !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
 }
 
 body.is-immersive.show-overlay .day-cell {
@@ -2891,4 +2895,45 @@ body.is-immersive.show-overlay .oshi-event .oshi-event-icon {
 
 body.is-immersive.show-overlay .overlay-dismiss-zone {
     display: block;
+}
+
+/* --- Immersive Overlay Responsive Layout --- */
+@media (max-width: 1200px) {
+    body.is-immersive.show-overlay .calendar-wrapper {
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+}
+
+/* --- Glassmorphism Maintenance --- */
+body.is-immersive.show-overlay .calendar-section {
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 24px !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    body.is-immersive.show-overlay .calendar-section {
+        background: rgba(30, 41, 59, 0.3) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+}
+
+body.is-immersive.show-overlay .calendar-month {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    width: auto !important;
+    max-width: 100% !important;
+    flex: 1 1 auto !important;
+}
+
+body.is-immersive.show-overlay .calendar-month:hover {
+    transform: none !important;
+    box-shadow: none !important;
 }
