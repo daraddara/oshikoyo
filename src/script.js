@@ -1837,6 +1837,7 @@ let controlsTimer = null;
 function applyImmersiveState() {
     const calendarSection = document.querySelector('.calendar-section');
     if (appSettings.immersiveMode) {
+        document.documentElement.classList.add('is-immersive');
         document.body.classList.add('is-immersive');
 
         // Auto-hide controls
@@ -1856,6 +1857,7 @@ function applyImmersiveState() {
         }
 
     } else {
+        document.documentElement.classList.remove('is-immersive');
         document.body.classList.remove('is-immersive');
         document.body.classList.remove('show-overlay');
         document.body.classList.remove('controls-visible');
@@ -2523,6 +2525,9 @@ function setupMiniCalendarInteractions() {
     const calendarSection = document.querySelector('.calendar-section');
     if (!calendarSection) return;
 
+    if (calendarSection.dataset.interactionsSetup) return;
+    calendarSection.dataset.interactionsSetup = 'true';
+
     let isDragging = false;
     let startX, startY, initialX, initialY;
 
@@ -2579,7 +2584,7 @@ function setupMiniCalendarInteractions() {
         const winW = window.innerWidth;
         const winH = window.innerHeight;
 
-        const margin = 24;
+        const margin = 20;
 
         if (centerX < winW / 2) {
             calendarSection.style.left = `${margin}px`;
@@ -3233,9 +3238,9 @@ function adjustMediaLayout() {
         splitter.style.display = 'flex'; // Reset splitter state
     }
 
-    // Gaps estimate: Header Margin (24) + Layout Gap (24) + Padding (40) + Safety (20)
-    // Adjusted to ensure bottom margin
-    const gaps = 110;
+    // Gaps estimate: body padding (40) + main-layout padding-bottom (40) + 2x gap (48) + safety margin
+    // Adjusted to ensure bottom margin prevents vertical scrollbars
+    const gaps = 150;
 
     if (pos === 'top' || pos === 'bottom') {
         // --- Top/Bottom: Full Width (Centered) & Dynamic Height ---
