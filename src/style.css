@@ -2543,6 +2543,10 @@ details[open]>summary::before {
 
 
 /* --- Immersive Mode --- */
+body.is-immersive {
+    overflow: hidden;
+}
+
 body.is-immersive .main-layout {
     flex-direction: row !important; /* Force reset */
 }
@@ -2800,7 +2804,7 @@ body.is-immersive.show-overlay .calendar-section {
     bottom: auto !important;
     right: auto !important;
     transform: translate(-50%, -50%) !important;
-    width: auto;
+    width: auto !important;
     max-width: 95vw;
     max-height: 90vh;
     padding: 24px;
