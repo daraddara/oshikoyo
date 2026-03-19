@@ -2617,22 +2617,40 @@ function updateToggleMonthsUI() {
     if (!btn) return;
 
     if (appSettings.monthCount === 1) {
-        // 1ヶ月表示: 1枚のカード
+        // 1ヶ月表示: 案Cスタイルの大きめ単体カレンダー
         btn.innerHTML = `
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="5" y="5" width="14" height="14" rx="2" ry="2"></rect>
-                <path d="M5 10h14"></path>
+                <rect x="3" y="2" width="18" height="20" rx="1.5"/>
+                <rect x="3" y="2" width="18" height="5" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+                <line x1="3" y1="7" x2="21" y2="7"/>
+                <line x1="9" y1="7" x2="9" y2="22" stroke-width="0.7"/>
+                <line x1="15" y1="7" x2="15" y2="22" stroke-width="0.7"/>
+                <line x1="3" y1="12" x2="21" y2="12" stroke-width="0.7"/>
+                <line x1="3" y1="17" x2="21" y2="17" stroke-width="0.7"/>
             </svg>
         `;
     } else {
-        // 2ヶ月表示: 2枚のカードが重なっている
+        // 2ヶ月表示: 案Cスタイルの2枚重ね（後ろ薄く・前フル）
         btn.innerHTML = `
-            <svg class="icon-multi-month" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="7" width="14" height="14" rx="2" ry="2" opacity="0.5"></rect>
-                <rect x="7" y="3" width="14" height="14" rx="2" ry="2"></rect>
-                <path d="M7 10h14" opacity="0.8"></path>
+                <g opacity="0.45">
+                    <rect x="1" y="2" width="14" height="13" rx="1.5"/>
+                    <rect x="1" y="2" width="14" height="3.5" rx="1.5" fill="currentColor" fill-opacity="0.5" stroke="none"/>
+                    <line x1="1" y1="5.5" x2="15" y2="5.5"/>
+                    <line x1="5.67" y1="5.5" x2="5.67" y2="15" stroke-width="0.7"/>
+                    <line x1="10.33" y1="5.5" x2="10.33" y2="15" stroke-width="0.7"/>
+                    <line x1="1" y1="9.5" x2="15" y2="9.5" stroke-width="0.7"/>
+                    <line x1="1" y1="13" x2="15" y2="13" stroke-width="0.7"/>
+                </g>
+                <rect x="8" y="9" width="15" height="13" rx="1.5"/>
+                <rect x="8" y="9" width="15" height="3.5" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+                <line x1="8" y1="12.5" x2="23" y2="12.5"/>
+                <line x1="13" y1="12.5" x2="13" y2="22" stroke-width="0.7"/>
+                <line x1="18" y1="12.5" x2="18" y2="22" stroke-width="0.7"/>
+                <line x1="8" y1="16.5" x2="23" y2="16.5" stroke-width="0.7"/>
+                <line x1="8" y1="20.5" x2="23" y2="20.5" stroke-width="0.7"/>
             </svg>
         `;
     }
@@ -2764,18 +2782,40 @@ function updateLayoutToggleUI() {
     if (!layoutIcon) return;
 
     if (appSettings.layoutDirection === 'row') {
-        // 現在：横並び -> 次のクリックで「縦並び」を想起させるアイコン（回転、または向きが異なる長方形）
+        // 現在：横並び -> 横並び状態を示すアイコン
         layoutIcon.innerHTML = `
-            <rect x="3" y="5" width="18" height="6" rx="1.5" fill="currentColor" fill-opacity="0.2"></rect>
-            <rect x="3" y="13" width="18" height="6" rx="1.5" fill="currentColor"></rect>
-            <path d="M12 2v20" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2" opacity="0.3"></path>
+            <rect x="1" y="3.5" width="10" height="17" rx="1.5"/>
+            <rect x="1" y="3.5" width="10" height="4" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+            <line x1="1" y1="7.5" x2="11" y2="7.5"/>
+            <line x1="4.33" y1="7.5" x2="4.33" y2="20.5" stroke-width="0.7"/>
+            <line x1="7.67" y1="7.5" x2="7.67" y2="20.5" stroke-width="0.7"/>
+            <line x1="1" y1="11.5" x2="11" y2="11.5" stroke-width="0.7"/>
+            <line x1="1" y1="15.5" x2="11" y2="15.5" stroke-width="0.7"/>
+            <rect x="13" y="3.5" width="10" height="17" rx="1.5"/>
+            <rect x="13" y="3.5" width="10" height="4" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+            <line x1="13" y1="7.5" x2="23" y2="7.5"/>
+            <line x1="16.33" y1="7.5" x2="16.33" y2="20.5" stroke-width="0.7"/>
+            <line x1="19.67" y1="7.5" x2="19.67" y2="20.5" stroke-width="0.7"/>
+            <line x1="13" y1="11.5" x2="23" y2="11.5" stroke-width="0.7"/>
+            <line x1="13" y1="15.5" x2="23" y2="15.5" stroke-width="0.7"/>
         `;
     } else {
-        // 現在：縦並び -> 次のクリックで「横並び」を想起させるアイコン
+        // 現在：縦並び -> 縦並び状態を示すアイコン
         layoutIcon.innerHTML = `
-            <rect x="5" y="3" width="6" height="18" rx="1.5" fill="currentColor" fill-opacity="0.2"></rect>
-            <rect x="13" y="3" width="6" height="18" rx="1.5" fill="currentColor"></rect>
-            <path d="M2 12h20" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2" opacity="0.3"></path>
+            <rect x="1.5" y="1.5" width="21" height="9" rx="1.5"/>
+            <rect x="1.5" y="1.5" width="21" height="3.5" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+            <line x1="1.5" y1="5" x2="22.5" y2="5"/>
+            <line x1="6.75" y1="5" x2="6.75" y2="10.5" stroke-width="0.7"/>
+            <line x1="12" y1="5" x2="12" y2="10.5" stroke-width="0.7"/>
+            <line x1="17.25" y1="5" x2="17.25" y2="10.5" stroke-width="0.7"/>
+            <line x1="1.5" y1="7.75" x2="22.5" y2="7.75" stroke-width="0.7"/>
+            <rect x="1.5" y="13.5" width="21" height="9" rx="1.5"/>
+            <rect x="1.5" y="13.5" width="21" height="3.5" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+            <line x1="1.5" y1="17" x2="22.5" y2="17"/>
+            <line x1="6.75" y1="17" x2="6.75" y2="22.5" stroke-width="0.7"/>
+            <line x1="12" y1="17" x2="12" y2="22.5" stroke-width="0.7"/>
+            <line x1="17.25" y1="17" x2="17.25" y2="22.5" stroke-width="0.7"/>
+            <line x1="1.5" y1="19.75" x2="22.5" y2="19.75" stroke-width="0.7"/>
         `;
     }
 }
