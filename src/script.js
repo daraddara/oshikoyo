@@ -2764,25 +2764,7 @@ function updateLayoutToggleUI() {
     if (!layoutIcon) return;
 
     if (appSettings.layoutDirection === 'row') {
-        // 現在：横並び -> 次のクリックで「縦並び」を想起させるアイコン
-        layoutIcon.innerHTML = `
-            <rect x="1.5" y="1.5" width="21" height="9" rx="1.5"/>
-            <rect x="1.5" y="1.5" width="21" height="3.5" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="none"/>
-            <line x1="1.5" y1="5" x2="22.5" y2="5"/>
-            <line x1="6.75" y1="5" x2="6.75" y2="10.5" stroke-width="0.7"/>
-            <line x1="12" y1="5" x2="12" y2="10.5" stroke-width="0.7"/>
-            <line x1="17.25" y1="5" x2="17.25" y2="10.5" stroke-width="0.7"/>
-            <line x1="1.5" y1="7.75" x2="22.5" y2="7.75" stroke-width="0.7"/>
-            <rect x="1.5" y="13.5" width="21" height="9" rx="1.5"/>
-            <rect x="1.5" y="13.5" width="21" height="3.5" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="none"/>
-            <line x1="1.5" y1="17" x2="22.5" y2="17"/>
-            <line x1="6.75" y1="17" x2="6.75" y2="22.5" stroke-width="0.7"/>
-            <line x1="12" y1="17" x2="12" y2="22.5" stroke-width="0.7"/>
-            <line x1="17.25" y1="17" x2="17.25" y2="22.5" stroke-width="0.7"/>
-            <line x1="1.5" y1="19.75" x2="22.5" y2="19.75" stroke-width="0.7"/>
-        `;
-    } else {
-        // 現在：縦並び -> 次のクリックで「横並び」を想起させるアイコン
+        // 現在：横並び -> 横並び状態を示すアイコン
         layoutIcon.innerHTML = `
             <rect x="1" y="3.5" width="10" height="17" rx="1.5"/>
             <rect x="1" y="3.5" width="10" height="4" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="none"/>
@@ -2798,6 +2780,24 @@ function updateLayoutToggleUI() {
             <line x1="19.67" y1="7.5" x2="19.67" y2="20.5" stroke-width="0.7"/>
             <line x1="13" y1="11.5" x2="23" y2="11.5" stroke-width="0.7"/>
             <line x1="13" y1="15.5" x2="23" y2="15.5" stroke-width="0.7"/>
+        `;
+    } else {
+        // 現在：縦並び -> 縦並び状態を示すアイコン
+        layoutIcon.innerHTML = `
+            <rect x="1.5" y="1.5" width="21" height="9" rx="1.5"/>
+            <rect x="1.5" y="1.5" width="21" height="3.5" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+            <line x1="1.5" y1="5" x2="22.5" y2="5"/>
+            <line x1="6.75" y1="5" x2="6.75" y2="10.5" stroke-width="0.7"/>
+            <line x1="12" y1="5" x2="12" y2="10.5" stroke-width="0.7"/>
+            <line x1="17.25" y1="5" x2="17.25" y2="10.5" stroke-width="0.7"/>
+            <line x1="1.5" y1="7.75" x2="22.5" y2="7.75" stroke-width="0.7"/>
+            <rect x="1.5" y="13.5" width="21" height="9" rx="1.5"/>
+            <rect x="1.5" y="13.5" width="21" height="3.5" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+            <line x1="1.5" y1="17" x2="22.5" y2="17"/>
+            <line x1="6.75" y1="17" x2="6.75" y2="22.5" stroke-width="0.7"/>
+            <line x1="12" y1="17" x2="12" y2="22.5" stroke-width="0.7"/>
+            <line x1="17.25" y1="17" x2="17.25" y2="22.5" stroke-width="0.7"/>
+            <line x1="1.5" y1="19.75" x2="22.5" y2="19.75" stroke-width="0.7"/>
         `;
     }
 }
