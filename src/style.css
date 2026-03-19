@@ -3075,3 +3075,64 @@ body.is-immersive.show-overlay .calendar-month:hover {
     transform: none !important;
     box-shadow: none !important;
 }
+
+/* ── 記念日設定行 ─────────────────────────────────── */
+.memorial-date-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.mdate-type {
+    flex: 0 0 130px;
+    min-width: 0;
+}
+
+.mdate-date {
+    flex: 1;
+    min-width: 0;
+}
+
+.mdate-annual-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.mdate-delete {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 1em;
+    line-height: 1;
+}
+
+.mdate-delete:hover {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+}
+
+.btn-add-row {
+    background: none;
+    border: 1px dashed var(--accent-color);
+    color: var(--accent-color);
+    border-radius: 6px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 0.9em;
+    width: 100%;
+    margin-top: 2px;
+}
+
+.btn-add-row:hover {
+    background: rgba(var(--accent-color-rgb, 59, 130, 246), 0.08);
+}

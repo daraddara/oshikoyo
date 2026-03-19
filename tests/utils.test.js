@@ -203,37 +203,37 @@ describe('hexToRgba', () => {
 
 describe('parseDateString', () => {
     it('should parse "YYYY/MM/DD" format', () => {
-        expect(parseDateString('2023/05/12')).toEqual({ month: 5, day: 12 });
-        expect(parseDateString('2023/5/2')).toEqual({ month: 5, day: 2 });
+        expect(parseDateString('2023/05/12')).toEqual({ year: 2023, month: 5, day: 12 });
+        expect(parseDateString('2023/5/2')).toEqual({ year: 2023, month: 5, day: 2 });
     });
 
     it('should parse "YYYY-MM-DD" format', () => {
-        expect(parseDateString('2023-05-12')).toEqual({ month: 5, day: 12 });
-        expect(parseDateString('2023-5-2')).toEqual({ month: 5, day: 2 });
+        expect(parseDateString('2023-05-12')).toEqual({ year: 2023, month: 5, day: 12 });
+        expect(parseDateString('2023-5-2')).toEqual({ year: 2023, month: 5, day: 2 });
     });
 
     it('should parse "M/D" format', () => {
-        expect(parseDateString('5/12')).toEqual({ month: 5, day: 12 });
-        expect(parseDateString('12/5')).toEqual({ month: 12, day: 5 });
-        expect(parseDateString('05/02')).toEqual({ month: 5, day: 2 });
+        expect(parseDateString('5/12')).toEqual({ year: null, month: 5, day: 12 });
+        expect(parseDateString('12/5')).toEqual({ year: null, month: 12, day: 5 });
+        expect(parseDateString('05/02')).toEqual({ year: null, month: 5, day: 2 });
     });
 
     it('should parse "M月D日" format', () => {
-        expect(parseDateString('5月12日')).toEqual({ month: 5, day: 12 });
-        expect(parseDateString('12月5日')).toEqual({ month: 12, day: 5 });
-        expect(parseDateString('05月02日')).toEqual({ month: 5, day: 2 });
+        expect(parseDateString('5月12日')).toEqual({ year: null, month: 5, day: 12 });
+        expect(parseDateString('12月5日')).toEqual({ year: null, month: 12, day: 5 });
+        expect(parseDateString('05月02日')).toEqual({ year: null, month: 5, day: 2 });
     });
 
     it('should handle "YYYY-MM-DD" standard date input value', () => {
-        expect(parseDateString('2023-05-12')).toEqual({ month: 5, day: 12 });
+        expect(parseDateString('2023-05-12')).toEqual({ year: 2023, month: 5, day: 12 });
         // NOTE: The function code has two blocks that match YYYY-MM-DD.
         // We're essentially covering both blocks with this and the first YYYY-MM-DD test.
     });
 
     it('should trim whitespace from the input string', () => {
-        expect(parseDateString('  2023/05/12  ')).toEqual({ month: 5, day: 12 });
-        expect(parseDateString('\t5/12\n')).toEqual({ month: 5, day: 12 });
-        expect(parseDateString(' 5月12日 ')).toEqual({ month: 5, day: 12 });
+        expect(parseDateString('  2023/05/12  ')).toEqual({ year: 2023, month: 5, day: 12 });
+        expect(parseDateString('\t5/12\n')).toEqual({ year: null, month: 5, day: 12 });
+        expect(parseDateString(' 5月12日 ')).toEqual({ year: null, month: 5, day: 12 });
     });
 
     it('should return null for invalid inputs', () => {
@@ -242,7 +242,7 @@ describe('parseDateString', () => {
         expect(parseDateString('')).toBeNull();
         expect(parseDateString('   ')).toBeNull(); // Only whitespace
         expect(parseDateString('invalid-date')).toBeNull();
-        expect(parseDateString('2023/13/45')).toEqual({ month: 13, day: 45 }); // Regex matches, semantic validation is not part of parseDateString as currently written.
+        expect(parseDateString('2023/13/45')).toEqual({ year: 2023, month: 13, day: 45 }); // Regex matches, semantic validation is not part of parseDateString as currently written.
         expect(parseDateString('23-05-12')).toBeNull(); // Missing digits in year
         expect(parseDateString('2023-05')).toBeNull(); // Incomplete
     });

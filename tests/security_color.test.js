@@ -37,7 +37,7 @@ describe('Security: XSS Vulnerability in renderCalendar via oshi.color', () => {
 
         const list = [{
             name: 'Test Oshi',
-            birthday: '2024/01/01',
+            memorial_dates: [{ type_id: 'bday', date: '2024/01/01', is_annual: true }],
             color: xssPayload
         }];
 
@@ -72,7 +72,7 @@ describe('Security: XSS Vulnerability in renderCalendar via oshi.color', () => {
         const container = document.getElementById('calendar-container');
         const list = [{
             name: 'No Color Oshi',
-            birthday: '2024/01/01',
+            memorial_dates: [{ type_id: 'bday', date: '2024/01/01', is_annual: true }],
             color: null // or undefined
         }];
 
