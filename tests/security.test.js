@@ -37,7 +37,7 @@ describe('Security: XSS Vulnerability in renderCalendar', () => {
         // Assign the malicious payload to the module's exported appSettings
         const list = [{
             name: xssPayload,
-            birthday: '2024/01/01', // Match the day being rendered (1/1/2024 since TODAY is mocked to this)
+            memorial_dates: [{ type_id: 'bday', date: '2024/01/01', is_annual: true }], // Match the day being rendered (1/1/2024 since TODAY is mocked to this)
             color: '#3b82f6'
         }];
 

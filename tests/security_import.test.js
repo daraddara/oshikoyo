@@ -32,16 +32,16 @@ describe('Security: Import Settings Validation', () => {
             oshiList: [
                 {
                     name: 'Valid Name',
-                    birthday: 12345, // invalid type
-                    debutDate: '<script>alert(1)</script>', // string is allowed, but unexpected properties should be dropped
+                    memorial_dates: [{ type_id: 'bday', date: '5/1', is_annual: true }],
+                    color: '#ff0000',
                     unknownProp: 'drop me'
                 }
             ]
         };
         const result = validateImportedSettings(input);
         expect(result.oshiList[0].name).toBe('Valid Name');
-        expect(result.oshiList[0].birthday).toBe(''); // Defaulted to empty string because of type mismatch
-        expect(result.oshiList[0].debutDate).toBe('<script>alert(1)</script>'); // The script handles XSS at render time, but this ensures it's at least a string
+        expect(result.oshiList[0].memorial_dates).toHaveLength(1);
+        expect(result.oshiList[0].memorial_dates[0].type_id).toBe('bday');
         expect(result.oshiList[0].unknownProp).toBeUndefined();
     });
 
@@ -85,8 +85,10 @@ describe('Security: Import Settings Validation', () => {
             oshiList: [
                 {
                     name: 'Test Oshi',
-                    birthday: '2000/01/01',
-                    debutDate: '2020/01/01',
+                    memorial_dates: [
+                        { type_id: 'bday',  date: '2000/01/01', is_annual: true },
+                        { type_id: 'debut', date: '2020/01/01', is_annual: true }
+                    ],
                     color: '#ff0000',
                     fanArtTag: '#testart',
                     source: 'test_source.json'

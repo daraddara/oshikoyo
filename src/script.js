@@ -9,6 +9,11 @@ const DEFAULT_SETTINGS = {
     layoutDirection: 'row', // 'row', 'column'
     // Oshi Settings (New List Structure)
     oshiList: [],
+    // Global event type master — shared across all oshi
+    event_types: [
+        { id: 'bday',  label: '誕生日',       icon: 'cake' },
+        { id: 'debut', label: 'デビュー記念日', icon: 'star' },
+    ],
     // Media Settings
     mediaMode: 'single', // 'single', 'random', 'cycle'
     mediaPosition: 'top', // 'top', 'bottom', 'left', 'right'
@@ -560,25 +565,25 @@ function parseDateString(str) {
     // Format: "YYYY/MM/DD" or "YYYY-MM-DD"
     let match = str.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
     if (match) {
-        return { month: parseInt(match[2]), day: parseInt(match[3]) };
+        return { year: parseInt(match[1]), month: parseInt(match[2]), day: parseInt(match[3]) };
     }
 
     // Format: "M/D" (year-less, e.g., 1/15)
     match = str.match(/^(\d{1,2})\/(\d{1,2})$/);
     if (match) {
-        return { month: parseInt(match[1]), day: parseInt(match[2]) };
+        return { year: null, month: parseInt(match[1]), day: parseInt(match[2]) };
     }
 
     // Format: "M月D日"
     match = str.match(/^(\d{1,2})月(\d{1,2})日$/);
     if (match) {
-        return { month: parseInt(match[1]), day: parseInt(match[2]) };
+        return { year: null, month: parseInt(match[1]), day: parseInt(match[2]) };
     }
 
     // Format: "YYYY-MM-DD" standard date input value
     match = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (match) {
-        return { month: parseInt(match[2]), day: parseInt(match[3]) };
+        return { year: parseInt(match[1]), month: parseInt(match[2]), day: parseInt(match[3]) };
     }
 
     return null;
@@ -754,6 +759,26 @@ function hidePopup() {
     if (popup) popup.style.display = 'none';
 }
 
+// SVGパスマップ (Phase 1: cake / star のみ; Phase 2 で拡張予定)
+const EVENT_ICON_PATHS = {
+    cake: `<path d="M12 7v5"/><path d="M9 12h6v4H9z"/><path d="M5 16h14v4H5z"/><path d="M12 3a1 1 0 0 1 0 2 1 1 0 0 1 0-2z"/>`,
+    star: `<polygon points="12 2 15.09 8.26 22 9.27 17 14.24 18.18 21.02 12 17.77 5.82 21.02 7 14.24 2 9.27 8.91 8.26 12 2" fill="currentColor"/>`,
+};
+
+/**
+ * @param {'cake'|'star'|string} iconId
+ * @param {boolean} isDark
+ * @param {'popup'|'badge'} context
+ */
+function buildEventIcon(iconId, isDark, context) {
+    const paths = EVENT_ICON_PATHS[iconId] || EVENT_ICON_PATHS.star;
+    const colorClass = iconId === 'cake' ? 'icon-pink' : 'icon-gold';
+    if (context === 'badge') {
+        return `<span class="day-icon-badge"><svg class="day-icon-svg ${colorClass}" viewBox="0 0 24 24">${paths}</svg></span>`;
+    }
+    return `<span class="oshi-event-icon ${isDark ? 'is-dark' : ''}"><svg class="oshi-event-svg ${colorClass}" viewBox="0 0 24 24">${paths}</svg></span>`;
+}
+
 function renderCalendar(container, year, month) {
     // Ensure popup exists
     createPopup();
@@ -795,11 +820,13 @@ function renderCalendar(container, year, month) {
         daysGrid.appendChild(emptyCell);
     }
 
-    // Pre-calculate parsed dates for oshi events to avoid redundant parsing in the day loop
+    // Pre-calculate parsed memorial dates for each oshi
     const oshiEventDates = (appSettings.oshiList || []).map(oshi => ({
         ...oshi,
-        parsedBirthday: parseDateString(oshi.birthday),
-        parsedDebutDate: parseDateString(oshi.debutDate)
+        parsedMemorialDates: (oshi.memorial_dates || []).map(md => ({
+            ...md,
+            parsed: parseDateString(md.date)
+        }))
     }));
 
     // Days
@@ -845,35 +872,31 @@ function renderCalendar(container, year, month) {
             }
 
             const isDarkIcon = textColor === '#1a1a1a';
-            const cakeIcon = `<span class="oshi-event-icon ${isDarkIcon ? 'is-dark' : ''}"><svg class="oshi-event-svg icon-pink" viewBox="0 0 24 24"><path d="M12 7v5"/><path d="M9 12h6v4H9z"/><path d="M5 16h14v4H5z"/><path d="M12 3a1 1 0 0 1 0 2 1 1 0 0 1 0-2z"/></svg></span>`;
-            const crackerIcon = `<span class="oshi-event-icon ${isDarkIcon ? 'is-dark' : ''}"><svg class="oshi-event-svg icon-gold" viewBox="0 0 24 24"><path d="M8 12L2 22l10-6"/><path d="M14 6l.01.01"/><path d="M10 2l.01.01"/><path d="M18 10l.01.01"/><path d="M22 6l.01.01"/><path d="M17 3l.01.01"/><path d="M11 7l.01.01"/><path d="M20 14l.01.01"/></svg></span>`;
 
-            let eventTypes = [];
+            let matchedEvents = []; // { label, icon }
             const escapedName = escapeHTML(oshi.name);
 
-            // Birthday Check
-            const bd = oshi.parsedBirthday;
-            if (bd && bd.month === month && bd.day === d) {
-                dayIcons.add('birthday');
-                eventTypes.push('誕生日');
+            // Memorial dates check
+            for (const md of oshi.parsedMemorialDates) {
+                if (!md.parsed) continue;
+                const { year: pYear, month: pMonth, day: pDay } = md.parsed;
+                if (pMonth !== month || pDay !== d) continue;
+                // is_annual=false かつ日付に年がある場合はその年のみ表示
+                if (!md.is_annual && pYear && pYear !== year) continue;
+
+                const typeInfo = (appSettings.event_types || []).find(t => t.id === md.type_id);
+                const icon = typeInfo?.icon || 'star';
+                const label = typeInfo?.label || md.type_id;
+                dayIcons.add(icon);
+                matchedEvents.push({ label, icon });
             }
 
-            // Anniversary Check
-            const dd = oshi.parsedDebutDate;
-            if (dd && dd.month === month && dd.day === d) {
-                dayIcons.add('anniversary');
-                eventTypes.push('記念日');
-            }
-
-            if (eventTypes.length > 0) {
-                const titleText = `${eventTypes.join('・')}: ${escapedName}`;
+            if (matchedEvents.length > 0) {
+                const titleText = `${matchedEvents.map(e => e.label).join('・')}: ${escapedName}`;
                 oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="${titleText}">${escapedName}</div>`);
-                
-                let iconsHtml = [];
-                if (eventTypes.includes('誕生日')) iconsHtml.push(cakeIcon);
-                if (eventTypes.includes('記念日')) iconsHtml.push(crackerIcon);
-                
-                oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">${iconsHtml.join(' ')} ${escapedName} ${eventTypes.join('・')}</div>`);
+
+                const iconsHtml = matchedEvents.map(e => buildEventIcon(e.icon, isDarkIcon, 'popup'));
+                oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">${iconsHtml.join(' ')} ${escapedName} ${matchedEvents.map(e => e.label).join('・')}</div>`);
             }
         });
 
@@ -884,11 +907,8 @@ function renderCalendar(container, year, month) {
         let html = `<div class="day-header"><span class="day-number">${d}</span>`;
         if (dayIcons.size > 0) {
             html += `<div class="day-icons">`;
-            if (dayIcons.has('birthday')) {
-                html += `<span class="day-icon-badge"><svg class="day-icon-svg icon-pink" viewBox="0 0 24 24"><path d="M12 7v5"/><path d="M9 12h6v4H9z"/><path d="M5 16h14v4H5z"/><path d="M12 3a1 1 0 0 1 0 2 1 1 0 0 1 0-2z"/></svg></span>`;
-            }
-            if (dayIcons.has('anniversary')) {
-                html += `<span class="day-icon-badge"><svg class="day-icon-svg icon-gold" viewBox="0 0 24 24"><path d="M8 12L2 22l10-6"/><path d="M14 6l.01.01"/><path d="M10 2l.01.01"/><path d="M18 10l.01.01"/><path d="M22 6l.01.01"/><path d="M17 3l.01.01"/><path d="M11 7l.01.01"/><path d="M20 14l.01.01"/></svg></span>`;
+            for (const iconId of dayIcons) {
+                html += buildEventIcon(iconId, false, 'badge');
             }
             html += `</div>`;
         }
@@ -1016,15 +1036,11 @@ function renderOshiTable() {
         nameCell.textContent = oshi.name || '-';
         row.appendChild(nameCell);
 
-        // Birthday
-        const bdCell = document.createElement('td');
-        bdCell.textContent = oshi.birthday || '-';
-        row.appendChild(bdCell);
-
-        // Debut Date
-        const ddCell = document.createElement('td');
-        ddCell.textContent = oshi.debutDate || '-';
-        row.appendChild(ddCell);
+        // Memorial dates count
+        const datesCell = document.createElement('td');
+        const datesCount = (oshi.memorial_dates || []).length;
+        datesCell.textContent = datesCount > 0 ? `${datesCount}件` : '-';
+        row.appendChild(datesCell);
 
         // Source
         const srcCell = document.createElement('td');
@@ -1063,6 +1079,79 @@ function renderOshiTable() {
     });
 }
 
+// --- Oshi Edit Form Helpers ---
+
+/** event_types からラベルを引く (見つからなければ type_id をそのまま返す) */
+function getLabelForTypeId(typeId) {
+    const found = (appSettings.event_types || []).find(t => t.id === typeId);
+    return found ? found.label : typeId;
+}
+
+/** ラベルから type_id を引く (見つからなければ null) */
+function getTypeIdForLabel(label) {
+    const found = (appSettings.event_types || []).find(t => t.label === label);
+    return found ? found.id : null;
+}
+
+/** datalist に現在の event_types を反映する */
+function updateEventTypeDatalist() {
+    const dl = document.getElementById('eventTypeDatalist');
+    if (!dl) return;
+    dl.innerHTML = (appSettings.event_types || [])
+        .map(t => `<option value="${escapeHTML(t.label)}">`)
+        .join('');
+}
+
+/** 記念日行を1行追加する */
+function addMemorialDateRow(md = null) {
+    const list = document.getElementById('memorialDatesList');
+    if (!list) return;
+
+    const row = document.createElement('div');
+    row.className = 'memorial-date-row';
+
+    // タイプ入力 (datalist コンボボックス)
+    const typeInput = document.createElement('input');
+    typeInput.type = 'text';
+    typeInput.className = 'mdate-type';
+    typeInput.setAttribute('list', 'eventTypeDatalist');
+    typeInput.placeholder = 'タイプ (例: 誕生日)';
+    if (md) typeInput.value = getLabelForTypeId(md.type_id);
+
+    // 日付入力
+    const dateInput = document.createElement('input');
+    dateInput.type = 'text';
+    dateInput.className = 'mdate-date';
+    dateInput.placeholder = 'M/D または YYYY/M/D';
+    if (md) dateInput.value = md.date;
+
+    // 毎年チェックボックス
+    const annualLabel = document.createElement('label');
+    annualLabel.className = 'mdate-annual-label';
+    const annualCheck = document.createElement('input');
+    annualCheck.type = 'checkbox';
+    annualCheck.className = 'mdate-annual';
+    annualCheck.checked = md ? md.is_annual : true;
+    annualLabel.appendChild(annualCheck);
+    annualLabel.appendChild(document.createTextNode('毎年'));
+
+    // 日付変更時に毎年のデフォルト値を自動設定
+    dateInput.addEventListener('change', () => {
+        const hasYear = /^\d{4}/.test(dateInput.value.trim());
+        annualCheck.checked = !hasYear;
+    });
+
+    // 削除ボタン
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'mdate-delete';
+    deleteBtn.textContent = '×';
+    deleteBtn.addEventListener('click', () => row.remove());
+
+    row.append(typeInput, dateInput, annualLabel, deleteBtn);
+    list.appendChild(row);
+}
+
 // --- Oshi Edit Form ---
 
 /** カラーチップ・ピッカー・テキスト入力を一括同期する */
@@ -1086,10 +1175,15 @@ function openOshiEditForm(index = -1) {
     const titleEl = document.getElementById('oshiEditTitle');
     const indexEl = document.getElementById('oshiEditIndex');
     const nameEl = document.getElementById('oshiEditName');
-    const bdEl = document.getElementById('oshiEditBirthday');
-    const ddEl = document.getElementById('oshiEditDebutDay');
 
     indexEl.value = index;
+
+    // datalist を最新の event_types で更新
+    updateEventTypeDatalist();
+
+    // 記念日リストをリセット
+    const listEl = document.getElementById('memorialDatesList');
+    if (listEl) listEl.innerHTML = '';
 
     if (index >= 0 && appSettings.oshiList && appSettings.oshiList[index]) {
         // Edit mode
@@ -1097,15 +1191,12 @@ function openOshiEditForm(index = -1) {
         titleEl.textContent = '編集';
         nameEl.value = oshi.name || '';
         syncOshiColorUI(oshi.color || '#3b82f6');
-        bdEl.value = oshi.birthday || '';
-        ddEl.value = oshi.debutDate || '';
+        (oshi.memorial_dates || []).forEach(md => addMemorialDateRow(md));
     } else {
         // Add mode
         titleEl.textContent = '新規追加';
         nameEl.value = '';
         syncOshiColorUI('#3b82f6');
-        bdEl.value = '';
-        ddEl.value = '';
     }
 
     document.getElementById('oshiEditModal').showModal();
@@ -1115,21 +1206,36 @@ function saveOshiFromForm() {
     const index = parseInt(document.getElementById('oshiEditIndex').value);
     const name = document.getElementById('oshiEditName').value.trim();
     const color = normalizeHex(document.getElementById('oshiEditColor').value) || '#3b82f6';
-    const birthday = document.getElementById('oshiEditBirthday').value;
-    const debutDate = document.getElementById('oshiEditDebutDay').value;
 
     if (!name) {
         alert('名前を入力してください');
         return;
     }
 
+    // 記念日リストを収集
+    if (!appSettings.event_types) appSettings.event_types = [...DEFAULT_SETTINGS.event_types];
+    const memorial_dates = [];
+    document.querySelectorAll('#memorialDatesList .memorial-date-row').forEach(row => {
+        const typeLabel = row.querySelector('.mdate-type').value.trim();
+        const date = row.querySelector('.mdate-date').value.trim();
+        const is_annual = row.querySelector('.mdate-annual').checked;
+        if (!typeLabel || !date) return; // 空行はスキップ
+
+        // 既存タイプを検索、なければ新規作成（star アイコンで登録）
+        let typeId = getTypeIdForLabel(typeLabel);
+        if (!typeId) {
+            typeId = 'ev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+            appSettings.event_types.push({ id: typeId, label: typeLabel, icon: 'star' });
+        }
+        memorial_dates.push({ type_id: typeId, date, is_annual });
+    });
+
     if (!appSettings.oshiList) appSettings.oshiList = [];
 
     const oshiData = {
         name,
         color,
-        birthday,
-        debutDate,
+        memorial_dates,
         source: index >= 0 ? (appSettings.oshiList[index]?.source || 'manual') : 'manual'
     };
 
@@ -1205,14 +1311,20 @@ function handleOshiImportFromModal(files) {
                     return;
                 }
 
-                const rawItems = data.map(item => ({
-                    name: item['メンバー名'] || item.name || '',
-                    birthday: item['誕生日'] || item.birthday || '',
-                    debutDate: item['周年記念日'] || item.debutDate || '',
-                    color: item['公式カラー (Hex/系統)'] || item.color || '',
-                    fanArtTag: item['ファンアートタグ'] || item.fanArtTag || '',
-                    source: file.name
-                })).filter(item => item.name); // Filter out items without names
+                const rawItems = data.map(item => {
+                    const birthday  = item['誕生日']     || item.birthday  || '';
+                    const debutDate = item['周年記念日'] || item.debutDate || '';
+                    const memorial_dates = [];
+                    if (birthday)  memorial_dates.push({ type_id: 'bday',  date: birthday,  is_annual: true });
+                    if (debutDate) memorial_dates.push({ type_id: 'debut', date: debutDate, is_annual: true });
+                    return {
+                        name: item['メンバー名'] || item.name || '',
+                        color: item['公式カラー (Hex/系統)'] || item.color || '',
+                        memorial_dates,
+                        fanArtTag: item['ファンアートタグ'] || item.fanArtTag || '',
+                        source: file.name
+                    };
+                }).filter(item => item.name); // Filter out items without names
 
                 if (rawItems.length === 0) {
                     errorCount++;
@@ -1514,17 +1626,40 @@ function validateImportedSettings(data) {
     if (Array.isArray(data.oshiList)) {
         validated.oshiList = data.oshiList.map(item => {
             if (!item || typeof item !== 'object') return null;
+            // memorial_dates の検証
+            let memorial_dates = [];
+            if (Array.isArray(item.memorial_dates)) {
+                memorial_dates = item.memorial_dates
+                    .filter(md => md && typeof md.type_id === 'string' && typeof md.date === 'string')
+                    .map(md => ({
+                        type_id: md.type_id,
+                        date: md.date,
+                        is_annual: typeof md.is_annual === 'boolean' ? md.is_annual : true
+                    }));
+            } else {
+                // 旧形式からの変換
+                if (typeof item.birthday === 'string' && item.birthday)
+                    memorial_dates.push({ type_id: 'bday', date: item.birthday, is_annual: true });
+                if (typeof item.debutDate === 'string' && item.debutDate)
+                    memorial_dates.push({ type_id: 'debut', date: item.debutDate, is_annual: true });
+            }
             return {
                 name: typeof item.name === 'string' ? item.name : 'Unknown',
-                birthday: typeof item.birthday === 'string' ? item.birthday : '',
-                debutDate: typeof item.debutDate === 'string' ? item.debutDate : '',
                 color: typeof item.color === 'string' ? item.color : '#3b82f6',
+                memorial_dates,
                 fanArtTag: typeof item.fanArtTag === 'string' ? item.fanArtTag : '',
                 source: typeof item.source === 'string' ? item.source : ''
             };
         }).filter(item => item !== null);
     } else {
         return null; // Reject if oshiList is missing or not an array
+    }
+
+    // Validate event_types
+    if (Array.isArray(data.event_types)) {
+        validated.event_types = data.event_types
+            .filter(t => t && typeof t.id === 'string' && typeof t.label === 'string')
+            .map(t => ({ id: t.id, label: t.label, icon: typeof t.icon === 'string' ? t.icon : 'star' }));
     }
 
     return validated;
@@ -1991,6 +2126,7 @@ function initSettings() {
     document.getElementById('btnOshiEditCancel').addEventListener('click', () => {
         document.getElementById('oshiEditModal').close();
     });
+    document.getElementById('btnAddMemorialDate').addEventListener('click', () => addMemorialDateRow());
 
     // カラーチップ ↔ Hexテキスト ↔ ネイティブピッカー 同期
     const hexInput = document.getElementById('oshiEditColor');
@@ -2142,6 +2278,24 @@ function loadSettings() {
             delete appSettings.oshiBirthday;
             delete appSettings.oshiDebutDay;
             delete appSettings.oshiColor;
+
+            // Migration: oshi の旧 birthday/debutDate を memorial_dates へ変換
+            if (appSettings.oshiList) {
+                appSettings.oshiList = appSettings.oshiList.map(oshi => {
+                    if (oshi.birthday !== undefined || oshi.debutDate !== undefined) {
+                        const memorial_dates = oshi.memorial_dates ? [...oshi.memorial_dates] : [];
+                        if (oshi.birthday) memorial_dates.unshift({ type_id: 'bday',  date: oshi.birthday,  is_annual: true });
+                        if (oshi.debutDate) memorial_dates.push({ type_id: 'debut', date: oshi.debutDate, is_annual: true });
+                        const { birthday, debutDate, ...rest } = oshi;
+                        return { ...rest, memorial_dates };
+                    }
+                    return oshi;
+                });
+            }
+            // event_types がない（古いデータ）場合はデフォルトをマージ
+            if (!appSettings.event_types || appSettings.event_types.length === 0) {
+                appSettings.event_types = [...DEFAULT_SETTINGS.event_types];
+            }
 
             // Fallback for removed 'none' mode
             if (appSettings.mediaMode === 'none') {
