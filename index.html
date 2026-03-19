@@ -398,7 +398,13 @@
             </div>
             <div class="setting-group">
                 <label>推しカラー</label>
-                <input type="color" id="oshiEditColor" value="#3b82f6">
+                <div class="color-input-group">
+                    <span class="color-chip" id="oshiColorChip">
+                        <input type="color" id="oshiColorPicker" tabindex="-1" aria-label="カラーピッカーを開く">
+                    </span>
+                    <input type="text" id="oshiEditColor" class="hex-input" value="#3b82f6"
+                        placeholder="#rrggbb" maxlength="7" spellcheck="false" autocomplete="off">
+                </div>
             </div>
             <div class="setting-group">
                 <label>誕生日 <span class="help-text">(例: 1/15 または 2000/1/15)</span></label>
