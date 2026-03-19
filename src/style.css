@@ -25,8 +25,11 @@
     --font-jp: 'Noto Sans JP', sans-serif;
     --font-en: 'Outfit', sans-serif;
     --font-rounded: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
-    --icon-pink: #e07090;
-    --icon-gold: #b8860b;
+    --icon-pink:   #e07090;
+    --icon-gold:   #b8860b;
+    --icon-red:    #e53e3e;
+    --icon-green:  #38a169;
+    --icon-yellow: #d69e2e;
 
     /* Z-Index Hierarchy */
     --z-base: 1;
@@ -1025,8 +1028,11 @@ body {
     stroke: #c24065;
 }
 
-.icon-pink { stroke: var(--icon-pink); }
-.icon-gold { stroke: var(--icon-gold); }
+.icon-pink   { stroke: var(--icon-pink); }
+.icon-gold   { stroke: var(--icon-gold); }
+.icon-red    { stroke: var(--icon-red); }
+.icon-green  { stroke: var(--icon-green); }
+.icon-yellow { stroke: var(--icon-yellow); }
 
 /* Holiday / Weekend Styling */
 .day-cell.is-sunday .day-number,
@@ -3135,4 +3141,183 @@ body.is-immersive.show-overlay .calendar-month:hover {
 
 .btn-add-row:hover {
     background: rgba(var(--accent-color-rgb, 59, 130, 246), 0.08);
+}
+
+/* ── アイコン選択ボタン ────────────────────────────── */
+.mdate-icon-btn {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mdate-icon-btn:hover {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.mdate-icon-svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+/* ── アイコンピッカーポップアップ ─────────────────── */
+.icon-picker-popup {
+    position: fixed;
+    display: none;
+    flex-wrap: wrap;
+    gap: 4px;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+    padding: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    width: 172px;
+}
+
+.icon-picker-popup.is-open {
+    display: flex;
+}
+
+.icon-chip {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.03);
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.1s, border-color 0.1s;
+}
+
+.icon-chip:hover {
+    background: rgba(0, 0, 0, 0.07);
+}
+
+.icon-chip.is-selected {
+    border-color: var(--accent-color);
+    background: rgba(var(--accent-color-rgb, 59, 130, 246), 0.08);
+}
+
+.icon-chip-svg {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+/* ── イベントタイプ管理 ───────────────────────────── */
+.event-type-manager {
+    margin: 12px 0 4px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.event-type-manager > summary {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(0, 0, 0, 0.02);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+}
+
+.event-type-manager > summary::before {
+    content: '▶';
+    font-size: 0.7em;
+    transition: transform 0.15s;
+}
+
+.event-type-manager[open] > summary::before {
+    transform: rotate(90deg);
+}
+
+.event-type-manager > summary::-webkit-details-marker { display: none; }
+
+#eventTypeManagerList {
+    padding: 6px 8px;
+}
+
+.event-type-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 4px;
+    border-radius: 4px;
+}
+
+.event-type-row:hover {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.et-icon {
+    display: flex;
+    align-items: center;
+}
+
+.et-icon-svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+.et-label {
+    flex: 1;
+    font-size: 0.9em;
+}
+
+.et-builtin {
+    font-size: 0.75em;
+    color: var(--text-secondary);
+    background: rgba(0, 0, 0, 0.06);
+    padding: 1px 6px;
+    border-radius: 10px;
+}
+
+.et-delete {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8em;
+    color: var(--text-secondary);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.et-delete:hover {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+}
+
+.et-empty {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 8px;
+    margin: 0;
 }
