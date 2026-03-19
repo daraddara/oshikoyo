@@ -1230,13 +1230,47 @@ body {
     resize: vertical;
 }
 
-.setting-group input[type="color"] {
-    width: 100%;
-    height: 40px;
-    padding: 2px;
-    border-radius: 8px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+.color-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.color-chip {
+    position: relative;
+    display: inline-flex;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    flex-shrink: 0;
     cursor: pointer;
+    background: #3b82f6;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    transition: box-shadow 0.2s;
+}
+
+.color-chip:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.color-chip input[type="color"] {
+    position: absolute;
+    inset: -4px;
+    width: calc(100% + 8px);
+    height: calc(100% + 8px);
+    opacity: 0;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+}
+
+.hex-input {
+    flex: 1;
+    font-family: 'Courier New', Courier, monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .radio-group {
@@ -1802,13 +1836,47 @@ body {
     resize: vertical;
 }
 
-.setting-group input[type="color"] {
-    width: 100%;
-    height: 40px;
-    padding: 2px;
-    border-radius: 8px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+.color-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.color-chip {
+    position: relative;
+    display: inline-flex;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    flex-shrink: 0;
     cursor: pointer;
+    background: #3b82f6;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    transition: box-shadow 0.2s;
+}
+
+.color-chip:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.color-chip input[type="color"] {
+    position: absolute;
+    inset: -4px;
+    width: calc(100% + 8px);
+    height: calc(100% + 8px);
+    opacity: 0;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+}
+
+.hex-input {
+    flex: 1;
+    font-family: 'Courier New', Courier, monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .radio-group {
