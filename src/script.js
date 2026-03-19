@@ -1229,10 +1229,25 @@ function addMemorialDateRow(md = null) {
     typeInput.placeholder = 'タイプ (例: 誕生日)';
     if (md) typeInput.value = getLabelForTypeId(md.type_id);
 
+    // フォーカス時に値をクリアして全オプションを表示（datalist は現在値でフィルタするため）
+    typeInput.addEventListener('focus', () => {
+        typeInput.dataset.prevValue = typeInput.value;
+        typeInput.value = '';
+    });
+
     // タイプが変わったらアイコンを自動更新
     typeInput.addEventListener('change', () => {
+        delete typeInput.dataset.prevValue;
         const typeId = getTypeIdForLabel(typeInput.value.trim());
         if (typeId) updateIconUI(getIconForTypeId(typeId));
+    });
+
+    // フォーカスアウト時、何も選ばなかった場合は元の値に戻す
+    typeInput.addEventListener('blur', () => {
+        if ('prevValue' in typeInput.dataset && !typeInput.value.trim()) {
+            typeInput.value = typeInput.dataset.prevValue;
+            delete typeInput.dataset.prevValue;
+        }
     });
 
     // 日付入力
