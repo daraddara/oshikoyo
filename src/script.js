@@ -2764,18 +2764,40 @@ function updateLayoutToggleUI() {
     if (!layoutIcon) return;
 
     if (appSettings.layoutDirection === 'row') {
-        // 現在：横並び -> 次のクリックで「縦並び」を想起させるアイコン（回転、または向きが異なる長方形）
+        // 現在：横並び -> 次のクリックで「縦並び」を想起させるアイコン
         layoutIcon.innerHTML = `
-            <rect x="3" y="5" width="18" height="6" rx="1.5" fill="currentColor" fill-opacity="0.2"></rect>
-            <rect x="3" y="13" width="18" height="6" rx="1.5" fill="currentColor"></rect>
-            <path d="M12 2v20" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2" opacity="0.3"></path>
+            <rect x="1.5" y="1.5" width="21" height="9" rx="1.5"/>
+            <rect x="1.5" y="1.5" width="21" height="3.5" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+            <line x1="1.5" y1="5" x2="22.5" y2="5"/>
+            <line x1="6.75" y1="5" x2="6.75" y2="10.5" stroke-width="0.7"/>
+            <line x1="12" y1="5" x2="12" y2="10.5" stroke-width="0.7"/>
+            <line x1="17.25" y1="5" x2="17.25" y2="10.5" stroke-width="0.7"/>
+            <line x1="1.5" y1="7.75" x2="22.5" y2="7.75" stroke-width="0.7"/>
+            <rect x="1.5" y="13.5" width="21" height="9" rx="1.5"/>
+            <rect x="1.5" y="13.5" width="21" height="3.5" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+            <line x1="1.5" y1="17" x2="22.5" y2="17"/>
+            <line x1="6.75" y1="17" x2="6.75" y2="22.5" stroke-width="0.7"/>
+            <line x1="12" y1="17" x2="12" y2="22.5" stroke-width="0.7"/>
+            <line x1="17.25" y1="17" x2="17.25" y2="22.5" stroke-width="0.7"/>
+            <line x1="1.5" y1="19.75" x2="22.5" y2="19.75" stroke-width="0.7"/>
         `;
     } else {
         // 現在：縦並び -> 次のクリックで「横並び」を想起させるアイコン
         layoutIcon.innerHTML = `
-            <rect x="5" y="3" width="6" height="18" rx="1.5" fill="currentColor" fill-opacity="0.2"></rect>
-            <rect x="13" y="3" width="6" height="18" rx="1.5" fill="currentColor"></rect>
-            <path d="M2 12h20" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2" opacity="0.3"></path>
+            <rect x="1" y="3.5" width="10" height="17" rx="1.5"/>
+            <rect x="1" y="3.5" width="10" height="4" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+            <line x1="1" y1="7.5" x2="11" y2="7.5"/>
+            <line x1="4.33" y1="7.5" x2="4.33" y2="20.5" stroke-width="0.7"/>
+            <line x1="7.67" y1="7.5" x2="7.67" y2="20.5" stroke-width="0.7"/>
+            <line x1="1" y1="11.5" x2="11" y2="11.5" stroke-width="0.7"/>
+            <line x1="1" y1="15.5" x2="11" y2="15.5" stroke-width="0.7"/>
+            <rect x="13" y="3.5" width="10" height="17" rx="1.5"/>
+            <rect x="13" y="3.5" width="10" height="4" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+            <line x1="13" y1="7.5" x2="23" y2="7.5"/>
+            <line x1="16.33" y1="7.5" x2="16.33" y2="20.5" stroke-width="0.7"/>
+            <line x1="19.67" y1="7.5" x2="19.67" y2="20.5" stroke-width="0.7"/>
+            <line x1="13" y1="11.5" x2="23" y2="11.5" stroke-width="0.7"/>
+            <line x1="13" y1="15.5" x2="23" y2="15.5" stroke-width="0.7"/>
         `;
     }
 }
