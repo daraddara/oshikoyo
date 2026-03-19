@@ -368,7 +368,6 @@
                         <tr>
                             <th>カラー</th>
                             <th>名前</th>
-                            <th>誕生日</th>
                             <th>記念日</th>
                             <th>ソース</th>
                             <th>操作</th>
@@ -407,12 +406,11 @@
                 </div>
             </div>
             <div class="setting-group">
-                <label>誕生日 <span class="help-text">(例: 1/15 または 2000/1/15)</span></label>
-                <input type="text" id="oshiEditBirthday" placeholder="M/D または YYYY/M/D">
-            </div>
-            <div class="setting-group">
-                <label>記念日 <span class="help-text">(例: 4/1 または 2020/4/1)</span></label>
-                <input type="text" id="oshiEditDebutDay" placeholder="M/D または YYYY/M/D">
+                <label>記念日・誕生日</label>
+                <div id="memorialDatesList"></div>
+                <button type="button" id="btnAddMemorialDate" class="btn-add-row">＋ 追加</button>
+                <datalist id="eventTypeDatalist"></datalist>
+                <p class="help-text" style="margin-top:4px">タイプ欄は既存から選ぶか新しい名前を入力。日付: M/D（毎年）または YYYY/M/D</p>
             </div>
             <div class="form-actions">
                 <button type="button" id="btnOshiEditCancel" class="btn-cancel">キャンセル</button>
