@@ -759,23 +759,35 @@ function hidePopup() {
     if (popup) popup.style.display = 'none';
 }
 
-// SVGパスマップ
+// SVGパスマップ (Lucide スタイル)
 const EVENT_ICON_PATHS = {
-    cake:  `<path d="M12 7v5"/><path d="M9 12h6v4H9z"/><path d="M5 16h14v4H5z"/><path d="M12 3a1 1 0 0 1 0 2 1 1 0 0 1 0-2z"/>`,
-    star:  `<polygon points="12 2 15.09 8.26 22 9.27 17 14.24 18.18 21.02 12 17.77 5.82 21.02 7 14.24 2 9.27 8.91 8.26 12 2"/>`,
-    heart: `<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>`,
-    gift:  `<rect x="3" y="8" width="18" height="14" rx="2"/><path d="M21 12H3"/><path d="M12 8V22"/><path d="M8 8c0-2 1.5-4 4-4s4 2 4 4"/>`,
-    bell:  `<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>`,
-    crown: `<path d="M2 20h20"/><path d="m3 9 4 4 5-8 5 8 4-4v11H3V9z"/>`,
+    cake:   `<path d="M12 7v5"/><path d="M9 12h6v4H9z"/><path d="M5 16h14v4H5z"/><path d="M12 3a1 1 0 0 1 0 2 1 1 0 0 1 0-2z"/>`,
+    star:   `<polygon points="12 2 15.09 8.26 22 9.27 17 14.24 18.18 21.02 12 17.77 5.82 21.02 7 14.24 2 9.27 8.91 8.26 12 2"/>`,
+    music:  `<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>`,
+    mic:    `<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/>`,
+    camera: `<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>`,
+    heart:  `<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>`,
+    trophy: `<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>`,
+    gift:   `<rect x="3" y="8" width="18" height="14" rx="2"/><path d="M21 12H3"/><path d="M12 8V22"/><path d="M8 8c0-2 1.5-4 4-4s4 2 4 4"/>`,
+    tv:     `<rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/>`,
+    flag:   `<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>`,
+    flower: `<path d="M12 5C12 5 6 9 6 14a6 6 0 0 0 12 0c0-5-6-9-6-9z"/><path d="M12 5V22"/><path d="M12 9C12 9 18 5.5 21 7c-2.5 4.33-7.5 5.5-9 2"/><path d="M12 9C12 9 6 5.5 3 7c2.5 4.33 7.5 5.5 9 2"/>`,
+    zap:    `<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>`,
 };
 
 const EVENT_ICON_COLORS = {
-    cake:  'icon-pink',
-    star:  'icon-gold',
-    heart: 'icon-red',
-    gift:  'icon-green',
-    bell:  'icon-yellow',
-    crown: 'icon-gold',
+    cake:   'icon-pink',
+    star:   'icon-gold',
+    music:  'icon-purple',
+    mic:    'icon-purple',
+    camera: 'icon-blue',
+    heart:  'icon-red',
+    trophy: 'icon-gold',
+    gift:   'icon-green',
+    tv:     'icon-blue',
+    flag:   'icon-red',
+    flower: 'icon-pink',
+    zap:    'icon-yellow',
 };
 
 /** アイコンIDからSVG HTMLを返す */

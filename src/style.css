@@ -30,6 +30,8 @@
     --icon-red:    #e53e3e;
     --icon-green:  #38a169;
     --icon-yellow: #d69e2e;
+    --icon-purple: #805ad5;
+    --icon-blue:   #3182ce;
 
     /* Z-Index Hierarchy */
     --z-base: 1;
@@ -1033,6 +1035,8 @@ body {
 .icon-red    { stroke: var(--icon-red); }
 .icon-green  { stroke: var(--icon-green); }
 .icon-yellow { stroke: var(--icon-yellow); }
+.icon-purple { stroke: var(--icon-purple); }
+.icon-blue   { stroke: var(--icon-blue); }
 
 /* Holiday / Weekend Styling */
 .day-cell.is-sunday .day-number,
@@ -3183,7 +3187,7 @@ body.is-immersive.show-overlay .calendar-month:hover {
     padding: 8px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     z-index: 9999;
-    width: 172px;
+    width: 176px; /* 4列: 4×36 + 3×4 + 2×8 = 176px */
 }
 
 .icon-picker-popup.is-open {
