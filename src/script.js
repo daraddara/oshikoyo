@@ -1064,11 +1064,28 @@ function renderOshiTable() {
 }
 
 // --- Oshi Edit Form ---
+
+/** カラーチップ・ピッカー・テキスト入力を一括同期する */
+function syncOshiColorUI(hex) {
+    const textEl = document.getElementById('oshiEditColor');
+    const chipEl = document.getElementById('oshiColorChip');
+    const pickerEl = document.getElementById('oshiColorPicker');
+    if (textEl) textEl.value = hex;
+    if (chipEl) chipEl.style.backgroundColor = hex;
+    if (pickerEl) pickerEl.value = hex;
+}
+
+/** '#' 有無を許容して #rrggbb 形式を返す。不正な場合は null */
+function normalizeHex(input) {
+    let val = input.trim();
+    if (!val.startsWith('#')) val = '#' + val;
+    return /^#[0-9a-fA-F]{6}$/.test(val) ? val.toLowerCase() : null;
+}
+
 function openOshiEditForm(index = -1) {
     const titleEl = document.getElementById('oshiEditTitle');
     const indexEl = document.getElementById('oshiEditIndex');
     const nameEl = document.getElementById('oshiEditName');
-    const colorEl = document.getElementById('oshiEditColor');
     const bdEl = document.getElementById('oshiEditBirthday');
     const ddEl = document.getElementById('oshiEditDebutDay');
 
@@ -1079,14 +1096,14 @@ function openOshiEditForm(index = -1) {
         const oshi = appSettings.oshiList[index];
         titleEl.textContent = '編集';
         nameEl.value = oshi.name || '';
-        colorEl.value = oshi.color || '#3b82f6';
+        syncOshiColorUI(oshi.color || '#3b82f6');
         bdEl.value = oshi.birthday || '';
         ddEl.value = oshi.debutDate || '';
     } else {
         // Add mode
         titleEl.textContent = '新規追加';
         nameEl.value = '';
-        colorEl.value = '#3b82f6';
+        syncOshiColorUI('#3b82f6');
         bdEl.value = '';
         ddEl.value = '';
     }
@@ -1097,7 +1114,7 @@ function openOshiEditForm(index = -1) {
 function saveOshiFromForm() {
     const index = parseInt(document.getElementById('oshiEditIndex').value);
     const name = document.getElementById('oshiEditName').value.trim();
-    const color = document.getElementById('oshiEditColor').value;
+    const color = normalizeHex(document.getElementById('oshiEditColor').value) || '#3b82f6';
     const birthday = document.getElementById('oshiEditBirthday').value;
     const debutDate = document.getElementById('oshiEditDebutDay').value;
 
@@ -1974,6 +1991,28 @@ function initSettings() {
     document.getElementById('btnOshiEditCancel').addEventListener('click', () => {
         document.getElementById('oshiEditModal').close();
     });
+
+    // カラーチップ ↔ Hexテキスト ↔ ネイティブピッカー 同期
+    const hexInput = document.getElementById('oshiEditColor');
+    const colorPicker = document.getElementById('oshiColorPicker');
+    const colorChip = document.getElementById('oshiColorChip');
+    if (hexInput && colorPicker && colorChip) {
+        // テキスト入力 → チップ・ピッカー更新
+        hexInput.addEventListener('input', () => {
+            const hex = normalizeHex(hexInput.value);
+            if (hex) {
+                colorChip.style.backgroundColor = hex;
+                colorPicker.value = hex;
+                hexInput.style.removeProperty('color');
+            } else {
+                hexInput.style.color = 'var(--danger, #ef4444)';
+            }
+        });
+        // ピッカー選択 → テキスト・チップ更新
+        colorPicker.addEventListener('input', () => {
+            syncOshiColorUI(colorPicker.value);
+        });
+    }
 
     // --- New Media & Data Handlers ---
 
