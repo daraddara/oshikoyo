@@ -2529,6 +2529,7 @@ function setupMiniCalendarInteractions() {
     calendarSection.dataset.interactionsSetup = 'true';
 
     let isDragging = false;
+    let hasDragged = false; // mousedown後に実際に移動が発生したかどうか
     let startX, startY, initialX, initialY;
 
     // Handle drag
@@ -2539,6 +2540,7 @@ function setupMiniCalendarInteractions() {
         if (e.target.closest('button') || e.target.tagName.toLowerCase() === 'input') return;
 
         isDragging = true;
+        hasDragged = false;
         startX = e.clientX;
         startY = e.clientY;
 
@@ -2556,6 +2558,10 @@ function setupMiniCalendarInteractions() {
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
 
+        if (!hasDragged && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+            hasDragged = true;
+        }
+
         calendarSection.style.left = `${initialX + dx}px`;
         calendarSection.style.top = `${initialY + dy}px`;
         calendarSection.style.bottom = 'auto'; // Disable bottom/right to rely on top/left
@@ -2567,15 +2573,7 @@ function setupMiniCalendarInteractions() {
         isDragging = false;
         calendarSection.classList.remove('is-dragging');
 
-        // Check if it was a click (not a drag)
-        const dx = Math.abs(e.clientX - startX);
-        const dy = Math.abs(e.clientY - startY);
-
-        if (dx < 5 && dy < 5) {
-            // It was a click, trigger overlay
-            document.body.classList.add('show-overlay');
-            return;
-        }
+        if (!hasDragged) return; // クリックの場合はsnap不要、clickイベントに任せる
 
         // Snap logic
         const rect = calendarSection.getBoundingClientRect();
@@ -2603,10 +2601,14 @@ function setupMiniCalendarInteractions() {
         }
     });
 
-    // Also handle click if no drag occurred (for mobile or quick clicks)
+    // クリック（ドラッグなし）の場合のみオーバーレイ表示
     calendarSection.addEventListener('click', (e) => {
-        if (appSettings.immersiveMode && !document.body.classList.contains('show-overlay') && !isDragging) {
-            // Extra safety to avoid triggering if it was just dragged
+        if (hasDragged) {
+            // ドラッグ後のclickイベントを無視してフラグをリセット
+            hasDragged = false;
+            return;
+        }
+        if (appSettings.immersiveMode && !document.body.classList.contains('show-overlay')) {
             document.body.classList.add('show-overlay');
         }
     });
