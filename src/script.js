@@ -939,7 +939,9 @@ function updateView() {
     wrapper.innerHTML = ''; // Clear current views
 
     // Apply Layout Class
-    wrapper.className = `calendar-wrapper direction-${appSettings.layoutDirection}`;
+    // 1ヶ月表示時は方向設定を無視してcolumnで統一（設定値は保持）
+    const effectiveDirection = appSettings.monthCount === 1 ? 'column' : appSettings.layoutDirection;
+    wrapper.className = `calendar-wrapper direction-${effectiveDirection}`;
 
     // Apply Media Position Class to Main Layout
     const mainLayout = document.getElementById('mainLayout');
@@ -2655,6 +2657,12 @@ function updateToggleMonthsUI() {
                 <line x1="8" y1="20.5" x2="23" y2="20.5" stroke-width="0.7"/>
             </svg>
         `;
+    }
+
+    // 1ヶ月表示時はレイアウト方向トグルを非表示
+    const layoutBtn = document.getElementById('btnToggleLayout');
+    if (layoutBtn) {
+        layoutBtn.style.display = appSettings.monthCount === 1 ? 'none' : '';
     }
 }
 
