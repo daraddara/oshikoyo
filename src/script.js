@@ -759,11 +759,43 @@ function hidePopup() {
     if (popup) popup.style.display = 'none';
 }
 
-// SVGパスマップ (Phase 1: cake / star のみ; Phase 2 で拡張予定)
+// SVGパスマップ (Lucide スタイル)
 const EVENT_ICON_PATHS = {
-    cake: `<path d="M12 7v5"/><path d="M9 12h6v4H9z"/><path d="M5 16h14v4H5z"/><path d="M12 3a1 1 0 0 1 0 2 1 1 0 0 1 0-2z"/>`,
-    star: `<polygon points="12 2 15.09 8.26 22 9.27 17 14.24 18.18 21.02 12 17.77 5.82 21.02 7 14.24 2 9.27 8.91 8.26 12 2" fill="currentColor"/>`,
+    cake:   `<path d="M12 7v5"/><path d="M9 12h6v4H9z"/><path d="M5 16h14v4H5z"/><path d="M12 3a1 1 0 0 1 0 2 1 1 0 0 1 0-2z"/>`,
+    star:   `<polygon points="12 2 15.09 8.26 22 9.27 17 14.24 18.18 21.02 12 17.77 5.82 21.02 7 14.24 2 9.27 8.91 8.26 12 2"/>`,
+    music:  `<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>`,
+    mic:    `<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/>`,
+    camera: `<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>`,
+    heart:  `<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>`,
+    trophy: `<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>`,
+    gift:   `<rect x="3" y="8" width="18" height="14" rx="2"/><path d="M21 12H3"/><path d="M12 8V22"/><path d="M8 8c0-2 1.5-4 4-4s4 2 4 4"/>`,
+    tv:     `<rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/>`,
+    flag:   `<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>`,
+    flower: `<path d="M12 5C12 5 6 9 6 14a6 6 0 0 0 12 0c0-5-6-9-6-9z"/><path d="M12 5V22"/><path d="M12 9C12 9 18 5.5 21 7c-2.5 4.33-7.5 5.5-9 2"/><path d="M12 9C12 9 6 5.5 3 7c2.5 4.33 7.5 5.5 9 2"/>`,
+    zap:    `<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>`,
 };
+
+const EVENT_ICON_COLORS = {
+    cake:   'icon-pink',
+    star:   'icon-gold',
+    music:  'icon-purple',
+    mic:    'icon-purple',
+    camera: 'icon-blue',
+    heart:  'icon-red',
+    trophy: 'icon-gold',
+    gift:   'icon-green',
+    tv:     'icon-blue',
+    flag:   'icon-red',
+    flower: 'icon-pink',
+    zap:    'icon-yellow',
+};
+
+/** アイコンIDからSVG HTMLを返す */
+function iconSVGHtml(iconId, svgClass) {
+    const paths = EVENT_ICON_PATHS[iconId] || EVENT_ICON_PATHS.star;
+    const color  = EVENT_ICON_COLORS[iconId] || 'icon-gold';
+    return `<svg class="${svgClass} ${color}" viewBox="0 0 24 24">${paths}</svg>`;
+}
 
 /**
  * @param {'cake'|'star'|string} iconId
@@ -771,12 +803,10 @@ const EVENT_ICON_PATHS = {
  * @param {'popup'|'badge'} context
  */
 function buildEventIcon(iconId, isDark, context) {
-    const paths = EVENT_ICON_PATHS[iconId] || EVENT_ICON_PATHS.star;
-    const colorClass = iconId === 'cake' ? 'icon-pink' : 'icon-gold';
     if (context === 'badge') {
-        return `<span class="day-icon-badge"><svg class="day-icon-svg ${colorClass}" viewBox="0 0 24 24">${paths}</svg></span>`;
+        return `<span class="day-icon-badge">${iconSVGHtml(iconId, 'day-icon-svg')}</span>`;
     }
-    return `<span class="oshi-event-icon ${isDark ? 'is-dark' : ''}"><svg class="oshi-event-svg ${colorClass}" viewBox="0 0 24 24">${paths}</svg></span>`;
+    return `<span class="oshi-event-icon ${isDark ? 'is-dark' : ''}">${iconSVGHtml(iconId, 'oshi-event-svg')}</span>`;
 }
 
 function renderCalendar(container, year, month) {
@@ -1003,6 +1033,7 @@ function renderOshiList() {
 
 function openOshiManager() {
     renderOshiTable();
+    renderEventTypeManager();
     document.getElementById('oshiManagementModal').showModal();
 }
 
@@ -1079,6 +1110,35 @@ function renderOshiTable() {
     });
 }
 
+/** イベントタイプ管理リストを描画 */
+function renderEventTypeManager() {
+    const list = document.getElementById('eventTypeManagerList');
+    if (!list) return;
+    const types = appSettings.event_types || [];
+    if (types.length === 0) {
+        list.innerHTML = '<p class="et-empty">タイプが登録されていません</p>';
+        return;
+    }
+    list.innerHTML = types.map(t => {
+        const isBuiltin = t.id === 'bday' || t.id === 'debut';
+        const svg = iconSVGHtml(t.icon || 'star', 'et-icon-svg');
+        const action = isBuiltin
+            ? '<span class="et-builtin">組込み</span>'
+            : `<button type="button" class="et-delete" data-type-id="${escapeHTML(t.id)}">削除</button>`;
+        return `<div class="event-type-row">${svg}<span class="et-label">${escapeHTML(t.label)}</span>${action}</div>`;
+    }).join('');
+    list.querySelectorAll('.et-delete').forEach(btn => {
+        btn.addEventListener('click', () => deleteEventType(btn.dataset.typeId));
+    });
+}
+
+/** カスタムイベントタイプを削除 */
+function deleteEventType(typeId) {
+    appSettings.event_types = (appSettings.event_types || []).filter(t => t.id !== typeId);
+    saveSettings();
+    renderEventTypeManager();
+}
+
 // --- Oshi Edit Form Helpers ---
 
 /** event_types からラベルを引く (見つからなければ type_id をそのまま返す) */
@@ -1091,6 +1151,12 @@ function getLabelForTypeId(typeId) {
 function getTypeIdForLabel(label) {
     const found = (appSettings.event_types || []).find(t => t.label === label);
     return found ? found.id : null;
+}
+
+/** typeId に対応するアイコンIDを取得 */
+function getIconForTypeId(typeId) {
+    const found = (appSettings.event_types || []).find(t => t.id === typeId);
+    return found ? (found.icon || 'star') : 'star';
 }
 
 /** datalist に現在の event_types を反映する */
@@ -1110,6 +1176,51 @@ function addMemorialDateRow(md = null) {
     const row = document.createElement('div');
     row.className = 'memorial-date-row';
 
+    // アイコン選択ボタン
+    const initIconId = md ? getIconForTypeId(md.type_id) : 'star';
+    row.dataset.iconId = initIconId;
+
+    const iconBtn = document.createElement('button');
+    iconBtn.type = 'button';
+    iconBtn.className = 'mdate-icon-btn';
+    iconBtn.title = 'アイコンを変更';
+    iconBtn.innerHTML = iconSVGHtml(initIconId, 'mdate-icon-svg');
+
+    // アイコンピッカー (position:fixed で配置)
+    const picker = document.createElement('div');
+    picker.className = 'icon-picker-popup';
+    picker.innerHTML = Object.keys(EVENT_ICON_PATHS).map(id =>
+        `<button type="button" class="icon-chip${id === initIconId ? ' is-selected' : ''}" data-icon-id="${id}" title="${id}">${iconSVGHtml(id, 'icon-chip-svg')}</button>`
+    ).join('');
+
+    const updateIconUI = (id) => {
+        row.dataset.iconId = id;
+        iconBtn.innerHTML = iconSVGHtml(id, 'mdate-icon-svg');
+        picker.querySelectorAll('.icon-chip').forEach(c =>
+            c.classList.toggle('is-selected', c.dataset.iconId === id)
+        );
+    };
+
+    iconBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.icon-picker-popup.is-open').forEach(p => {
+            if (p !== picker) p.classList.remove('is-open');
+        });
+        if (!picker.classList.contains('is-open')) {
+            const rect = iconBtn.getBoundingClientRect();
+            picker.style.top  = `${rect.bottom + 4}px`;
+            picker.style.left = `${rect.left}px`;
+        }
+        picker.classList.toggle('is-open');
+    });
+
+    picker.querySelectorAll('.icon-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            updateIconUI(chip.dataset.iconId);
+            picker.classList.remove('is-open');
+        });
+    });
+
     // タイプ入力 (datalist コンボボックス)
     const typeInput = document.createElement('input');
     typeInput.type = 'text';
@@ -1117,6 +1228,27 @@ function addMemorialDateRow(md = null) {
     typeInput.setAttribute('list', 'eventTypeDatalist');
     typeInput.placeholder = 'タイプ (例: 誕生日)';
     if (md) typeInput.value = getLabelForTypeId(md.type_id);
+
+    // フォーカス時に値をクリアして全オプションを表示（datalist は現在値でフィルタするため）
+    typeInput.addEventListener('focus', () => {
+        typeInput.dataset.prevValue = typeInput.value;
+        typeInput.value = '';
+    });
+
+    // タイプが変わったらアイコンを自動更新
+    typeInput.addEventListener('change', () => {
+        delete typeInput.dataset.prevValue;
+        const typeId = getTypeIdForLabel(typeInput.value.trim());
+        if (typeId) updateIconUI(getIconForTypeId(typeId));
+    });
+
+    // フォーカスアウト時、何も選ばなかった場合は元の値に戻す
+    typeInput.addEventListener('blur', () => {
+        if ('prevValue' in typeInput.dataset && !typeInput.value.trim()) {
+            typeInput.value = typeInput.dataset.prevValue;
+            delete typeInput.dataset.prevValue;
+        }
+    });
 
     // 日付入力
     const dateInput = document.createElement('input');
@@ -1148,7 +1280,7 @@ function addMemorialDateRow(md = null) {
     deleteBtn.textContent = '×';
     deleteBtn.addEventListener('click', () => row.remove());
 
-    row.append(typeInput, dateInput, annualLabel, deleteBtn);
+    row.append(iconBtn, picker, typeInput, dateInput, annualLabel, deleteBtn);
     list.appendChild(row);
 }
 
@@ -1221,11 +1353,16 @@ function saveOshiFromForm() {
         const is_annual = row.querySelector('.mdate-annual').checked;
         if (!typeLabel || !date) return; // 空行はスキップ
 
-        // 既存タイプを検索、なければ新規作成（star アイコンで登録）
+        const iconId = row.dataset.iconId || 'star';
         let typeId = getTypeIdForLabel(typeLabel);
         if (!typeId) {
+            // 新規タイプ作成
             typeId = 'ev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-            appSettings.event_types.push({ id: typeId, label: typeLabel, icon: 'star' });
+            appSettings.event_types.push({ id: typeId, label: typeLabel, icon: iconId });
+        } else {
+            // 既存タイプのアイコンが変更されていれば更新
+            const existing = appSettings.event_types.find(t => t.id === typeId);
+            if (existing && existing.icon !== iconId) existing.icon = iconId;
         }
         memorial_dates.push({ type_id: typeId, date, is_annual });
     });
@@ -2127,6 +2264,11 @@ function initSettings() {
         document.getElementById('oshiEditModal').close();
     });
     document.getElementById('btnAddMemorialDate').addEventListener('click', () => addMemorialDateRow());
+
+    // アイコンピッカーをクリック外で閉じる
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.icon-picker-popup.is-open').forEach(p => p.classList.remove('is-open'));
+    });
 
     // カラーチップ ↔ Hexテキスト ↔ ネイティブピッカー 同期
     const hexInput = document.getElementById('oshiEditColor');
