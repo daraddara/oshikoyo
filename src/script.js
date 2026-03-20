@@ -1764,14 +1764,35 @@ async function updateLocalMediaUI() {
 function openImageLightbox(src, onDelete = null, imgId = null) {
     const dlg = document.createElement('dialog');
     dlg.className = 'img-lightbox-dialog';
-    dlg.innerHTML = `
-        <div class="img-lightbox-inner">
-            <img src="${src}" alt="">
-            <button class="img-lightbox-close" title="閉じる">×</button>
-            ${onDelete ? `<button class="img-lightbox-delete" type="button" title="削除">
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-            </button>` : ''}
-        </div>`;
+
+    // Security: Create the image element safely to prevent XSS via src attribute injection
+    const imgLightboxInner = document.createElement('div');
+    imgLightboxInner.className = 'img-lightbox-inner';
+
+    const imgEl = document.createElement('img');
+    imgEl.src = src;
+    imgEl.alt = '';
+
+    imgLightboxInner.appendChild(imgEl);
+
+    // Add close button
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'img-lightbox-close';
+    closeBtn.title = '閉じる';
+    closeBtn.textContent = '×';
+    imgLightboxInner.appendChild(closeBtn);
+
+    if (onDelete) {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'img-lightbox-delete';
+        deleteBtn.type = 'button';
+        deleteBtn.title = '削除';
+        deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+        imgLightboxInner.appendChild(deleteBtn);
+    }
+
+    dlg.appendChild(imgLightboxInner);
+
     const close = () => { dlg.close(); dlg.remove(); };
     dlg.addEventListener('click', (e) => {
         if (e.target === dlg || e.target.classList.contains('img-lightbox-close')) close();
