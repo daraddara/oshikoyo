@@ -259,6 +259,7 @@ class LocalImageDB {
 
         // Pre-fetch all existing blobs to compare (might be heavy if many images, but necessary for dedup)
         // Optimization: Create a signature map (size + type) to reduce comparisons
+        // Optimization: Create a signature map (size + type) with cached hashes to prevent O(N^2) ArrayBuffer reads during deduplication comparisons.
         const existingSignatures = new Map();
         for (const img of existingImages) {
             const size = img.file.size;
@@ -267,10 +268,25 @@ class LocalImageDB {
             if (!existingSignatures.has(key)) {
                 existingSignatures.set(key, []);
             }
-            existingSignatures.get(key).push(img.file);
+            existingSignatures.get(key).push({ file: img.file, hash: null });
         }
 
         const filesToAdd = [];
+
+        // Simple fast hashing function for quick candidate filtering before full byte-by-byte comparison
+        const getBlobHash = async (obj, blob) => {
+            if (obj.hash !== null) return obj.hash;
+            const buf = await blob.arrayBuffer();
+            const view = new Uint8Array(buf);
+            let hash = 5381;
+            const len = view.length;
+            const step = Math.max(1, Math.floor(len / 100000)); // Sample max 100k bytes
+            for (let i = 0; i < len; i += step) {
+                hash = ((hash << 5) + hash) + view[i]; // hash * 33 + c
+            }
+            obj.hash = hash;
+            return hash;
+        };
 
         for (const item of jsonData.images) {
             const blob = base64ToBlob(item.data, item.type);
@@ -280,10 +296,17 @@ class LocalImageDB {
             const key = `${blob.size}-${blob.type}`;
             if (existingSignatures.has(key)) {
                 const candidates = existingSignatures.get(key);
+                const incomingObj = { file: blob, hash: null };
+                const incomingHash = await getBlobHash(incomingObj, blob);
+
                 for (const candidate of candidates) {
-                    if (await areBlobsEqual(candidate, blob)) {
-                        isDuplicate = true;
-                        break;
+                    const candidateHash = await getBlobHash(candidate, candidate.file);
+
+                    if (incomingHash === candidateHash) {
+                        if (await areBlobsEqual(candidate.file, blob)) {
+                            isDuplicate = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -303,7 +326,7 @@ class LocalImageDB {
 
             // Add to ephemeral signature list to prevent duplicates within the same import batch
             if (!existingSignatures.has(key)) existingSignatures.set(key, []);
-            existingSignatures.get(key).push(file);
+            existingSignatures.get(key).push({ file: file, hash: null });
 
             addedCount++;
         }
