@@ -1651,6 +1651,32 @@ async function updateLocalMediaUI() {
     }
 }
 
+function openImageLightbox(src, onDelete = null) {
+    const dlg = document.createElement('dialog');
+    dlg.className = 'img-lightbox-dialog';
+    dlg.innerHTML = `
+        <div class="img-lightbox-inner">
+            <img src="${src}" alt="">
+            <button class="img-lightbox-close" title="閉じる">×</button>
+            ${onDelete ? `<button class="img-lightbox-delete" type="button" title="削除">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            </button>` : ''}
+        </div>`;
+    const close = () => { dlg.close(); dlg.remove(); };
+    dlg.addEventListener('click', (e) => {
+        if (e.target === dlg || e.target.classList.contains('img-lightbox-close')) close();
+    });
+    if (onDelete) {
+        dlg.querySelector('.img-lightbox-delete').addEventListener('click', async () => {
+            close();
+            await onDelete();
+        });
+    }
+    dlg.addEventListener('close', () => dlg.remove());
+    document.body.appendChild(dlg);
+    dlg.showModal();
+}
+
 async function renderLocalImageManager() {
     const list = document.getElementById('localImageList');
     if (!list) return;
@@ -1684,35 +1710,28 @@ async function renderLocalImageManager() {
 
     allImages.forEach(item => {
         const div = document.createElement('div');
-        div.style.position = 'relative';
-        div.style.aspectRatio = '1/1';
-        div.style.border = '1px solid #ddd';
-        div.style.borderRadius = '4px';
-        div.style.overflow = 'hidden';
+        div.className = 'local-image-item';
 
         const img = document.createElement('img');
         img.src = URL.createObjectURL(item.file);
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
-
-        // Clean up URL object when removed (simplified here, ideally intersection observer)
+        img.alt = item.name || '';
+        img.style.cursor = 'zoom-in';
+        img.addEventListener('click', () => openImageLightbox(img.src, async () => {
+            await localImageDB.deleteImage(item.id);
+            URL.revokeObjectURL(img.src);
+            div.remove();
+            const list = document.getElementById('localImageList');
+            if (list && list.children.length === 0) {
+                list.innerHTML = '<p style="grid-column: 1/-1; color:#888;">画像がありません</p>';
+            }
+            await updateLocalImageCount();
+        }));
 
         const btnDel = document.createElement('button');
-        btnDel.type = 'button'; // Prevent form submission
-        btnDel.textContent = '×';
-        btnDel.style.position = 'absolute';
-        btnDel.style.top = '2px';
-        btnDel.style.right = '2px';
-        btnDel.style.background = 'rgba(0,0,0,0.5)';
-        btnDel.style.color = '#fff';
-        btnDel.style.border = 'none';
-        btnDel.style.borderRadius = '50%';
-        btnDel.style.width = '20px';
-        btnDel.style.height = '20px';
-        btnDel.style.fontSize = '14px';
-        btnDel.style.cursor = 'pointer';
+        btnDel.type = 'button';
+        btnDel.className = 'btn-img-delete';
         btnDel.title = '削除';
+        btnDel.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
 
         btnDel.onclick = async (e) => {
             // Check if overlay already exists
