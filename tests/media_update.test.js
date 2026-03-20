@@ -34,7 +34,7 @@ describe('updateMediaArea ロジック (メディア表示更新)', () => {
         });
 
         // グローバル変数の初期化
-        global.appSettings = { mediaMode: 'random', mediaPosition: 'right' };
+        global.appSettings = { mediaMode: 'random', mediaPosition: 'right', localImageOrder: [] };
         global.appState = { lastMediaKey: 'key1', mediaHistory: [], mediaHistoryIndex: -1 };
         global.localImageDB = {
             getAllKeys: vi.fn().mockResolvedValue(['key1', 'key2']),
@@ -43,6 +43,8 @@ describe('updateMediaArea ロジック (メディア表示更新)', () => {
         global.currentMediaObjectURL = null;
         global.adjustMediaLayout = vi.fn();
         global.saveState = vi.fn();
+        // パススルー（localImageOrder が空なので DB キー順をそのまま返す）
+        global.getOrderedImageKeys = (keys) => keys;
     });
 
     it('mode が "layout" の場合、画像取得は行わずレイアウト調整のみ実行されること', async () => {
