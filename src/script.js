@@ -916,7 +916,7 @@ function renderCalendar(container, year, month) {
 
                 const typeInfo = (appSettings.event_types || []).find(t => t.id === md.type_id);
                 const icon = typeInfo?.icon || 'star';
-                const label = typeInfo?.label || md.type_id;
+                const label = escapeHTML(typeInfo?.label || md.type_id);
                 dayIcons.add(icon);
                 matchedEvents.push({ label, icon });
             }
