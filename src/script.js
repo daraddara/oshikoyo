@@ -2279,21 +2279,11 @@ function initSettings() {
         // Initialize Local UI visibility
         updateLocalMediaUI();
 
-        // Use querySelector to find the details element we bound the event to
-        const details = document.querySelector('.local-image-manager');
-        if (details && (details.open || hasNewLocalImages)) {
-            // If open OR we have new images (dirty), force render
+        // 画像タブが現在アクティブな場合、または新規追加があった場合に一覧を再描画
+        const activePanel = document.querySelector('.settings-tab-panel.is-active');
+        if (hasNewLocalImages || (activePanel && activePanel.dataset.panel === 'media')) {
             renderLocalImageManager();
             hasNewLocalImages = false;
-
-            // If dirty, also ensure it is open so user sees it? 
-            // User query: "Once I collapse and open it is displayed".
-            // If it was open, we refresh. 
-            // If it was closed, we refresh (so when they open it is ready) or rely on toggle?
-            // "Toggle" event fires when opening. So if closed -> open, toggle handles it.
-            // The issue is ONLY when it IS open (or appears so).
-            // So (details.open || hasNewLocalImages) covers it. 
-            // If dirty, we render even if closed (pre-load) or if open (refresh).
         }
 
         // Render Oshi List
@@ -2309,6 +2299,7 @@ function initSettings() {
             document.querySelectorAll('.settings-tab-panel').forEach(p => p.classList.remove('is-active'));
             btn.classList.add('is-active');
             document.querySelector(`.settings-tab-panel[data-panel="${btn.dataset.tab}"]`).classList.add('is-active');
+            if (btn.dataset.tab === 'media') renderLocalImageManager();
         });
     });
 
@@ -2450,11 +2441,6 @@ function initSettings() {
             updateLocalMediaUI();
             renderLocalImageManager();
         }
-    });
-
-    // Toggle Details (Load images only when opened)
-    document.querySelector('.local-image-manager').addEventListener('toggle', (e) => {
-        if (e.target.open) renderLocalImageManager();
     });
 
     // Export Settings
