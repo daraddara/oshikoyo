@@ -2755,10 +2755,9 @@ details[open]>summary::before {
 .oshi-table-actions {
     text-align: right;
     white-space: nowrap;
-    width: 72px;
+    width: 36px;
 }
 
-.btn-icon-edit,
 .btn-icon-delete {
     display: inline-flex;
     align-items: center;
@@ -2773,18 +2772,8 @@ details[open]>summary::before {
     transition: opacity 0.15s, background 0.15s;
 }
 
-.oshi-table tbody tr:hover .btn-icon-edit,
 .oshi-table tbody tr:hover .btn-icon-delete {
     opacity: 1;
-}
-
-.btn-icon-edit {
-    color: var(--accent-color, #3b82f6);
-    margin-right: 2px;
-}
-
-.btn-icon-edit:hover {
-    background: rgba(59, 130, 246, 0.12);
 }
 
 .btn-icon-delete {
