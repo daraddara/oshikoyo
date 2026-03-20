@@ -2289,6 +2289,16 @@ function initSettings() {
         document.getElementById('settingsModal').showModal();
     });
 
+    // Settings tab switching
+    document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('is-active'));
+            document.querySelectorAll('.settings-tab-panel').forEach(p => p.classList.remove('is-active'));
+            btn.classList.add('is-active');
+            document.querySelector(`.settings-tab-panel[data-panel="${btn.dataset.tab}"]`).classList.add('is-active');
+        });
+    });
+
     // Close Modal
     document.getElementById('btnCancel').addEventListener('click', () => {
         document.getElementById('settingsModal').close();
