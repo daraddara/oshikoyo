@@ -2505,18 +2505,63 @@ details[open]>summary::before {
     border: 2px solid rgba(0, 0, 0, 0.1);
 }
 
-.oshi-table .btn-delete-row {
-    background: none;
-    border: none;
-    color: #ef4444;
-    cursor: pointer;
-    font-size: 0.85rem;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: background 0.2s;
+/* C. 記念日バッジ */
+.memorial-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
+    border-radius: 11px;
+    background: var(--accent-color, #3b82f6);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
 }
 
-.oshi-table .btn-delete-row:hover {
+/* A. アクション列 — ホバー時のみ表示 */
+.oshi-table-actions {
+    text-align: right;
+    white-space: nowrap;
+    width: 72px;
+}
+
+.btn-icon-edit,
+.btn-icon-delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 6px;
+    background: none;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s;
+}
+
+.oshi-table tbody tr:hover .btn-icon-edit,
+.oshi-table tbody tr:hover .btn-icon-delete {
+    opacity: 1;
+}
+
+.btn-icon-edit {
+    color: var(--accent-color, #3b82f6);
+    margin-right: 2px;
+}
+
+.btn-icon-edit:hover {
+    background: rgba(59, 130, 246, 0.12);
+}
+
+.btn-icon-delete {
+    color: #ef4444;
+}
+
+.btn-icon-delete:hover {
     background: rgba(239, 68, 68, 0.1);
 }
 
@@ -2530,21 +2575,6 @@ details[open]>summary::before {
     flex-wrap: wrap;
 }
 
-.oshi-table .btn-edit-row {
-    background: none;
-    border: none;
-    color: var(--accent-color);
-    cursor: pointer;
-    font-size: 0.85rem;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: background 0.2s;
-    margin-right: 4px;
-}
-
-.oshi-table .btn-edit-row:hover {
-    background: rgba(59, 130, 246, 0.1);
-}
 
 /* Oshi Edit Modal */
 .oshi-edit-modal {
