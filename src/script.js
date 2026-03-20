@@ -1718,8 +1718,13 @@ async function renderLocalImageManager() {
         img.style.cursor = 'zoom-in';
         img.addEventListener('click', () => openImageLightbox(img.src, async () => {
             await localImageDB.deleteImage(item.id);
+            URL.revokeObjectURL(img.src);
+            div.remove();
+            const list = document.getElementById('localImageList');
+            if (list && list.children.length === 0) {
+                list.innerHTML = '<p style="grid-column: 1/-1; color:#888;">画像がありません</p>';
+            }
             await updateLocalImageCount();
-            await renderLocalImageManager();
         }));
 
         const btnDel = document.createElement('button');
