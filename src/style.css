@@ -2142,6 +2142,77 @@ body {
     background: rgba(239, 68, 68, 0.85);
 }
 
+/* タグインジケーター（画像グリッド右下） */
+.img-tag-indicator {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-color, #3b82f6);
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* タグバッジ（共通） */
+.tag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--accent-color, #3b82f6) 15%, transparent);
+    color: var(--text-primary, #333);
+    font-size: 11px;
+    line-height: 1.5;
+    white-space: nowrap;
+    max-width: 120px;
+}
+.tag-badge .tag-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    opacity: 0.5;
+    font-size: 13px;
+    padding: 0 1px;
+    line-height: 1;
+    color: inherit;
+    flex-shrink: 0;
+}
+.tag-badge .tag-remove:hover { opacity: 1; }
+
+/* タグ入力エリア */
+.tag-input-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    min-height: 32px;
+    padding: 4px 6px;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 6px;
+    background: var(--bg-input, #fff);
+    cursor: text;
+}
+.tag-input-area input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 12px;
+    min-width: 80px;
+    flex: 1;
+    color: inherit;
+}
+
+/* ライトボックス内タグセクション */
+.img-lightbox-tags {
+    margin-top: 8px;
+    padding: 0 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
 /* 画像グリッド D&D 並び替え */
 .img-drag-handle {
     position: absolute;

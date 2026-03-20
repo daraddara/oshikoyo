@@ -23,6 +23,8 @@ const DEFAULT_SETTINGS = {
     layoutMode: 'smart', // 'smart', 'top', 'bottom', 'left', 'right'
     immersiveMode: false,
     localImageOrder: [], // ordered array of IndexedDB image keys
+    tags: [],            // master tag list: string[]
+    localImageMeta: {},  // { [id: number]: { tags: string[] } }
 };
 
 // --- IndexedDB Management ---
@@ -1042,6 +1044,23 @@ function getOrderedImageKeys(dbKeys) {
     return ordered;
 }
 
+// --- Tag Logic ---
+function getImageTags(imgId) {
+    const meta = appSettings.localImageMeta || {};
+    return meta[imgId]?.tags ? [...meta[imgId].tags] : [];
+}
+
+function setImageTags(imgId, tags) {
+    if (!appSettings.localImageMeta) appSettings.localImageMeta = {};
+    if (!appSettings.localImageMeta[imgId]) appSettings.localImageMeta[imgId] = {};
+    appSettings.localImageMeta[imgId].tags = tags;
+}
+
+function addTagsToMaster(tags) {
+    if (!appSettings.tags) appSettings.tags = [];
+    tags.forEach(t => { if (t && !appSettings.tags.includes(t)) appSettings.tags.push(t); });
+}
+
 function renderOshiTable() {
     const tbody = document.getElementById('oshiTableBody');
     const emptyMsg = document.getElementById('oshiTableEmpty');
@@ -1221,6 +1240,78 @@ function updateEventTypeDatalist() {
         .join('');
 }
 
+function updateTagDatalist() {
+    const dl = document.getElementById('tagDatalist');
+    if (!dl) return;
+    const oshiNames = (appSettings.oshiList || []).map(o => o.name).filter(Boolean);
+    const allOptions = [...new Set([...oshiNames, ...(appSettings.tags || [])])];
+    dl.innerHTML = allOptions.map(t => `<option value="${escapeHTML(t)}">`).join('');
+}
+
+// --- Tag UI ---
+function createTagInputUI(initialTags, onChange) {
+    const area = document.createElement('div');
+    area.className = 'tag-input-area';
+    let tags = [...initialTags];
+
+    function commitInput(input) {
+        const v = input.value.trim().replace(/,$/, '');
+        if (v && !tags.includes(v)) {
+            tags.push(v);
+            addTagsToMaster([v]);
+            onChange([...tags]);
+            render();
+        } else {
+            input.value = '';
+        }
+    }
+
+    function render() {
+        area.innerHTML = '';
+        tags.forEach((tag, i) => {
+            const badge = document.createElement('span');
+            badge.className = 'tag-badge';
+            const txt = document.createTextNode(tag);
+            const rm = document.createElement('button');
+            rm.type = 'button';
+            rm.className = 'tag-remove';
+            rm.textContent = '×';
+            rm.addEventListener('click', (e) => {
+                e.stopPropagation();
+                tags.splice(i, 1);
+                onChange([...tags]);
+                render();
+            });
+            badge.appendChild(txt);
+            badge.appendChild(rm);
+            area.appendChild(badge);
+        });
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.setAttribute('list', 'tagDatalist');
+        input.placeholder = tags.length ? '' : 'タグを追加...';
+        input.addEventListener('focus', () => { input.dataset.prev = input.value; input.value = ''; });
+        input.addEventListener('blur', () => { commitInput(input); });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                commitInput(input);
+            } else if (e.key === 'Backspace' && !input.value && tags.length) {
+                tags.pop();
+                onChange([...tags]);
+                render();
+            }
+        });
+        area.appendChild(input);
+    }
+
+    area.addEventListener('click', (e) => {
+        if (e.target === area) area.querySelector('input')?.focus();
+    });
+    render();
+    return area;
+}
+
 /** 記念日行を1行追加する */
 function addMemorialDateRow(md = null) {
     const list = document.getElementById('memorialDatesList');
@@ -1384,6 +1475,16 @@ function openOshiEditForm(index = -1) {
         syncOshiColorUI('#3b82f6');
     }
 
+    // タグ入力UIを初期化
+    updateTagDatalist();
+    const currentOshiTags = (index >= 0 ? appSettings.oshiList[index]?.tags : null) || [];
+    const existingTagArea = document.getElementById('oshiTagInputArea');
+    if (existingTagArea) {
+        const tagUI = createTagInputUI(currentOshiTags, () => {});
+        tagUI.id = 'oshiTagInputArea';
+        existingTagArea.replaceWith(tagUI);
+    }
+
     document.getElementById('oshiEditModal').showModal();
 }
 
@@ -1422,10 +1523,16 @@ function saveOshiFromForm() {
 
     if (!appSettings.oshiList) appSettings.oshiList = [];
 
+    // タグを収集
+    const tagBadges = [...document.querySelectorAll('#oshiTagInputArea .tag-badge')];
+    const tags = tagBadges.map(b => b.childNodes[0].textContent.trim()).filter(Boolean);
+    addTagsToMaster(tags);
+
     const oshiData = {
         name,
         color,
         memorial_dates,
+        tags,
         source: index >= 0 ? (appSettings.oshiList[index]?.source || 'manual') : 'manual'
     };
 
@@ -1654,7 +1761,7 @@ async function updateLocalMediaUI() {
     }
 }
 
-function openImageLightbox(src, onDelete = null) {
+function openImageLightbox(src, onDelete = null, imgId = null) {
     const dlg = document.createElement('dialog');
     dlg.className = 'img-lightbox-dialog';
     dlg.innerHTML = `
@@ -1674,6 +1781,27 @@ function openImageLightbox(src, onDelete = null) {
             close();
             await onDelete();
         });
+    }
+    if (imgId !== null) {
+        updateTagDatalist();
+        const tagSection = document.createElement('div');
+        tagSection.className = 'img-lightbox-tags';
+        const tagUI = createTagInputUI(getImageTags(imgId), (newTags) => {
+            setImageTags(imgId, newTags);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+            const gridItem = document.querySelector(`.local-image-item[data-img-id="${imgId}"]`);
+            if (gridItem) {
+                gridItem.querySelector('.img-tag-indicator')?.remove();
+                if (newTags.length > 0) {
+                    const dot = document.createElement('div');
+                    dot.className = 'img-tag-indicator';
+                    dot.title = newTags.join(', ');
+                    gridItem.appendChild(dot);
+                }
+            }
+        });
+        tagSection.appendChild(tagUI);
+        dlg.querySelector('.img-lightbox-inner').appendChild(tagSection);
     }
     dlg.addEventListener('close', () => dlg.remove());
     document.body.appendChild(dlg);
@@ -1728,6 +1856,7 @@ async function renderLocalImageManager() {
         img.addEventListener('click', () => openImageLightbox(img.src, async () => {
             await localImageDB.deleteImage(item.id);
             appSettings.localImageOrder = (appSettings.localImageOrder || []).filter(id => id !== item.id);
+            if (appSettings.localImageMeta) delete appSettings.localImageMeta[item.id];
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
             URL.revokeObjectURL(img.src);
             div.remove();
@@ -1736,7 +1865,7 @@ async function renderLocalImageManager() {
                 list.innerHTML = '<p style="grid-column: 1/-1; color:#888;">画像がありません</p>';
             }
             await updateLocalImageCount();
-        }));
+        }, item.id));
 
         const handle = document.createElement('div');
         handle.className = 'img-drag-handle';
@@ -1778,6 +1907,7 @@ async function renderLocalImageManager() {
                 ev.stopPropagation(); // Prevent bubbling
                 await localImageDB.deleteImage(item.id);
                 appSettings.localImageOrder = (appSettings.localImageOrder || []).filter(id => id !== item.id);
+                if (appSettings.localImageMeta) delete appSettings.localImageMeta[item.id];
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
                 URL.revokeObjectURL(img.src);
                 renderLocalImageManager();
@@ -1798,6 +1928,13 @@ async function renderLocalImageManager() {
         div.appendChild(img);
         div.appendChild(handle);
         div.appendChild(btnDel);
+        const imageTags = getImageTags(item.id);
+        if (imageTags.length > 0) {
+            const dot = document.createElement('div');
+            dot.className = 'img-tag-indicator';
+            dot.title = imageTags.join(', ');
+            div.appendChild(dot);
+        }
         fragment.appendChild(div);
     });
 
@@ -2664,6 +2801,16 @@ function loadSettings() {
             if (!Array.isArray(appSettings.localImageOrder)) {
                 appSettings.localImageOrder = [];
             }
+            // Migration: Initialize tag-related fields if missing
+            if (!Array.isArray(appSettings.tags)) {
+                appSettings.tags = [];
+            }
+            if (!appSettings.localImageMeta || typeof appSettings.localImageMeta !== 'object' || Array.isArray(appSettings.localImageMeta)) {
+                appSettings.localImageMeta = {};
+            }
+            appSettings.oshiList = (appSettings.oshiList || []).map(o =>
+                ({ ...o, tags: Array.isArray(o.tags) ? o.tags : [] })
+            );
         } catch (e) { }
     }
     // updateView(); // Removed to prevent double rendering on init
