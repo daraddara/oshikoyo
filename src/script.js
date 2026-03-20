@@ -1802,7 +1802,23 @@ async function handleLocalImageImport(files) {
 
 async function handleExportImages() {
     showToast('画像データを書き出し中...');
-    await localImageDB.exportData();
+    const chunks = await localImageDB.exportData();
+    if (chunks.length === 0) {
+        showToast('書き出す画像がありません');
+        return;
+    }
+    for (const chunk of chunks) {
+        const blob = new Blob([JSON.stringify(chunk.data)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = chunk.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+    showToast(`${chunks.length > 1 ? chunks.length + ' ファイルに分割して' : ''}書き出しました`);
 }
 
 function handleExportSettings() {
