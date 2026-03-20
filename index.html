@@ -353,7 +353,10 @@
     <dialog id="previewModal" class="settings-modal preview-modal">
         <form method="dialog" class="settings-form">
             <h2>画像の追加確認</h2>
-            <p>以下の画像を追加しますか？</p>
+            <div class="setting-group" id="previewTagGroup">
+                <label>共通タグ（全画像に付与・任意）</label>
+                <div id="previewTagInputArea" class="tag-input-area"></div>
+            </div>
             <div class="settings-scroll-area">
                 <div id="previewGrid" class="preview-grid">
                     <!-- Previews injected here -->
