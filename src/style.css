@@ -2333,14 +2333,15 @@ body {
 .media-action-group { margin-bottom: 18px; }
 
 .media-btn-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
     gap: 8px;
-    flex-wrap: wrap;
 }
 
 .btn-media {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     padding: 8px 14px;
     border: 1px solid rgba(0, 0, 0, 0.12);
