@@ -71,8 +71,8 @@ describe('Security: XSS Vulnerability in renderCalendar label', () => {
         const img = dayCell.querySelector('img[onerror*="XSS_LABEL"]');
         expect(img).toBeNull();
 
-        // The title attribute should contain the escaped payload
+        // title属性にXSSペイロードの文字列が含まれること（getAttribute はデコード済み値を返す）
         const oshiEvent = dayCell.querySelector('.oshi-event');
-        expect(oshiEvent.getAttribute('title')).toContain('&lt;img src=x onerror=alert(&quot;XSS_LABEL&quot;)&gt;');
+        expect(oshiEvent.getAttribute('title')).toContain('<img src=x onerror=alert("XSS_LABEL")>');
     });
 });
