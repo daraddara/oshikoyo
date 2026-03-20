@@ -2492,9 +2492,44 @@ details[open]>summary::before {
     background: rgba(59, 130, 246, 0.05);
 }
 
-.oshi-table td:first-child {
+/* D. ドラッグハンドル列 */
+.oshi-th-handle {
+    width: 28px;
+}
+
+.oshi-handle-cell {
+    width: 28px;
+    text-align: center;
+    color: #ccc;
+    cursor: grab;
+    user-select: none;
+    padding: 0 4px !important;
+}
+
+.oshi-handle-cell:active {
+    cursor: grabbing;
+}
+
+.oshi-table tbody tr:hover .oshi-handle-cell {
+    color: #aaa;
+}
+
+.oshi-color-cell {
     width: 50px;
     text-align: center;
+}
+
+/* ドラッグ中の視覚フィードバック */
+.oshi-table tr.is-dragging {
+    opacity: 0.4;
+}
+
+.oshi-table tr.drag-over-top {
+    box-shadow: inset 0 2px 0 0 var(--accent-color, #3b82f6);
+}
+
+.oshi-table tr.drag-over-bottom {
+    box-shadow: inset 0 -2px 0 0 var(--accent-color, #3b82f6);
 }
 
 .oshi-color-swatch {

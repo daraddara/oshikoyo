@@ -1037,6 +1037,8 @@ function openOshiManager() {
     document.getElementById('oshiManagementModal').showModal();
 }
 
+let _oshiDragSrcIndex = -1;
+
 function renderOshiTable() {
     const tbody = document.getElementById('oshiTableBody');
     const emptyMsg = document.getElementById('oshiTableEmpty');
@@ -1054,8 +1056,18 @@ function renderOshiTable() {
     appSettings.oshiList.forEach((oshi, index) => {
         const row = document.createElement('tr');
 
+        // D. ドラッグハンドル
+        const handleCell = document.createElement('td');
+        handleCell.className = 'oshi-handle-cell';
+        handleCell.title = 'ドラッグして並び替え';
+        handleCell.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>`;
+        handleCell.addEventListener('mousedown', () => { row.draggable = true; });
+        handleCell.addEventListener('click', (e) => e.stopPropagation());
+        row.appendChild(handleCell);
+
         // Color swatch
         const colorCell = document.createElement('td');
+        colorCell.className = 'oshi-color-cell';
         const swatch = document.createElement('span');
         swatch.className = 'oshi-color-swatch';
         swatch.style.backgroundColor = oshi.color || '#ccc';
@@ -1113,6 +1125,45 @@ function renderOshiTable() {
         // B. 行クリックで編集
         row.style.cursor = 'pointer';
         row.addEventListener('click', () => openOshiEditForm(index));
+
+        // D. ドラッグ&ドロップ並び替え
+        row.addEventListener('dragstart', (e) => {
+            _oshiDragSrcIndex = index;
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(() => row.classList.add('is-dragging'), 0);
+        });
+        row.addEventListener('dragend', () => {
+            row.draggable = false;
+            row.classList.remove('is-dragging');
+            tbody.querySelectorAll('.drag-over-top, .drag-over-bottom')
+                .forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom'));
+        });
+        row.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (_oshiDragSrcIndex === index) return;
+            tbody.querySelectorAll('.drag-over-top, .drag-over-bottom')
+                .forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom'));
+            const mid = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
+            row.classList.add(e.clientY < mid ? 'drag-over-top' : 'drag-over-bottom');
+        });
+        row.addEventListener('dragleave', (e) => {
+            if (!row.contains(e.relatedTarget)) {
+                row.classList.remove('drag-over-top', 'drag-over-bottom');
+            }
+        });
+        row.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (_oshiDragSrcIndex === index) return;
+            const mid = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
+            const tgt = e.clientY < mid ? index : index + 1;
+            const copy = [...appSettings.oshiList];
+            const [item] = copy.splice(_oshiDragSrcIndex, 1);
+            copy.splice(_oshiDragSrcIndex < tgt ? tgt - 1 : tgt, 0, item);
+            appSettings.oshiList = copy;
+            saveSettings();
+            renderOshiTable();
+            renderOshiList();
+        });
 
         tbody.appendChild(row);
     });
