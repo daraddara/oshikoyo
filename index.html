@@ -288,21 +288,6 @@
                         </div>
                     </div>
 
-                    <div class="media-action-group">
-                        <label class="setting-label-sm">バックアップ</label>
-                        <div class="media-btn-row">
-                            <button type="button" id="btnExportImages" class="btn-media">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                                画像データを書き出し
-                            </button>
-                            <button type="button" id="btnImportImages" class="btn-media">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                画像データを読み込み
-                            </button>
-                            <input type="file" id="inputImportImages" accept=".json" multiple style="display:none">
-                        </div>
-                    </div>
-
                     <div class="media-status-row">
                         <span>登録済み: <strong id="localImageCount">0</strong> 枚</span>
                         <button type="button" id="btnClearLocal" class="btn-danger-text">全削除</button>
@@ -312,7 +297,7 @@
                         <!-- Images injected here -->
                     </div>
 
-                    <p class="help-text">画像はブラウザ内に保存されます。バックアップや移行の際は「画像データを書き出し」をご利用ください。</p>
+                    <p class="help-text">画像はブラウザ内に保存されます。バックアップ・移行は「データ」タブから行えます。</p>
                 </div>
             </div>
 
@@ -320,6 +305,7 @@
             <div class="settings-tab-panel" data-panel="data">
                 <div class="setting-group">
                     <label class="setting-label">設定のバックアップと復元</label>
+                    <p class="help-text" style="margin-bottom:10px">推しリスト・記念日・UI設定が含まれます（画像を除く）</p>
                     <div class="data-btn-row">
                         <button type="button" id="btnExportSettings" class="btn-data-action">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -333,7 +319,26 @@
                         </button>
                     </div>
                     <input type="file" id="inputImportSettings" accept=".json" style="display:none">
-                    <p class="help-text">※ 画像データ自体はバックアップに含まれません。</p>
+                </div>
+
+                <div class="setting-divider"></div>
+
+                <div class="setting-group">
+                    <label class="setting-label">画像のバックアップと復元</label>
+                    <p class="help-text" style="margin-bottom:10px">ブラウザに保存された画像データのみが対象です</p>
+                    <div class="data-btn-row">
+                        <button type="button" id="btnExportImages" class="btn-data-action">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <span>画像を書き出し</span>
+                            <small>画像データをJSONで保存</small>
+                        </button>
+                        <button type="button" id="btnImportImages" class="btn-data-action">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span>画像を読み込み</span>
+                            <small>JSONファイルから復元</small>
+                        </button>
+                    </div>
+                    <input type="file" id="inputImportImages" accept=".json" multiple style="display:none">
                 </div>
             </div>
 
