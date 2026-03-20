@@ -1800,6 +1800,11 @@ async function handleLocalImageImport(files) {
     renderLocalImageManager();
 }
 
+async function handleExportImages() {
+    showToast('画像データを書き出し中...');
+    await localImageDB.exportData();
+}
+
 function handleExportSettings() {
     const dataStr = JSON.stringify(appSettings, null, 2);
     const blob = new Blob([dataStr], { type: "application/json" });
@@ -2453,10 +2458,13 @@ function initSettings() {
         if (e.target.files[0]) handleImportSettings(e.target.files[0]);
     });
 
-    // --- New: Image Backup/Restore Listeners ---
+    // Image Backup/Restore
+    document.getElementById('btnExportImages').addEventListener('click', handleExportImages);
+    const inputImportImages = document.getElementById('inputImportImages');
+    document.getElementById('btnImportImages').addEventListener('click', () => inputImportImages.click());
     inputImportImages.addEventListener('change', (e) => {
         handleImportImages(e.target.files);
-        e.target.value = ''; // Reset for re-selection
+        e.target.value = '';
     });
 
     // (Legacy cleanup: mediaIntervalSelect listener removed)
