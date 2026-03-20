@@ -1092,18 +1092,9 @@ function renderOshiTable() {
         }
         row.appendChild(datesCell);
 
-        // Actions
+        // Actions（削除のみ。編集は行クリックで行う）
         const actCell = document.createElement('td');
         actCell.className = 'oshi-table-actions';
-
-        // Edit Button
-        const editBtn = document.createElement('button');
-        editBtn.type = 'button';
-        editBtn.className = 'btn-icon-edit';
-        editBtn.title = '編集';
-        editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-        editBtn.addEventListener('click', (e) => { e.stopPropagation(); openOshiEditForm(index); });
-        actCell.appendChild(editBtn);
 
         // Delete Button
         const delBtn = document.createElement('button');
@@ -2287,6 +2278,16 @@ function initSettings() {
         renderOshiList();
 
         document.getElementById('settingsModal').showModal();
+    });
+
+    // Settings tab switching
+    document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('is-active'));
+            document.querySelectorAll('.settings-tab-panel').forEach(p => p.classList.remove('is-active'));
+            btn.classList.add('is-active');
+            document.querySelector(`.settings-tab-panel[data-panel="${btn.dataset.tab}"]`).classList.add('is-active');
+        });
     });
 
     // Close Modal
