@@ -850,14 +850,29 @@ function renderCalendar(container, year, month) {
         daysGrid.appendChild(emptyCell);
     }
 
-    // Pre-calculate parsed memorial dates for each oshi
-    const oshiEventDates = (appSettings.oshiList || []).map(oshi => ({
-        ...oshi,
-        parsedMemorialDates: (oshi.memorial_dates || []).map(md => ({
-            ...md,
-            parsed: parseDateString(md.date)
-        }))
-    }));
+    // Pre-calculate parsed memorial dates and styles for each oshi
+    const oshiEventDates = (appSettings.oshiList || []).map(oshi => {
+        const textColor = oshi.color ? getContrastColor(oshi.color) : '#333';
+        const textShadow = textColor === '#ffffff' ? '0 0 1px rgba(0,0,0,0.3)' : 'none';
+        const escapedColor = oshi.color ? escapeHTML(oshi.color) : null;
+        const rgbaBg = escapedColor ? hexToRgba(escapedColor, 0.85) : null;
+        const baseStyle = rgbaBg ? `background-color: ${rgbaBg}; color: ${textColor}; text-shadow: ${textShadow};` : '';
+        const isDarkIcon = textColor === '#1a1a1a';
+        const escapedName = escapeHTML(oshi.name || '');
+
+        return {
+            ...oshi,
+            textColor,
+            textShadow,
+            baseStyle,
+            isDarkIcon,
+            escapedName,
+            parsedMemorialDates: (oshi.memorial_dates || []).map(md => ({
+                ...md,
+                parsed: parseDateString(md.date)
+            }))
+        };
+    });
 
     // Days
     for (let d = 1; d <= daysInMonth; d++) {
@@ -890,21 +905,9 @@ function renderCalendar(container, year, month) {
         oshiEventDates.forEach(oshi => {
             if (!oshi.name) return;
 
-            const textColor = oshi.color ? getContrastColor(oshi.color) : '#333';
-            const textShadow = textColor === '#ffffff' ? '0 0 1px rgba(0,0,0,0.3)' : 'none';
-
-            let baseStyle = '';
-
-            if (oshi.color) {
-                const escapedColor = escapeHTML(oshi.color);
-                const rgbaBg = hexToRgba(escapedColor, 0.85);
-                baseStyle = `background-color: ${rgbaBg}; color: ${textColor}; text-shadow: ${textShadow};`;
-            }
-
-            const isDarkIcon = textColor === '#1a1a1a';
+            const { textColor, textShadow, baseStyle, isDarkIcon, escapedName } = oshi;
 
             let matchedEvents = []; // { label, icon }
-            const escapedName = escapeHTML(oshi.name);
 
             // Memorial dates check
             for (const md of oshi.parsedMemorialDates) {
