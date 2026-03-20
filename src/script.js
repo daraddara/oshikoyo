@@ -22,6 +22,7 @@ const DEFAULT_SETTINGS = {
     lastActiveInterval: '1m',
     layoutMode: 'smart', // 'smart', 'top', 'bottom', 'left', 'right'
     immersiveMode: false,
+    localImageOrder: [], // ordered array of IndexedDB image keys
 };
 
 // --- IndexedDB Management ---
@@ -200,12 +201,13 @@ class LocalImageDB {
     }
 
     /**
-     * Exports all image data as a single gzip-compressed JSON blob.
+     * Exports image data as a single gzip-compressed JSON blob.
      * Images are loaded and encoded one at a time to keep peak memory at O(1 image).
+     * @param {number[]} [orderedKeys] - Keys in desired export order. Defaults to DB key order.
      * @returns {Promise<Array<{filename: string, blob: Blob}>>}
      */
-    async exportData() {
-        const keys = await this.getAllKeys();
+    async exportData(orderedKeys) {
+        const keys = orderedKeys ?? await this.getAllKeys();
         if (keys.length === 0) return [];
 
         const encoder = new TextEncoder();
@@ -1020,6 +1022,25 @@ function openOshiManager() {
 }
 
 let _oshiDragSrcIndex = -1;
+let _imgDragSrcIndex = -1;
+
+/**
+ * Returns image keys sorted by localImageOrder.
+ * Keys not in order are appended at the end.
+ * @param {number[]} dbKeys
+ * @returns {number[]}
+ */
+function getOrderedImageKeys(dbKeys) {
+    const order = appSettings.localImageOrder;
+    if (!order || order.length === 0) return dbKeys;
+    const dbSet = new Set(dbKeys);
+    const ordered = order.filter(id => dbSet.has(id));
+    const inOrder = new Set(ordered);
+    for (const k of dbKeys) {
+        if (!inOrder.has(k)) ordered.push(k);
+    }
+    return ordered;
+}
 
 function renderOshiTable() {
     const tbody = document.getElementById('oshiTableBody');
@@ -1688,18 +1709,26 @@ async function renderLocalImageManager() {
         return;
     }
 
+    // Sort by saved order
+    const idToImage = new Map(allImages.map(item => [item.id, item]));
+    const orderedIds = getOrderedImageKeys(allImages.map(item => item.id));
+    const sortedImages = orderedIds.map(id => idToImage.get(id)).filter(Boolean);
+
     const fragment = document.createDocumentFragment();
 
-    allImages.forEach(item => {
+    sortedImages.forEach(item => {
         const div = document.createElement('div');
         div.className = 'local-image-item';
+        div.dataset.imgId = item.id;
 
         const img = document.createElement('img');
         img.src = URL.createObjectURL(item.file);
-        img.alt = item.name || '';
+        img.alt = item.file.name || '';
         img.style.cursor = 'zoom-in';
         img.addEventListener('click', () => openImageLightbox(img.src, async () => {
             await localImageDB.deleteImage(item.id);
+            appSettings.localImageOrder = (appSettings.localImageOrder || []).filter(id => id !== item.id);
+            saveSettings();
             URL.revokeObjectURL(img.src);
             div.remove();
             const list = document.getElementById('localImageList');
@@ -1708,6 +1737,12 @@ async function renderLocalImageManager() {
             }
             await updateLocalImageCount();
         }));
+
+        const handle = document.createElement('div');
+        handle.className = 'img-drag-handle';
+        handle.title = '並び替え';
+        handle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="2"/><circle cx="15" cy="5" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="19" r="2"/><circle cx="15" cy="19" r="2"/></svg>`;
+        handle.addEventListener('mousedown', () => { div.draggable = true; });
 
         const btnDel = document.createElement('button');
         btnDel.type = 'button';
@@ -1720,7 +1755,6 @@ async function renderLocalImageManager() {
             if (div.querySelector('.delete-confirm-overlay')) return;
 
             // Add Visual State
-            div.classList.add('local-image-item'); // Ensure class presence for styling
             div.classList.add('is-deleting');
 
             // Create Overlay
@@ -1743,6 +1777,8 @@ async function renderLocalImageManager() {
             btnYes.addEventListener('click', async (ev) => {
                 ev.stopPropagation(); // Prevent bubbling
                 await localImageDB.deleteImage(item.id);
+                appSettings.localImageOrder = (appSettings.localImageOrder || []).filter(id => id !== item.id);
+                saveSettings();
                 URL.revokeObjectURL(img.src);
                 renderLocalImageManager();
                 updateLocalMediaUI();
@@ -1760,28 +1796,33 @@ async function renderLocalImageManager() {
         };
 
         div.appendChild(img);
+        div.appendChild(handle);
         div.appendChild(btnDel);
         fragment.appendChild(div);
     });
 
     list.appendChild(fragment);
+    setupImageGridDnD(list);
 }
 
 async function handleLocalImageImport(files) {
     if (!files || files.length === 0) return;
 
     const fileArray = Array.from(files).filter(f => f.type.startsWith('image/'));
-    await localImageDB.addImages(fileArray);
-    const addedCount = fileArray.length;
+    const newKeys = await localImageDB.addImages(fileArray);
+    appSettings.localImageOrder = [...(appSettings.localImageOrder || []), ...newKeys];
+    saveSettings();
 
-    showToast(`${addedCount} 枚の画像を追加しました`);
+    showToast(`${fileArray.length} 枚の画像を追加しました`);
     updateLocalMediaUI();
     renderLocalImageManager();
 }
 
 async function handleExportImages() {
     showToast('画像データを書き出し中...');
-    const chunks = await localImageDB.exportData();
+    const dbKeys = await localImageDB.getAllKeys();
+    const orderedKeys = getOrderedImageKeys(dbKeys);
+    const chunks = await localImageDB.exportData(orderedKeys);
     if (chunks.length === 0) {
         showToast('書き出す画像がありません');
         return;
@@ -1910,7 +1951,7 @@ async function handleImportImages(files) {
 
     let lastError = null;
 
-    const importPromises = Array.from(files).map(async (file) => {
+    for (const file of Array.from(files)) {
         try {
             let json;
             if (file.name.endsWith('.json.gz')) {
@@ -1921,17 +1962,22 @@ async function handleImportImages(files) {
                 const text = await file.text();
                 json = JSON.parse(text);
             }
+            const keysBefore = new Set(await localImageDB.getAllKeys());
             const result = await localImageDB.importData(json);
             totalAdded += result.added;
             totalSkipped += result.skipped;
+            if (result.added > 0) {
+                const keysAfter = await localImageDB.getAllKeys();
+                const newKeys = keysAfter.filter(k => !keysBefore.has(k));
+                appSettings.localImageOrder = [...(appSettings.localImageOrder || []), ...newKeys];
+                saveSettings();
+            }
         } catch (e) {
             console.error("Import failed for file:", file.name, e);
             errorCount++;
             lastError = e;
         }
-    });
-
-    await Promise.all(importPromises);
+    }
 
     let msg = `インポート完了: \n追加: ${totalAdded} 件\n重複スキップ: ${totalSkipped} 件`;
     if (errorCount > 0) {
@@ -1946,6 +1992,73 @@ async function handleImportImages(files) {
         updateLocalMediaUI();
         renderLocalImageManager();
     }
+}
+
+// --- Image Grid Drag & Drop Reorder ---
+function setupImageGridDnD(list) {
+    list.addEventListener('dragstart', (e) => {
+        const item = e.target.closest('.local-image-item');
+        if (!item) return;
+        const items = [...list.querySelectorAll('.local-image-item')];
+        _imgDragSrcIndex = items.indexOf(item);
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => item.classList.add('is-img-dragging'), 0);
+    });
+
+    list.addEventListener('dragend', (e) => {
+        const item = e.target.closest('.local-image-item');
+        if (item) {
+            item.draggable = false;
+            item.classList.remove('is-img-dragging');
+        }
+        list.querySelectorAll('.drag-over-left, .drag-over-right')
+            .forEach(el => el.classList.remove('drag-over-left', 'drag-over-right'));
+        _imgDragSrcIndex = -1;
+    });
+
+    list.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const item = e.target.closest('.local-image-item');
+        if (!item) return;
+        const items = [...list.querySelectorAll('.local-image-item')];
+        const idx = items.indexOf(item);
+        if (idx === _imgDragSrcIndex) return;
+        list.querySelectorAll('.drag-over-left, .drag-over-right')
+            .forEach(el => el.classList.remove('drag-over-left', 'drag-over-right'));
+        const rect = item.getBoundingClientRect();
+        const insertBefore = e.clientX < rect.left + rect.width / 2;
+        item.classList.add(insertBefore ? 'drag-over-left' : 'drag-over-right');
+    });
+
+    list.addEventListener('dragleave', (e) => {
+        if (!list.contains(e.relatedTarget)) {
+            list.querySelectorAll('.drag-over-left, .drag-over-right')
+                .forEach(el => el.classList.remove('drag-over-left', 'drag-over-right'));
+        }
+    });
+
+    list.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const item = e.target.closest('.local-image-item');
+        if (!item || _imgDragSrcIndex < 0) return;
+        const items = [...list.querySelectorAll('.local-image-item')];
+        const tgtIdx = items.indexOf(item);
+        if (tgtIdx === _imgDragSrcIndex) return;
+
+        const rect = item.getBoundingClientRect();
+        const insertBefore = e.clientX < rect.left + rect.width / 2;
+        const insertIdx = insertBefore ? tgtIdx : tgtIdx + 1;
+
+        const order = [...(appSettings.localImageOrder.length > 0
+            ? appSettings.localImageOrder
+            : items.map(el => Number(el.dataset.imgId)))];
+        const [moved] = order.splice(_imgDragSrcIndex, 1);
+        order.splice(_imgDragSrcIndex < insertIdx ? insertIdx - 1 : insertIdx, 0, moved);
+
+        appSettings.localImageOrder = order;
+        saveSettings();
+        renderLocalImageManager();
+    });
 }
 
 // --- Drag & Drop / Paste Logic ---
@@ -2172,6 +2285,8 @@ function setupPreviewModal() {
         const lastKey = results[results.length - 1];
 
         if (count > 0) {
+            appSettings.localImageOrder = [...(appSettings.localImageOrder || []), ...results];
+            saveSettings();
             hasNewLocalImages = true;
             updateLocalMediaUI();
 
@@ -2444,6 +2559,8 @@ function initSettings() {
     document.getElementById('btnClearLocal').addEventListener('click', async () => {
         if (confirm('登録済みの画像をすべて削除します。よろしいですか？')) {
             await localImageDB.clearAll();
+            appSettings.localImageOrder = [];
+            saveSettings();
             updateLocalMediaUI();
             renderLocalImageManager();
         }
@@ -2538,6 +2655,11 @@ function loadSettings() {
             // Migration: Initialize lastActiveInterval if it doesn't exist
             if (!appSettings.lastActiveInterval) {
                 appSettings.lastActiveInterval = appSettings.mediaIntervalPreset || '1m';
+            }
+
+            // Migration: Initialize localImageOrder if missing
+            if (!Array.isArray(appSettings.localImageOrder)) {
+                appSettings.localImageOrder = [];
             }
         } catch (e) { }
     }
@@ -3590,7 +3712,8 @@ async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'
 
     // --- Logic: Local Only ---
     try {
-        const keys = await localImageDB.getAllKeys();
+        const dbKeys = await localImageDB.getAllKeys();
+        const keys = getOrderedImageKeys(dbKeys);
         if (keys.length === 0) {
             renderDefaultMedia(displayArea);
             return;

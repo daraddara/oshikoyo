@@ -2142,6 +2142,45 @@ body {
     background: rgba(239, 68, 68, 0.85);
 }
 
+/* 画像グリッド D&D 並び替え */
+.img-drag-handle {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    width: 18px;
+    height: 18px;
+    background: rgba(0, 0, 0, 0.45);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s;
+    cursor: grab;
+    color: #fff;
+    z-index: 2;
+}
+
+.local-image-item:hover .img-drag-handle {
+    opacity: 1;
+}
+
+.img-drag-handle:active {
+    cursor: grabbing;
+}
+
+.local-image-item.is-img-dragging {
+    opacity: 0.35;
+}
+
+.local-image-item.drag-over-left {
+    box-shadow: -3px 0 0 0 var(--accent-color);
+}
+
+.local-image-item.drag-over-right {
+    box-shadow: 3px 0 0 0 var(--accent-color);
+}
+
 /* 画像ライトボックス（dialog使用でtop layer表示） */
 .img-lightbox-dialog {
     border: none;

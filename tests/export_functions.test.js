@@ -30,9 +30,11 @@ const exportOshiCode = extractCode(
 
 // --- ファクトリ関数（依存注入） ---
 function makeHandleExportImages(mockLocalImageDB, mockShowToast) {
-    return new Function('localImageDB', 'showToast',
+    // getOrderedImageKeys: テストではカスタム順不要のためパススルー
+    const getOrderedImageKeys = (keys) => keys;
+    return new Function('localImageDB', 'showToast', 'getOrderedImageKeys',
         `${exportImagesCode}; return handleExportImages;`
-    )(mockLocalImageDB, mockShowToast);
+    )(mockLocalImageDB, mockShowToast, getOrderedImageKeys);
 }
 
 function makeHandleExportSettings(mockAppSettings) {
@@ -67,7 +69,10 @@ describe('handleExportImages', () => {
     });
 
     it('画像が0件の場合はダウンロードせず専用トーストを表示する', async () => {
-        const mockDB = { exportData: vi.fn().mockResolvedValue([]) };
+        const mockDB = {
+            getAllKeys: vi.fn().mockResolvedValue([]),
+            exportData: vi.fn().mockResolvedValue([]),
+        };
         const fn = makeHandleExportImages(mockDB, mockShowToast);
 
         await fn();
@@ -80,7 +85,10 @@ describe('handleExportImages', () => {
 
     it('ダウンロードを実行しトーストを表示する', async () => {
         const chunks = [{ filename: 'oshikoyo_images_backup_2026-03-20.json.gz', blob: new Blob(['gz'], { type: 'application/gzip' }) }];
-        const mockDB = { exportData: vi.fn().mockResolvedValue(chunks) };
+        const mockDB = {
+            getAllKeys: vi.fn().mockResolvedValue([1]),
+            exportData: vi.fn().mockResolvedValue(chunks),
+        };
         const fn = makeHandleExportImages(mockDB, mockShowToast);
 
         await fn();
@@ -94,7 +102,10 @@ describe('handleExportImages', () => {
     it('正しいファイル名が設定される', async () => {
         const filename = 'oshikoyo_images_backup_2026-03-20.json.gz';
         const chunks = [{ filename, blob: new Blob(['gz'], { type: 'application/gzip' }) }];
-        const mockDB = { exportData: vi.fn().mockResolvedValue(chunks) };
+        const mockDB = {
+            getAllKeys: vi.fn().mockResolvedValue([1]),
+            exportData: vi.fn().mockResolvedValue(chunks),
+        };
         const fn = makeHandleExportImages(mockDB, mockShowToast);
 
         // ダウンロード時に <a download="..."> が設定されることを確認
