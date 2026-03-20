@@ -1728,7 +1728,7 @@ async function renderLocalImageManager() {
         img.addEventListener('click', () => openImageLightbox(img.src, async () => {
             await localImageDB.deleteImage(item.id);
             appSettings.localImageOrder = (appSettings.localImageOrder || []).filter(id => id !== item.id);
-            saveSettings();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
             URL.revokeObjectURL(img.src);
             div.remove();
             const list = document.getElementById('localImageList');
@@ -1778,7 +1778,7 @@ async function renderLocalImageManager() {
                 ev.stopPropagation(); // Prevent bubbling
                 await localImageDB.deleteImage(item.id);
                 appSettings.localImageOrder = (appSettings.localImageOrder || []).filter(id => id !== item.id);
-                saveSettings();
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
                 URL.revokeObjectURL(img.src);
                 renderLocalImageManager();
                 updateLocalMediaUI();
@@ -1802,7 +1802,10 @@ async function renderLocalImageManager() {
     });
 
     list.appendChild(fragment);
-    setupImageGridDnD(list);
+    if (!list.dataset.dndReady) {
+        list.dataset.dndReady = '1';
+        setupImageGridDnD(list);
+    }
 }
 
 async function handleLocalImageImport(files) {
@@ -1811,7 +1814,7 @@ async function handleLocalImageImport(files) {
     const fileArray = Array.from(files).filter(f => f.type.startsWith('image/'));
     const newKeys = await localImageDB.addImages(fileArray);
     appSettings.localImageOrder = [...(appSettings.localImageOrder || []), ...newKeys];
-    saveSettings();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
 
     showToast(`${fileArray.length} 枚の画像を追加しました`);
     updateLocalMediaUI();
@@ -1970,7 +1973,7 @@ async function handleImportImages(files) {
                 const keysAfter = await localImageDB.getAllKeys();
                 const newKeys = keysAfter.filter(k => !keysBefore.has(k));
                 appSettings.localImageOrder = [...(appSettings.localImageOrder || []), ...newKeys];
-                saveSettings();
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
             }
         } catch (e) {
             console.error("Import failed for file:", file.name, e);
@@ -2056,7 +2059,7 @@ function setupImageGridDnD(list) {
         order.splice(_imgDragSrcIndex < insertIdx ? insertIdx - 1 : insertIdx, 0, moved);
 
         appSettings.localImageOrder = order;
-        saveSettings();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
         renderLocalImageManager();
     });
 }
@@ -2286,7 +2289,7 @@ function setupPreviewModal() {
 
         if (count > 0) {
             appSettings.localImageOrder = [...(appSettings.localImageOrder || []), ...results];
-            saveSettings();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
             hasNewLocalImages = true;
             updateLocalMediaUI();
 
@@ -2560,7 +2563,7 @@ function initSettings() {
         if (confirm('登録済みの画像をすべて削除します。よろしいですか？')) {
             await localImageDB.clearAll();
             appSettings.localImageOrder = [];
-            saveSettings();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
             updateLocalMediaUI();
             renderLocalImageManager();
         }
