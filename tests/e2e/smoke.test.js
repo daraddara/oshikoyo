@@ -51,7 +51,7 @@ test.describe('Smoke Test & Layout Verification', () => {
         const settingsModal = page.locator('#settingsModal');
         await expect(settingsModal).toBeVisible();
 
-        const scrollArea = settingsModal.locator('.settings-scroll-area');
+        const scrollArea = settingsModal.locator('.settings-tab-panel.is-active');
         await expect(scrollArea).toBeVisible();
 
         // Wait for modal transition/rendering
