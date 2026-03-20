@@ -2216,12 +2216,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0;
-    transition: background 0.15s, opacity 0.15s;
-}
-
-.img-lightbox-inner:hover .img-lightbox-delete {
-    opacity: 1;
+    transition: background 0.15s;
 }
 
 .img-lightbox-delete:hover {
