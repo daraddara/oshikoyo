@@ -78,8 +78,8 @@ describe('handleExportImages', () => {
         expect(mockShowToast).toHaveBeenCalledWith('書き出す画像がありません');
     });
 
-    it('1チャンクの場合は1回ダウンロードを実行する', async () => {
-        const chunks = [{ filename: 'oshikoyo_images_backup_2026-03-20.json', data: { images: [] } }];
+    it('ダウンロードを実行しトーストを表示する', async () => {
+        const chunks = [{ filename: 'oshikoyo_images_backup_2026-03-20.json.gz', blob: new Blob(['gz'], { type: 'application/gzip' }) }];
         const mockDB = { exportData: vi.fn().mockResolvedValue(chunks) };
         const fn = makeHandleExportImages(mockDB, mockShowToast);
 
@@ -88,29 +88,12 @@ describe('handleExportImages', () => {
         expect(URL.createObjectURL).toHaveBeenCalledOnce();
         expect(URL.revokeObjectURL).toHaveBeenCalledOnce();
         expect(clickSpy).toHaveBeenCalledOnce();
-        // 分割なしのトースト
         expect(mockShowToast).toHaveBeenLastCalledWith('書き出しました');
     });
 
-    it('複数チャンクの場合はチャンク数分ダウンロードし分割数をトーストに表示する', async () => {
-        const chunks = [
-            { filename: 'oshikoyo_images_backup_2026-03-20_part1.json', data: { images: [] } },
-            { filename: 'oshikoyo_images_backup_2026-03-20_part2.json', data: { images: [] } },
-        ];
-        const mockDB = { exportData: vi.fn().mockResolvedValue(chunks) };
-        const fn = makeHandleExportImages(mockDB, mockShowToast);
-
-        await fn();
-
-        expect(URL.createObjectURL).toHaveBeenCalledTimes(2);
-        expect(URL.revokeObjectURL).toHaveBeenCalledTimes(2);
-        expect(clickSpy).toHaveBeenCalledTimes(2);
-        expect(mockShowToast).toHaveBeenLastCalledWith('2 ファイルに分割して書き出しました');
-    });
-
-    it('各チャンクに正しいファイル名が設定される', async () => {
-        const filename = 'oshikoyo_images_backup_2026-03-20.json';
-        const chunks = [{ filename, data: { images: [] } }];
+    it('正しいファイル名が設定される', async () => {
+        const filename = 'oshikoyo_images_backup_2026-03-20.json.gz';
+        const chunks = [{ filename, blob: new Blob(['gz'], { type: 'application/gzip' }) }];
         const mockDB = { exportData: vi.fn().mockResolvedValue(chunks) };
         const fn = makeHandleExportImages(mockDB, mockShowToast);
 

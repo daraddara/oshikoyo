@@ -62,10 +62,23 @@ describe('LocalImageDB システム', () => {
         await db.addImage(file1);
         await db.addImage(file2);
 
-        // エクスポート
+        // エクスポート: gzip blob が1ファイル返される
         const chunks = await db.exportData();
-        expect(chunks.length).toBeGreaterThan(0);
-        const backupData = chunks[0].data;
+        expect(chunks.length).toBe(1);
+        expect(chunks[0].filename).toMatch(/oshikoyo_images_backup_.+\.json\.gz$/);
+
+        // blob を展開して JSON パース
+        const arrayBuffer = await chunks[0].blob.arrayBuffer();
+        const inputStream = new ReadableStream({
+            start(controller) {
+                controller.enqueue(new Uint8Array(arrayBuffer));
+                controller.close();
+            }
+        });
+        const decompressed = inputStream.pipeThrough(new DecompressionStream('gzip'));
+        const text = await new Response(decompressed).text();
+        const backupData = JSON.parse(text);
+        expect(backupData.version).toBe(2);
         expect(backupData.images).toHaveLength(2);
 
         // クリア
