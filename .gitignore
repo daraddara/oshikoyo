@@ -7,6 +7,9 @@ Thumbs.db
 .idea/
 *.swp
 
+# Claude Code local settings
+.claude/
+
 # Local settings
 .oshikoyo-settings
 
