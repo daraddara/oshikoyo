@@ -3620,15 +3620,19 @@ function prepareMediaContentLayer(container) {
 function updateMediaNavigation(contentLayer, handleNavigation) {
     if (appSettings.mediaMode === 'random' || appSettings.mediaMode === 'cycle') {
         if (!contentLayer.querySelector('.media-nav-btn.prev')) {
-            const btnPrev = document.createElement('div');
+            const btnPrev = document.createElement('button');
+            btnPrev.type = 'button';
             btnPrev.className = 'media-nav-btn prev';
+            btnPrev.setAttribute('aria-label', '前の画像');
             btnPrev.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>';
             btnPrev.onclick = (e) => { e.stopPropagation(); handleNavigation('prev'); };
             contentLayer.appendChild(btnPrev);
         }
         if (!contentLayer.querySelector('.media-nav-btn.next')) {
-            const btnNext = document.createElement('div');
+            const btnNext = document.createElement('button');
+            btnNext.type = 'button';
             btnNext.className = 'media-nav-btn next';
+            btnNext.setAttribute('aria-label', '次の画像');
             btnNext.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
             btnNext.onclick = (e) => { e.stopPropagation(); handleNavigation('next'); };
             contentLayer.appendChild(btnNext);
