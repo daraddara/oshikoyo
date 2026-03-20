@@ -367,35 +367,39 @@
 
     <dialog id="oshiManagementModal" class="settings-modal oshi-manager-modal">
         <form method="dialog" class="settings-form">
-            <h2>登録済みの推し一覧</h2>
-            <div class="oshi-manager-toolbar">
-                <button type="button" id="btnOshiAdd" class="btn-secondary">+ 新規追加</button>
-                <button type="button" id="btnOshiImport" class="btn-secondary">📥 インポート</button>
-                <input type="file" id="inputOshiImport" accept=".json" multiple style="display:none">
-                <button type="button" id="btnOshiExport" class="btn-secondary">📤 エクスポート</button>
+            <div class="settings-header">
+                <h2 class="settings-title">登録済みの推し一覧</h2>
+                <div class="oshi-manager-toolbar">
+                    <button type="button" id="btnOshiAdd" class="btn-secondary">+ 新規追加</button>
+                    <button type="button" id="btnOshiImport" class="btn-secondary">📥 インポート</button>
+                    <input type="file" id="inputOshiImport" accept=".json" multiple style="display:none">
+                    <button type="button" id="btnOshiExport" class="btn-secondary">📤 エクスポート</button>
+                </div>
             </div>
-            <div class="oshi-manager-scroll-area">
-                <table class="oshi-table">
-                    <thead>
-                        <tr>
-                            <th class="oshi-th-handle"></th>
-                            <th>カラー</th>
-                            <th>名前</th>
-                            <th>記念日</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="oshiTableBody">
-                        <!-- Rows injected by JS -->
-                    </tbody>
-                </table>
-                <p id="oshiTableEmpty" class="empty-list-message"
-                    style="display:none; text-align:center; padding: 20px;">まだ登録されていません</p>
+            <div class="oshi-manager-content">
+                <div class="oshi-manager-scroll-area">
+                    <table class="oshi-table">
+                        <thead>
+                            <tr>
+                                <th class="oshi-th-handle"></th>
+                                <th>カラー</th>
+                                <th>名前</th>
+                                <th>記念日</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="oshiTableBody">
+                            <!-- Rows injected by JS -->
+                        </tbody>
+                    </table>
+                    <p id="oshiTableEmpty" class="empty-list-message"
+                        style="display:none; text-align:center; padding: 20px;">まだ登録されていません</p>
+                </div>
+                <details class="event-type-manager">
+                    <summary>イベントタイプ管理</summary>
+                    <div id="eventTypeManagerList"></div>
+                </details>
             </div>
-            <details class="event-type-manager">
-                <summary>イベントタイプ管理</summary>
-                <div id="eventTypeManagerList"></div>
-            </details>
             <div class="form-actions">
                 <button type="button" id="btnCloseOshiManager" class="btn-cancel">閉じる</button>
             </div>
@@ -405,28 +409,32 @@
     <!-- Oshi Edit Popup -->
     <dialog id="oshiEditModal" class="settings-modal oshi-edit-modal">
         <form method="dialog" class="settings-form">
-            <h2 id="oshiEditTitle">新規追加</h2>
-            <input type="hidden" id="oshiEditIndex" value="-1">
-            <div class="setting-group">
-                <label>名前 <span style="color:#ef4444">*</span></label>
-                <input type="text" id="oshiEditName" placeholder="例: ○○ちゃん" required>
+            <div class="settings-header">
+                <h2 class="settings-title" id="oshiEditTitle">新規追加</h2>
             </div>
-            <div class="setting-group">
-                <label>推しカラー</label>
-                <div class="color-input-group">
-                    <span class="color-chip" id="oshiColorChip">
-                        <input type="color" id="oshiColorPicker" tabindex="-1" aria-label="カラーピッカーを開く">
-                    </span>
-                    <input type="text" id="oshiEditColor" class="hex-input" value="#3b82f6"
-                        placeholder="#rrggbb" maxlength="7" spellcheck="false" autocomplete="off">
+            <div class="oshi-edit-content">
+                <input type="hidden" id="oshiEditIndex" value="-1">
+                <div class="setting-group">
+                    <label>名前 <span class="required-mark">*</span></label>
+                    <input type="text" id="oshiEditName" placeholder="例: ○○ちゃん" required>
                 </div>
-            </div>
-            <div class="setting-group">
-                <label>記念日・誕生日</label>
-                <div id="memorialDatesList"></div>
-                <button type="button" id="btnAddMemorialDate" class="btn-add-row">＋ 追加</button>
-                <datalist id="eventTypeDatalist"></datalist>
-                <p class="help-text" style="margin-top:4px">タイプ欄は既存から選ぶか新しい名前を入力。日付: M/D（毎年）または YYYY/M/D</p>
+                <div class="setting-group">
+                    <label>推しカラー</label>
+                    <div class="color-input-group">
+                        <span class="color-chip" id="oshiColorChip">
+                            <input type="color" id="oshiColorPicker" tabindex="-1" aria-label="カラーピッカーを開く">
+                        </span>
+                        <input type="text" id="oshiEditColor" class="hex-input" value="#3b82f6"
+                            placeholder="#rrggbb" maxlength="7" spellcheck="false" autocomplete="off">
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <label>記念日・誕生日</label>
+                    <div id="memorialDatesList"></div>
+                    <button type="button" id="btnAddMemorialDate" class="btn-add-row">＋ 追加</button>
+                    <datalist id="eventTypeDatalist"></datalist>
+                    <p class="help-text" style="margin-top:4px">タイプ欄は既存から選ぶか新しい名前を入力。日付: M/D（毎年）または YYYY/M/D</p>
+                </div>
             </div>
             <div class="form-actions">
                 <button type="button" id="btnOshiEditCancel" class="btn-cancel">キャンセル</button>

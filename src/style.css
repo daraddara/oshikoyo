@@ -2612,10 +2612,42 @@ details[open]>summary::before {
     width: 95%;
 }
 
-.oshi-manager-scroll-area {
-    max-height: 60vh;
+/* ヘッダー内にツールバーを含む */
+.oshi-manager-modal .settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px 20px;
+}
+
+/* スクロール可能なテーブル領域 */
+.oshi-manager-content {
+    padding: 0 20px 8px;
     overflow-y: auto;
-    margin-bottom: 20px;
+    max-height: 65vh;
+}
+
+.oshi-manager-scroll-area {
+    overflow-y: visible;
+    margin-bottom: 12px;
+}
+
+/* 編集モーダルのコンテンツ領域 */
+.oshi-edit-content {
+    padding: 20px 24px 4px;
+    overflow-y: auto;
+    max-height: 65vh;
+}
+
+.oshi-edit-modal .settings-header {
+    padding: 16px 24px 14px;
+}
+
+/* 必須マーク */
+.required-mark {
+    color: #ef4444;
 }
 
 .oshi-summary-bar {
@@ -2767,9 +2799,6 @@ details[open]>summary::before {
 .oshi-manager-toolbar {
     display: flex;
     gap: 8px;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     flex-wrap: wrap;
 }
 
