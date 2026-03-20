@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { extractCode, loadModule, setupTestEnvironment } from './test-utils.js';
 
 // Ensure test environment is setup (polyfills Blob.arrayBuffer, etc)
@@ -19,6 +19,15 @@ const { getWeekdayHeaderHTML } = loadModule([weekdayHeaderLogic], ['getWeekdayHe
 // Extract base64ToBlob from script.js
 const base64ToBlobLogic = extractCode('// Helper: Base64 to Blob', '// Helper: Compare Blobs');
 const { base64ToBlob } = loadModule([base64ToBlobLogic], ['base64ToBlob']);
+
+// Extract getOrderedImageKeys from script.js (depends on appSettings)
+const orderedImageKeysCode = extractCode(
+    'function getOrderedImageKeys(dbKeys) {',
+    '\nfunction renderOshiTable'
+);
+function makeGetOrderedImageKeys(mockAppSettings) {
+    return new Function('appSettings', `${orderedImageKeysCode}; return getOrderedImageKeys;`)(mockAppSettings);
+}
 
 describe('escapeHTML', () => {
     it('should escape special characters', () => {
@@ -289,5 +298,32 @@ describe('blobToBase64', () => {
             // Restore original FileReader
             global.FileReader = originalFileReader;
         }
+    });
+});
+
+describe('getOrderedImageKeys', () => {
+    it('localImageOrder が空のとき DB キー順をそのまま返す', () => {
+        const fn = makeGetOrderedImageKeys({ localImageOrder: [] });
+        expect(fn([1, 2, 3])).toEqual([1, 2, 3]);
+    });
+
+    it('localImageOrder が未設定のとき DB キー順をそのまま返す', () => {
+        const fn = makeGetOrderedImageKeys({});
+        expect(fn([1, 2, 3])).toEqual([1, 2, 3]);
+    });
+
+    it('localImageOrder の順序で並び替えられる', () => {
+        const fn = makeGetOrderedImageKeys({ localImageOrder: [3, 1, 2] });
+        expect(fn([1, 2, 3])).toEqual([3, 1, 2]);
+    });
+
+    it('localImageOrder に存在しないキーは末尾に追加される', () => {
+        const fn = makeGetOrderedImageKeys({ localImageOrder: [2, 1] });
+        expect(fn([1, 2, 3])).toEqual([2, 1, 3]);
+    });
+
+    it('localImageOrder に DB に存在しないキーは除外される', () => {
+        const fn = makeGetOrderedImageKeys({ localImageOrder: [5, 2, 1] });
+        expect(fn([1, 2, 3])).toEqual([2, 1, 3]);
     });
 });
