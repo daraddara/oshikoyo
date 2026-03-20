@@ -200,62 +200,41 @@ class LocalImageDB {
     }
 
     /**
-     * Exports all image data as JSON chunks.
-     * @param {number} [chunkSizeLimit=52428800] - Limit for each chunk in characters.
-     * @returns {Promise<Array<{filename: string, data: object}>>}
+     * Exports all image data as a single gzip-compressed JSON blob.
+     * Images are loaded and encoded one at a time to keep peak memory at O(1 image).
+     * @returns {Promise<Array<{filename: string, blob: Blob}>>}
      */
-    async exportData(chunkSizeLimit = 50 * 1024 * 1024) {
-        await this.open();
-        const allImages = await this.getAllImages();
-        const chunks = [];
-        let currentChunk = {
-            version: 1,
-            timestamp: new Date().toISOString(),
-            images: []
-        };
-        let currentSize = 0;
-        let chunkIndex = 1;
+    async exportData() {
+        const keys = await this.getAllKeys();
+        if (keys.length === 0) return [];
 
-        for (const item of allImages) {
-            const base64 = await blobToBase64(item.file);
-            const imageData = {
-                id: item.id, // Keep original ID if possible, though re-import will assign new ID usually
-                name: item.file.name,
-                type: item.file.type,
-                lastModified: item.file.lastModified,
+        const encoder = new TextEncoder();
+        const { readable, writable } = new TransformStream();
+        const compressed = readable.pipeThrough(new CompressionStream('gzip'));
+        const writer = writable.getWriter();
+
+        // Start consuming the compressed stream before writing to avoid deadlock
+        const blobPromise = new Response(compressed).blob();
+
+        await writer.write(encoder.encode(`{"version":2,"timestamp":"${new Date().toISOString()}","images":[`));
+        for (let i = 0; i < keys.length; i++) {
+            const file = await this.getImage(keys[i]);
+            const base64 = await blobToBase64(file);
+            const imageData = JSON.stringify({
+                id: keys[i],
+                name: file.name,
+                type: file.type,
+                lastModified: file.lastModified,
                 data: base64
-            };
-
-            const itemSize = base64.length; // Approximate size in chars (bytes is less, but string len matters for JSON)
-
-            if (currentSize + itemSize > chunkSizeLimit && currentChunk.images.length > 0) {
-                // Finalize current chunk
-                chunks.push({
-                    filename: `oshikoyo_images_backup_${currentChunk.timestamp.slice(0, 10)}_part${chunkIndex}.json`,
-                    data: currentChunk
-                });
-                chunkIndex++;
-                currentChunk = {
-                    version: 1,
-                    timestamp: new Date().toISOString(),
-                    images: []
-                };
-                currentSize = 0;
-            }
-
-            currentChunk.images.push(imageData);
-            currentSize += itemSize;
-        }
-
-        // Add last chunk
-        if (currentChunk.images.length > 0) {
-            chunks.push({
-                filename: `oshikoyo_images_backup_${currentChunk.timestamp.slice(0, 10)}${chunks.length > 0 ? '_part' + chunkIndex : ''}.json`,
-                data: currentChunk
             });
+            await writer.write(encoder.encode((i > 0 ? ',' : '') + imageData));
         }
+        await writer.write(encoder.encode(']}'));
+        await writer.close();
 
-        return chunks;
+        const blob = await blobPromise;
+        const date = new Date().toISOString().slice(0, 10);
+        return [{ filename: `oshikoyo_images_backup_${date}.json.gz`, blob }];
     }
 
     /**
@@ -1808,8 +1787,7 @@ async function handleExportImages() {
         return;
     }
     for (const chunk of chunks) {
-        const blob = new Blob([JSON.stringify(chunk.data)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(chunk.blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = chunk.filename;
@@ -1818,7 +1796,7 @@ async function handleExportImages() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }
-    showToast(`${chunks.length > 1 ? chunks.length + ' ファイルに分割して' : ''}書き出しました`);
+    showToast('書き出しました');
 }
 
 function handleExportSettings() {
@@ -1934,8 +1912,15 @@ async function handleImportImages(files) {
 
     const importPromises = Array.from(files).map(async (file) => {
         try {
-            const text = await file.text();
-            const json = JSON.parse(text);
+            let json;
+            if (file.name.endsWith('.json.gz')) {
+                const decompressed = file.stream().pipeThrough(new DecompressionStream('gzip'));
+                const text = await new Response(decompressed).text();
+                json = JSON.parse(text);
+            } else {
+                const text = await file.text();
+                json = JSON.parse(text);
+            }
             const result = await localImageDB.importData(json);
             totalAdded += result.added;
             totalSkipped += result.skipped;
