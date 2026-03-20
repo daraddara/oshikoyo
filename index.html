@@ -225,108 +225,120 @@
     <!-- 設定モーダル -->
     <dialog id="settingsModal" class="settings-modal">
         <form method="dialog" class="settings-form">
-            <div class="settings-scroll-area">
-                <section class="settings-section">
-                    <h3>基本設定</h3>
-                    <div class="setting-group">
-                        <label>週の開始日</label>
-                        <div class="radio-group">
-                            <label><input type="radio" name="startOfWeek" value="0" checked> 日曜日</label>
-                            <label><input type="radio" name="startOfWeek" value="1"> 月曜日</label>
+            <div class="settings-header">
+                <h2 class="settings-title">設定</h2>
+            </div>
+
+            <nav class="settings-tabs" role="tablist">
+                <button type="button" class="settings-tab-btn is-active" data-tab="general" role="tab">一般</button>
+                <button type="button" class="settings-tab-btn" data-tab="media" role="tab">画像</button>
+                <button type="button" class="settings-tab-btn" data-tab="data" role="tab">データ</button>
+            </nav>
+
+            <!-- 一般タブ -->
+            <div class="settings-tab-panel is-active" data-panel="general">
+                <div class="setting-group">
+                    <label class="setting-label">週の開始日</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="startOfWeek" value="0" checked> 日曜日</label>
+                        <label><input type="radio" name="startOfWeek" value="1"> 月曜日</label>
+                    </div>
+                </div>
+
+                <div class="setting-divider"></div>
+
+                <div class="setting-group">
+                    <label class="setting-label">推し</label>
+                    <div class="oshi-summary-bar">
+                        <span class="oshi-summary-count">登録数: <strong id="oshiCount">0</strong> 人</span>
+                        <button type="button" id="btnOpenOshiManager" class="btn-secondary">一覧を管理</button>
+                    </div>
+                    <p class="help-text">追加・編集・インポート・エクスポートは「一覧を管理」から行えます。</p>
+                </div>
+
+                <div class="setting-divider"></div>
+
+                <div class="setting-group">
+                    <label class="setting-label">レイアウト</label>
+                    <p class="help-text">表示月数・レイアウト方向はヘッダーのボタンから直接切り替えできます。</p>
+                    <button type="button" id="btnResetLayout" class="btn-reset-layout">配置をデフォルトに戻す</button>
+                    <p class="help-text" style="margin-top:6px">表示月数・レイアウト方向・画像位置・画像サイズを初期状態に戻します。</p>
+                </div>
+            </div>
+
+            <!-- 画像タブ -->
+            <div class="settings-tab-panel" data-panel="media">
+                <div id="localMediaSettings" class="setting-group">
+                    <div class="media-action-group">
+                        <label class="setting-label-sm">画像を追加</label>
+                        <div class="media-btn-row">
+                            <button type="button" id="btnLocalFolder" class="btn-media">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                                フォルダから一括登録
+                            </button>
+                            <input type="file" id="inputLocalFolder" webkitdirectory style="display:none">
+                            <button type="button" id="btnLocalFiles" class="btn-media">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                                ファイルを追加
+                            </button>
+                            <input type="file" id="inputLocalFiles" multiple accept="image/*" style="display:none">
+                            <button type="button" id="btnClipboardPaste" class="btn-media">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                                貼り付け
+                            </button>
                         </div>
                     </div>
 
-                    <div class="settings-guide">
-                        <p>💡 表示月数・レイアウト方向はヘッダーのボタンから直接切り替えできます。</p>
-                    </div>
-                    <div class="setting-group">
-                        <button type="button" id="btnResetLayout" class="btn-reset-layout">🔄 配置をデフォルトに戻す</button>
-                        <p class="help-text">表示月数・レイアウト方向・画像位置・画像サイズを初期状態に戻します。</p>
-                    </div>
-                </section>
-
-                <section class="settings-section">
-                    <h3>推し設定</h3>
-
-                    <div class="setting-group">
-                        <label>登録済みの推し</label>
-                        <div class="oshi-summary-bar">
-                            <span>登録数: <strong id="oshiCount">0</strong> 人</span>
-                            <button type="button" id="btnOpenOshiManager" class="btn-secondary">一覧を管理</button>
+                    <div class="media-action-group">
+                        <label class="setting-label-sm">バックアップ</label>
+                        <div class="media-btn-row">
+                            <button type="button" id="btnExportImages" class="btn-media">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                画像データを書き出し
+                            </button>
+                            <button type="button" id="btnImportImages" class="btn-media">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                画像データを読み込み
+                            </button>
+                            <input type="file" id="inputImportImages" accept=".json" multiple style="display:none">
                         </div>
-                        <p class="help-text">※ 追加・編集・インポート・エクスポートは「一覧を管理」から行えます。</p>
-                    </div>
-                </section>
-
-                <section class="settings-section">
-                    <h3>画像表示設定</h3>
-
-                    <div class="settings-guide">
-                        <p>💡 画像の配置は、画像エリア上のコントロールバーにある「レイアウト」ボタンをクリックしてメニューから変更できます。境界のバーをドラッグすると画像サイズを調整できます。</p>
                     </div>
 
-                    <div id="localMediaSettings" class="setting-group">
-                        <label>ローカル画像管理</label>
-                        <div class="local-media-controls">
-                            <div class="import-buttons"
-                                style="margin-bottom: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
-                                <button type="button" id="btnLocalFolder" class="btn-secondary">📂
-                                    フォルダから一括登録</button>
-                                <input type="file" id="inputLocalFolder" webkitdirectory style="display:none">
+                    <div class="media-status-row">
+                        <span>登録済み: <strong id="localImageCount">0</strong> 枚</span>
+                        <button type="button" id="btnClearLocal" class="btn-danger-text">全削除</button>
+                    </div>
 
-                                <button type="button" id="btnLocalFiles" class="btn-secondary">📄
-                                    ファイルを追加</button>
-                                <input type="file" id="inputLocalFiles" multiple accept="image/*" style="display:none">
-
-                                <button type="button" id="btnClipboardPaste" class="btn-secondary">📋
-                                    貼り付け</button>
-                            </div>
-
-                            <!-- New: Export/Import Buttons -->
-                            <div class="backup-buttons"
-                                style="margin-bottom: 10px; display: flex; gap: 8px; border-top: 1px dashed #eee; padding-top: 8px;">
-                                <button type="button" id="btnExportImages" class="btn-secondary"
-                                    style="font-size: 0.9em;">📤 画像データを書き出し</button>
-                                <button type="button" id="btnImportImages" class="btn-secondary"
-                                    style="font-size: 0.9em;">📥 画像データを読み込み</button>
-                                <input type="file" id="inputImportImages" accept=".json" multiple style="display:none">
-                            </div>
-
-                            <div class="local-status-bar"
-                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                <span>登録済み: <strong id="localImageCount">0</strong> 枚</span>
-                                <button type="button" id="btnClearLocal" class="btn-danger-text"
-                                    style="color: #ef4444; background: none; border: none; cursor: pointer; text-decoration: underline;">全削除</button>
-                            </div>
-
-                            <details class="local-image-manager">
-                                <summary style="cursor: pointer; margin-bottom: 8px;">登録済み画像一覧を確認</summary>
-                                <div id="localImageList" class="local-image-grid"
-                                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; max-height: 300px; overflow-y: auto;">
-                                    <!-- Images injected here -->
-                                </div>
-                            </details>
+                    <details class="local-image-manager">
+                        <summary>登録済み画像一覧を確認</summary>
+                        <div id="localImageList" class="local-image-grid">
+                            <!-- Images injected here -->
                         </div>
-                        <p class="help-text" style="font-size: 0.8rem; color: #666; margin-top: 8px;">※
-                            画像はブラウザ内に保存されます。バックアップや移行の際は「画像データを書き出し」をご利用ください。</p>
-                    </div>
-                </section>
+                    </details>
 
-                <section class="settings-section">
-                    <h3>データ管理</h3>
-                    <div class="setting-group">
-                        <label>設定のバックアップと復元</label>
-                        <div class="backup-controls" style="display: flex; gap: 8px;">
-                            <button type="button" id="btnExportSettings" class="btn-secondary">設定を書き出し
-                                (保存)</button>
-                            <button type="button" id="btnImportSettings" class="btn-secondary">設定を読み込み
-                                (復元)</button>
-                            <input type="file" id="inputImportSettings" accept=".json" style="display:none">
-                        </div>
-                        <p class="help-text" style="font-size: 0.8rem; color: #666; margin-top: 5px;">※
-                            画像データ自体はバックアップに含まれません。</p>
+                    <p class="help-text">画像はブラウザ内に保存されます。バックアップや移行の際は「画像データを書き出し」をご利用ください。</p>
+                </div>
+            </div>
+
+            <!-- データタブ -->
+            <div class="settings-tab-panel" data-panel="data">
+                <div class="setting-group">
+                    <label class="setting-label">設定のバックアップと復元</label>
+                    <div class="data-btn-row">
+                        <button type="button" id="btnExportSettings" class="btn-data-action">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <span>設定を書き出し</span>
+                            <small>現在の設定をJSONで保存</small>
+                        </button>
+                        <button type="button" id="btnImportSettings" class="btn-data-action">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span>設定を読み込み</span>
+                            <small>JSONファイルから復元</small>
+                        </button>
                     </div>
-                </section>
+                    <input type="file" id="inputImportSettings" accept=".json" style="display:none">
+                    <p class="help-text">※ 画像データ自体はバックアップに含まれません。</p>
+                </div>
             </div>
 
             <div class="form-actions">
@@ -355,35 +367,39 @@
 
     <dialog id="oshiManagementModal" class="settings-modal oshi-manager-modal">
         <form method="dialog" class="settings-form">
-            <h2>登録済みの推し一覧</h2>
-            <div class="oshi-manager-toolbar">
-                <button type="button" id="btnOshiAdd" class="btn-secondary">+ 新規追加</button>
-                <button type="button" id="btnOshiImport" class="btn-secondary">📥 インポート</button>
-                <input type="file" id="inputOshiImport" accept=".json" multiple style="display:none">
-                <button type="button" id="btnOshiExport" class="btn-secondary">📤 エクスポート</button>
+            <div class="settings-header">
+                <h2 class="settings-title">登録済みの推し一覧</h2>
+                <div class="oshi-manager-toolbar">
+                    <button type="button" id="btnOshiAdd" class="btn-secondary">+ 新規追加</button>
+                    <button type="button" id="btnOshiImport" class="btn-secondary">📥 インポート</button>
+                    <input type="file" id="inputOshiImport" accept=".json" multiple style="display:none">
+                    <button type="button" id="btnOshiExport" class="btn-secondary">📤 エクスポート</button>
+                </div>
             </div>
-            <div class="oshi-manager-scroll-area">
-                <table class="oshi-table">
-                    <thead>
-                        <tr>
-                            <th class="oshi-th-handle"></th>
-                            <th>カラー</th>
-                            <th>名前</th>
-                            <th>記念日</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="oshiTableBody">
-                        <!-- Rows injected by JS -->
-                    </tbody>
-                </table>
-                <p id="oshiTableEmpty" class="empty-list-message"
-                    style="display:none; text-align:center; padding: 20px;">まだ登録されていません</p>
+            <div class="oshi-manager-content">
+                <div class="oshi-manager-scroll-area">
+                    <table class="oshi-table">
+                        <thead>
+                            <tr>
+                                <th class="oshi-th-handle"></th>
+                                <th></th>
+                                <th>名前</th>
+                                <th>記念日</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="oshiTableBody">
+                            <!-- Rows injected by JS -->
+                        </tbody>
+                    </table>
+                    <p id="oshiTableEmpty" class="empty-list-message"
+                        style="display:none; text-align:center; padding: 20px;">まだ登録されていません</p>
+                </div>
+                <details class="event-type-manager">
+                    <summary>イベントタイプ管理</summary>
+                    <div id="eventTypeManagerList"></div>
+                </details>
             </div>
-            <details class="event-type-manager">
-                <summary>イベントタイプ管理</summary>
-                <div id="eventTypeManagerList"></div>
-            </details>
             <div class="form-actions">
                 <button type="button" id="btnCloseOshiManager" class="btn-cancel">閉じる</button>
             </div>
@@ -393,28 +409,32 @@
     <!-- Oshi Edit Popup -->
     <dialog id="oshiEditModal" class="settings-modal oshi-edit-modal">
         <form method="dialog" class="settings-form">
-            <h2 id="oshiEditTitle">新規追加</h2>
-            <input type="hidden" id="oshiEditIndex" value="-1">
-            <div class="setting-group">
-                <label>名前 <span style="color:#ef4444">*</span></label>
-                <input type="text" id="oshiEditName" placeholder="例: ○○ちゃん" required>
+            <div class="settings-header">
+                <h2 class="settings-title" id="oshiEditTitle">新規追加</h2>
             </div>
-            <div class="setting-group">
-                <label>推しカラー</label>
-                <div class="color-input-group">
-                    <span class="color-chip" id="oshiColorChip">
-                        <input type="color" id="oshiColorPicker" tabindex="-1" aria-label="カラーピッカーを開く">
-                    </span>
-                    <input type="text" id="oshiEditColor" class="hex-input" value="#3b82f6"
-                        placeholder="#rrggbb" maxlength="7" spellcheck="false" autocomplete="off">
+            <div class="oshi-edit-content">
+                <input type="hidden" id="oshiEditIndex" value="-1">
+                <div class="setting-group">
+                    <label>名前 <span class="required-mark">*</span></label>
+                    <input type="text" id="oshiEditName" placeholder="例: ○○ちゃん" required>
                 </div>
-            </div>
-            <div class="setting-group">
-                <label>記念日・誕生日</label>
-                <div id="memorialDatesList"></div>
-                <button type="button" id="btnAddMemorialDate" class="btn-add-row">＋ 追加</button>
-                <datalist id="eventTypeDatalist"></datalist>
-                <p class="help-text" style="margin-top:4px">タイプ欄は既存から選ぶか新しい名前を入力。日付: M/D（毎年）または YYYY/M/D</p>
+                <div class="setting-group">
+                    <label>推しカラー</label>
+                    <div class="color-input-group">
+                        <span class="color-chip" id="oshiColorChip">
+                            <input type="color" id="oshiColorPicker" tabindex="-1" aria-label="カラーピッカーを開く">
+                        </span>
+                        <input type="text" id="oshiEditColor" class="hex-input" value="#3b82f6"
+                            placeholder="#rrggbb" maxlength="7" spellcheck="false" autocomplete="off">
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <label>記念日・誕生日</label>
+                    <div id="memorialDatesList"></div>
+                    <button type="button" id="btnAddMemorialDate" class="btn-add-row">＋ 追加</button>
+                    <datalist id="eventTypeDatalist"></datalist>
+                    <p class="help-text" style="margin-top:4px">タイプ欄は既存から選ぶか新しい名前を入力。日付: M/D（毎年）または YYYY/M/D</p>
+                </div>
             </div>
             <div class="form-actions">
                 <button type="button" id="btnOshiEditCancel" class="btn-cancel">キャンセル</button>
