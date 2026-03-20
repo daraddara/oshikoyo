@@ -1684,34 +1684,16 @@ async function renderLocalImageManager() {
 
     allImages.forEach(item => {
         const div = document.createElement('div');
-        div.style.position = 'relative';
-        div.style.aspectRatio = '1/1';
-        div.style.border = '1px solid #ddd';
-        div.style.borderRadius = '4px';
-        div.style.overflow = 'hidden';
+        div.className = 'local-image-item';
 
         const img = document.createElement('img');
         img.src = URL.createObjectURL(item.file);
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
-
-        // Clean up URL object when removed (simplified here, ideally intersection observer)
+        img.alt = item.name || '';
 
         const btnDel = document.createElement('button');
-        btnDel.type = 'button'; // Prevent form submission
+        btnDel.type = 'button';
+        btnDel.className = 'btn-img-delete';
         btnDel.textContent = '×';
-        btnDel.style.position = 'absolute';
-        btnDel.style.top = '2px';
-        btnDel.style.right = '2px';
-        btnDel.style.background = 'rgba(0,0,0,0.5)';
-        btnDel.style.color = '#fff';
-        btnDel.style.border = 'none';
-        btnDel.style.borderRadius = '50%';
-        btnDel.style.width = '20px';
-        btnDel.style.height = '20px';
-        btnDel.style.fontSize = '14px';
-        btnDel.style.cursor = 'pointer';
         btnDel.title = '削除';
 
         btnDel.onclick = async (e) => {
