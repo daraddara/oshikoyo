@@ -8,6 +8,8 @@ setupTestEnvironment();
 const previewLogic = extractCode('// --- Preview Logic ---', 'function setupPreviewModal() {');
 
 const setupCode = `
+    function updateTagDatalist() {}
+    function createTagInputUI() { return { id: null, replaceWith: () => {} }; }
     ${previewLogic}
     return {
         handleFiles,
