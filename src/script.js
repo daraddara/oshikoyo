@@ -1796,6 +1796,7 @@ function openImageLightbox(src, onDelete = null, imgId = null) {
                     const dot = document.createElement('div');
                     dot.className = 'img-tag-indicator';
                     dot.title = newTags.join(', ');
+                    dot.textContent = newTags.length;
                     gridItem.appendChild(dot);
                 }
             }
@@ -1933,6 +1934,7 @@ async function renderLocalImageManager() {
             const dot = document.createElement('div');
             dot.className = 'img-tag-indicator';
             dot.title = imageTags.join(', ');
+            dot.textContent = imageTags.length;
             div.appendChild(dot);
         }
         fragment.appendChild(div);
