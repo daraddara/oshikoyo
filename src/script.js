@@ -1947,18 +1947,6 @@ async function renderLocalImageManager() {
     }
 }
 
-async function handleLocalImageImport(files) {
-    if (!files || files.length === 0) return;
-
-    const fileArray = Array.from(files).filter(f => f.type.startsWith('image/'));
-    const newKeys = await localImageDB.addImages(fileArray);
-    appSettings.localImageOrder = [...(appSettings.localImageOrder || []), ...newKeys];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
-
-    showToast(`${fileArray.length} 枚の画像を追加しました`);
-    updateLocalMediaUI();
-    renderLocalImageManager();
-}
 
 async function handleExportImages() {
     showToast('画像データを書き出し中...');
@@ -2395,6 +2383,13 @@ async function handleFiles(files) {
 
     if (pendingPreviewFiles.length > 0) {
         renderPreview();
+        updateTagDatalist();
+        const tagArea = document.getElementById('previewTagInputArea');
+        if (tagArea) {
+            const tagUI = createTagInputUI([], () => {});
+            tagUI.id = 'previewTagInputArea';
+            tagArea.replaceWith(tagUI);
+        }
         document.getElementById('previewModal').showModal();
     }
 }
@@ -2418,6 +2413,11 @@ function renderPreview() {
 function setupPreviewModal() {
     // Add Confirm Add Button
     document.getElementById('btnAddPreview').addEventListener('click', async () => {
+        // Collect common tags before closing (DOM is still accessible)
+        const tagBadges = [...document.querySelectorAll('#previewTagInputArea .tag-badge')];
+        const commonTags = tagBadges.map(b => b.childNodes[0].textContent.trim()).filter(Boolean);
+        if (commonTags.length) addTagsToMaster(commonTags);
+
         const modal = document.getElementById('previewModal');
         modal.close(); // Close first
 
@@ -2428,6 +2428,9 @@ function setupPreviewModal() {
 
         if (count > 0) {
             appSettings.localImageOrder = [...(appSettings.localImageOrder || []), ...results];
+            if (commonTags.length) {
+                results.forEach(id => setImageTags(id, [...commonTags]));
+            }
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
             hasNewLocalImages = true;
             updateLocalMediaUI();
@@ -2633,12 +2636,12 @@ function initSettings() {
     // Local Import (Folder)
     const inputFolder = document.getElementById('inputLocalFolder');
     document.getElementById('btnLocalFolder').addEventListener('click', () => inputFolder.click());
-    inputFolder.addEventListener('change', (e) => handleLocalImageImport(e.target.files));
+    inputFolder.addEventListener('change', (e) => handleFiles(e.target.files));
 
     // Local Import (Files)
     const inputFiles = document.getElementById('inputLocalFiles');
     document.getElementById('btnLocalFiles').addEventListener('click', () => inputFiles.click());
-    inputFiles.addEventListener('change', (e) => handleLocalImageImport(e.target.files));
+    inputFiles.addEventListener('change', (e) => handleFiles(e.target.files));
 
     // Clipboard Paste Helper
     const handleClipboardPaste = async () => {
@@ -2658,7 +2661,7 @@ function initSettings() {
                 }
             }
             if (files.length > 0) {
-                handleLocalImageImport(files); // Reuse preview logic
+                handleFiles(files); // Reuse preview logic
             } else {
                 showToast('クリップボードに画像が見つかりませんでした。', 'warning');
             }
@@ -2692,7 +2695,7 @@ function initSettings() {
             }
             if (files.length > 0) {
                 e.preventDefault();
-                handleLocalImageImport(files);
+                handleFiles(files);
             }
         }
     });
@@ -2993,7 +2996,7 @@ async function checkSharedImage() {
             if (response) {
                 const blob = await response.blob();
                 const file = new File([blob], `shared-${Date.now()}.${blob.type.split('/')[1] || 'png'}`, { type: blob.type });
-                handleLocalImageImport([file]); // Pass to preview/import logic
+                handleFiles([file]); // Pass to preview/import logic
                 // Clean up
                 await cache.delete('shared-image-file');
             }
