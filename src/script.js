@@ -2272,13 +2272,22 @@ function setupImageGridDnD(list) {
 
         const rect = item.getBoundingClientRect();
         const insertBefore = e.clientX < rect.left + rect.width / 2;
-        const insertIdx = insertBefore ? tgtIdx : tgtIdx + 1;
+
+        // IDベースで並び替え：フィルター中でも全体順序を正しく操作できる
+        const srcId = Number(items[_imgDragSrcIndex].dataset.imgId);
+        const tgtId = Number(items[tgtIdx].dataset.imgId);
 
         const order = [...(appSettings.localImageOrder.length > 0
             ? appSettings.localImageOrder
             : items.map(el => Number(el.dataset.imgId)))];
-        const [moved] = order.splice(_imgDragSrcIndex, 1);
-        order.splice(_imgDragSrcIndex < insertIdx ? insertIdx - 1 : insertIdx, 0, moved);
+
+        const srcPos = order.indexOf(srcId);
+        if (srcPos === -1) return;
+        order.splice(srcPos, 1);
+
+        const tgtPos = order.indexOf(tgtId);
+        if (tgtPos === -1) return;
+        order.splice(insertBefore ? tgtPos : tgtPos + 1, 0, srcId);
 
         appSettings.localImageOrder = order;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
