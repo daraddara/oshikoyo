@@ -1889,15 +1889,20 @@ function openImageLightbox(src, onDelete = null, imgId = null) {
         const tagUI = createTagInputUI(getImageTags(imgId), (newTags) => {
             setImageTags(imgId, newTags);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
-            const gridItem = document.querySelector(`.local-image-item[data-img-id="${imgId}"]`);
-            if (gridItem) {
-                gridItem.querySelector('.img-tag-indicator')?.remove();
-                if (newTags.length > 0) {
-                    const dot = document.createElement('div');
-                    dot.className = 'img-tag-indicator';
-                    dot.title = newTags.join(', ');
-                    dot.textContent = newTags.length;
-                    gridItem.appendChild(dot);
+            if (showUntaggedOnly) {
+                // タグなしフィルター中にタグを付与した場合、グリッドを再描画して即時除外
+                renderLocalImageManager();
+            } else {
+                const gridItem = document.querySelector(`.local-image-item[data-img-id="${imgId}"]`);
+                if (gridItem) {
+                    gridItem.querySelector('.img-tag-indicator')?.remove();
+                    if (newTags.length > 0) {
+                        const dot = document.createElement('div');
+                        dot.className = 'img-tag-indicator';
+                        dot.title = newTags.join(', ');
+                        dot.textContent = newTags.length;
+                        gridItem.appendChild(dot);
+                    }
                 }
             }
         });
