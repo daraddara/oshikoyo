@@ -27,6 +27,8 @@ const DEFAULT_SETTINGS = {
     localImageOrder: [],
     tags: [],
     localImageMeta: {},
+    memorialDisplayMode: 'preferred',
+    imageCompressMode: 'standard',
 };
 
 const STORAGE_KEY = 'oshikoyo_settings';
@@ -117,5 +119,23 @@ describe('loadSettings マイグレーション — タグ関連フィールド'
         expect(s.tags).toEqual([]);
         expect(s.localImageMeta).toEqual({});
         expect(s.oshiList).toEqual([]);
+    });
+
+    it('imageCompressMode がない古いデータ → "standard" で初期化される', () => {
+        const { loadSettings, getAppSettings } = makeLoadSettings({ startOfWeek: 1 });
+        loadSettings();
+        expect(getAppSettings().imageCompressMode).toBe('standard');
+    });
+
+    it('imageCompressMode が不正な値 → "standard" で上書きされる', () => {
+        const { loadSettings, getAppSettings } = makeLoadSettings({ imageCompressMode: 'invalid' });
+        loadSettings();
+        expect(getAppSettings().imageCompressMode).toBe('standard');
+    });
+
+    it('imageCompressMode が有効な値なら保持される', () => {
+        const { loadSettings, getAppSettings } = makeLoadSettings({ imageCompressMode: 'aggressive' });
+        loadSettings();
+        expect(getAppSettings().imageCompressMode).toBe('aggressive');
     });
 });
