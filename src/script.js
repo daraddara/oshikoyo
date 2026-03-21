@@ -2924,12 +2924,19 @@ function initSettings() {
     });
 
     // Close Modal
-    document.getElementById('btnCancel').addEventListener('click', () => {
+    document.getElementById('btnClose').addEventListener('click', () => {
         document.getElementById('settingsModal').close();
     });
 
-    // Save Settings
-    document.getElementById('btnSave').addEventListener('click', saveSettings);
+    // 全般タブ: 各コントロールの変更を即時保存・適用
+    document.querySelectorAll('input[name="startOfWeek"]').forEach(r => {
+        r.addEventListener('change', saveSettings);
+    });
+    document.querySelectorAll('input[name="memorialDisplayMode"]').forEach(r => {
+        r.addEventListener('change', saveSettings);
+    });
+    const checkAutoLayout = document.getElementById('checkAutoLayout');
+    if (checkAutoLayout) checkAutoLayout.addEventListener('change', saveSettings);
 
     // Reset Layout
     document.getElementById('btnResetLayout').addEventListener('click', resetLayoutToDefault);
@@ -3241,28 +3248,25 @@ function resetLayoutToDefault() {
     showToast('配置をデフォルトに戻しました');
 }
 
+/**
+ * 全般タブの設定を appSettings に反映して即時保存・適用する。
+ * モーダルは閉じない（各コントロールの change イベントから呼ばれる）。
+ */
 function saveSettings() {
-    // Basic
+    // 週の始まり
     const startOfWeekEl = document.querySelector('input[name="startOfWeek"]:checked');
     if (startOfWeekEl) appSettings.startOfWeek = parseInt(startOfWeekEl.value);
 
-    // Auto Layout
+    // 自動レイアウト
     const checkAutoLayout = document.getElementById('checkAutoLayout');
     if (checkAutoLayout) appSettings.autoLayoutMode = checkAutoLayout.checked;
 
-    // Memorial Display Mode
+    // 記念日表示モード
     const memorialModeEl = document.querySelector('input[name="memorialDisplayMode"]:checked');
     if (memorialModeEl) appSettings.memorialDisplayMode = memorialModeEl.value;
 
-    // Media mode is managed by UI buttons directly
-    // Interval is managed by select menu directly
-
-    // Note: oshiList is already updated in memory via adding/deleting buttons.
-    // We just save the current state.
-
     localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
-    document.getElementById('settingsModal').close();
-    setupMediaTimer(true); // Reset timer with new settings and refresh image
+    setupMediaTimer(true);
     updateToggleMonthsUI();
     updateView();
 }
