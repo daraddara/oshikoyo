@@ -90,12 +90,28 @@ describe('Security: Import Settings Validation', () => {
                         { type_id: 'debut', date: '2020/01/01', is_annual: true }
                     ],
                     color: '#ff0000',
-                    fanArtTag: '#testart',
+                    tags: ['ライブ', '衣装A'],
                     source: 'test_source.json'
                 }
             ]
         };
         const result = validateImportedSettings(input);
         expect(result).toEqual(input);
+    });
+
+    it('should strip deprecated fanArtTag and emit tags array', () => {
+        const input = {
+            oshiList: [
+                {
+                    name: 'Test Oshi',
+                    color: '#ff0000',
+                    fanArtTag: '#testart',
+                    source: 'test_source.json'
+                }
+            ]
+        };
+        const result = validateImportedSettings(input);
+        expect(result.oshiList[0].fanArtTag).toBeUndefined();
+        expect(result.oshiList[0].tags).toEqual([]);
     });
 });
