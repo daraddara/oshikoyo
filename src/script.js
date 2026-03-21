@@ -1910,6 +1910,7 @@ function openImageLightbox(src, onDelete = null, imgId = null) {
 }
 
 let imageTagFilter = new Set(); // タグフィルター状態（セッション中に保持）
+let showUntaggedOnly = false;   // タグなし画像のみ表示フィルター（imageTagFilter と排他）
 
 async function renderLocalImageManager() {
     const list = document.getElementById('localImageList');
@@ -1952,6 +1953,11 @@ async function renderLocalImageManager() {
     // Remove stale filter tags (image deleted etc.)
     [...imageTagFilter].forEach(t => { if (!allTagsSet.has(t)) imageTagFilter.delete(t); });
 
+    const untaggedCount = sortedImages.filter(item => getImageTags(item.id).length === 0).length;
+
+    // showUntaggedOnly をリセット（タグなし画像が0件になった場合）
+    if (untaggedCount === 0) showUntaggedOnly = false;
+
     const filterContainer = list.parentElement.querySelector('.img-filter-bar');
     if (filterContainer) filterContainer.remove();
 
@@ -1960,10 +1966,10 @@ async function renderLocalImageManager() {
         filterBar.className = 'img-filter-bar';
 
         const allChip = document.createElement('button');
-        allChip.className = 'img-filter-chip' + (imageTagFilter.size === 0 ? ' active' : '');
+        allChip.className = 'img-filter-chip' + (!showUntaggedOnly && imageTagFilter.size === 0 ? ' active' : '');
         allChip.textContent = 'すべて';
         allChip.type = 'button';
-        allChip.onclick = () => { imageTagFilter.clear(); renderLocalImageManager(); };
+        allChip.onclick = () => { imageTagFilter.clear(); showUntaggedOnly = false; renderLocalImageManager(); };
         filterBar.appendChild(allChip);
 
         [...allTagsSet].sort().forEach(tag => {
@@ -1972,6 +1978,7 @@ async function renderLocalImageManager() {
             chip.textContent = tag;
             chip.type = 'button';
             chip.onclick = () => {
+                showUntaggedOnly = false;
                 if (imageTagFilter.has(tag)) imageTagFilter.delete(tag);
                 else imageTagFilter.add(tag);
                 renderLocalImageManager();
@@ -1979,15 +1986,35 @@ async function renderLocalImageManager() {
             filterBar.appendChild(chip);
         });
 
+        // 「タグなし」チップ：タグなし画像が存在する場合のみ表示
+        if (untaggedCount > 0) {
+            const untaggedChip = document.createElement('button');
+            untaggedChip.className = 'img-filter-chip img-filter-chip--untagged' + (showUntaggedOnly ? ' active' : '');
+            untaggedChip.textContent = `タグなし (${untaggedCount})`;
+            untaggedChip.type = 'button';
+            untaggedChip.title = 'タグが設定されていない画像のみ表示';
+            untaggedChip.onclick = () => {
+                showUntaggedOnly = true;
+                imageTagFilter.clear();
+                renderLocalImageManager();
+            };
+            filterBar.appendChild(untaggedChip);
+        }
+
         list.insertAdjacentElement('beforebegin', filterBar);
     }
 
-    // Filter images (OR: any selected tag matches)
-    const displayImages = imageTagFilter.size === 0
-        ? sortedImages
-        : sortedImages.filter(item =>
+    // Filter images
+    let displayImages;
+    if (showUntaggedOnly) {
+        displayImages = sortedImages.filter(item => getImageTags(item.id).length === 0);
+    } else if (imageTagFilter.size === 0) {
+        displayImages = sortedImages;
+    } else {
+        displayImages = sortedImages.filter(item =>
             [...imageTagFilter].some(t => getImageTags(item.id).includes(t))
         );
+    }
 
     const fragment = document.createDocumentFragment();
 

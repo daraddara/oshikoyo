@@ -2202,6 +2202,13 @@ body {
     color: #fff;
     border-color: transparent;
 }
+.img-filter-chip--untagged {
+    border-style: dashed;
+}
+.img-filter-chip--untagged.active {
+    background: var(--text-secondary, #888);
+    border-style: solid;
+}
 
 /* タグバッジ（共通） */
 .tag-badge {
