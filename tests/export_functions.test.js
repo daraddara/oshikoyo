@@ -2,8 +2,8 @@
  * @jest-environment jsdom
  *
  * エクスポート関数のテスト
- * - handleExportImages: 画像データのダウンロード（バグ再発防止）
- * - handleExportSettings: 設定データのダウンロード
+ * - handleExportFullBackup: 全データ（設定＋画像）のダウンロード
+ * - handleExportImageTagPackage: 画像＋タグパッケージのダウンロード
  * - handleOshiExport: 推しリストのダウンロード
  */
 
@@ -13,14 +13,14 @@ import { extractCode, setupTestEnvironment } from './test-utils.js';
 setupTestEnvironment();
 
 // --- コード抽出 ---
-const exportImagesCode = extractCode(
-    'async function handleExportImages() {',
-    '\nfunction handleExportSettings() {'
+const exportFullBackupCode = extractCode(
+    'async function handleExportFullBackup() {',
+    '\nasync function handleImportFullBackup('
 );
 
-const exportSettingsCode = extractCode(
-    'function handleExportSettings() {',
-    '\n// Helper: Validate Imported Settings'
+const exportImageTagCode = extractCode(
+    'async function handleExportImageTagPackage() {',
+    '\nasync function handleImportImageTagPackage('
 );
 
 const exportOshiCode = extractCode(
@@ -28,19 +28,26 @@ const exportOshiCode = extractCode(
     '\n// --- Oshi Import (for modal) ---'
 );
 
+const blobToBase64Code = extractCode(
+    '// Helper: Blob to Base64',
+    '// --- State Persistence'
+);
+
 // --- ファクトリ関数（依存注入） ---
-function makeHandleExportImages(mockLocalImageDB, mockShowToast) {
-    // getOrderedImageKeys: テストではカスタム順不要のためパススルー
+function makeHandleExportFullBackup(mockLocalImageDB, mockAppSettings, mockShowToast) {
     const getOrderedImageKeys = (keys) => keys;
-    return new Function('localImageDB', 'showToast', 'getOrderedImageKeys',
-        `${exportImagesCode}; return handleExportImages;`
-    )(mockLocalImageDB, mockShowToast, getOrderedImageKeys);
+    return new Function(
+        'localImageDB', 'appSettings', 'showToast', 'getOrderedImageKeys', 'blobToBase64',
+        `${blobToBase64Code}; ${exportFullBackupCode}; return handleExportFullBackup;`
+    )(mockLocalImageDB, mockAppSettings, mockShowToast, getOrderedImageKeys, null /* extracted */);
 }
 
-function makeHandleExportSettings(mockAppSettings) {
-    return new Function('appSettings',
-        `${exportSettingsCode}; return handleExportSettings;`
-    )(mockAppSettings);
+function makeHandleExportImageTagPackage(mockLocalImageDB, mockAppSettings, mockShowToast) {
+    const getOrderedImageKeys = (keys) => keys;
+    return new Function(
+        'localImageDB', 'appSettings', 'showToast', 'getOrderedImageKeys', 'blobToBase64',
+        `${blobToBase64Code}; ${exportImageTagCode}; return handleExportImageTagPackage;`
+    )(mockLocalImageDB, mockAppSettings, mockShowToast, getOrderedImageKeys, null /* extracted */);
 }
 
 function makeHandleOshiExport(mockAppSettings, mockShowToast) {
@@ -50,15 +57,79 @@ function makeHandleOshiExport(mockAppSettings, mockShowToast) {
 }
 
 // ===========================================================================
-// handleExportImages
+// handleExportFullBackup
 // ===========================================================================
-describe('handleExportImages', () => {
+describe('handleExportFullBackup', () => {
     let clickSpy;
     let mockShowToast;
 
     beforeEach(() => {
         mockShowToast = vi.fn();
-        // a.click() の実行を捕捉（実際のダウンロードは発生させない）
+        clickSpy = vi.spyOn(HTMLElement.prototype, 'click').mockImplementation(() => {});
+        URL.createObjectURL.mockReturnValue('blob:test-url');
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+        vi.clearAllMocks();
+    });
+
+    it('ダウンロードを実行しトーストを表示する', async () => {
+        const mockDB = {
+            getAllKeys: vi.fn().mockResolvedValue([1]),
+            getImage: vi.fn().mockResolvedValue(new File(['img'], 'photo.jpg', { type: 'image/jpeg' })),
+        };
+        const mockSettings = { oshiList: [], startOfWeek: 0 };
+        const fn = makeHandleExportFullBackup(mockDB, mockSettings, mockShowToast);
+
+        await fn();
+
+        expect(URL.createObjectURL).toHaveBeenCalledOnce();
+        expect(URL.revokeObjectURL).toHaveBeenCalledOnce();
+        expect(clickSpy).toHaveBeenCalledOnce();
+        expect(mockShowToast).toHaveBeenLastCalledWith('バックアップを保存しました');
+    });
+
+    it('画像が0件でもバックアップは実行される', async () => {
+        const mockDB = {
+            getAllKeys: vi.fn().mockResolvedValue([]),
+            getImage: vi.fn(),
+        };
+        const mockSettings = { oshiList: [], startOfWeek: 0 };
+        const fn = makeHandleExportFullBackup(mockDB, mockSettings, mockShowToast);
+
+        await fn();
+
+        expect(URL.createObjectURL).toHaveBeenCalledOnce();
+        expect(clickSpy).toHaveBeenCalledOnce();
+        expect(mockDB.getImage).not.toHaveBeenCalled();
+    });
+
+    it('ファイル名が oshikoyo_backup_YYYY-MM-DD.json.gz 形式である', async () => {
+        const mockDB = {
+            getAllKeys: vi.fn().mockResolvedValue([]),
+            getImage: vi.fn(),
+        };
+        const fn = makeHandleExportFullBackup(mockDB, { oshiList: [] }, mockShowToast);
+
+        const appendSpy = vi.spyOn(document.body, 'appendChild');
+        await fn();
+
+        const anchor = appendSpy.mock.calls[0][0];
+        expect(anchor.tagName).toBe('A');
+        expect(anchor.download).toMatch(/^oshikoyo_backup_\d{4}-\d{2}-\d{2}\.json\.gz$/);
+    });
+});
+
+// ===========================================================================
+// handleExportImageTagPackage
+// ===========================================================================
+describe('handleExportImageTagPackage', () => {
+    let clickSpy;
+    let mockShowToast;
+
+    beforeEach(() => {
+        mockShowToast = vi.fn();
         clickSpy = vi.spyOn(HTMLElement.prototype, 'click').mockImplementation(() => {});
         URL.createObjectURL.mockReturnValue('blob:test-url');
     });
@@ -69,91 +140,43 @@ describe('handleExportImages', () => {
     });
 
     it('画像が0件の場合はダウンロードせず専用トーストを表示する', async () => {
-        const mockDB = {
-            getAllKeys: vi.fn().mockResolvedValue([]),
-            exportData: vi.fn().mockResolvedValue([]),
-        };
-        const fn = makeHandleExportImages(mockDB, mockShowToast);
+        const mockDB = { getAllKeys: vi.fn().mockResolvedValue([]) };
+        const fn = makeHandleExportImageTagPackage(mockDB, { oshiList: [] }, mockShowToast);
 
         await fn();
 
-        expect(mockDB.exportData).toHaveBeenCalledOnce();
         expect(URL.createObjectURL).not.toHaveBeenCalled();
         expect(clickSpy).not.toHaveBeenCalled();
         expect(mockShowToast).toHaveBeenCalledWith('書き出す画像がありません');
     });
 
     it('ダウンロードを実行しトーストを表示する', async () => {
-        const chunks = [{ filename: 'oshikoyo_images_backup_2026-03-20.json.gz', blob: new Blob(['gz'], { type: 'application/gzip' }) }];
         const mockDB = {
             getAllKeys: vi.fn().mockResolvedValue([1]),
-            exportData: vi.fn().mockResolvedValue(chunks),
+            getImage: vi.fn().mockResolvedValue(new File(['img'], 'photo.jpg', { type: 'image/jpeg' })),
         };
-        const fn = makeHandleExportImages(mockDB, mockShowToast);
+        const mockSettings = { oshiList: [], localImageMeta: {} };
+        const fn = makeHandleExportImageTagPackage(mockDB, mockSettings, mockShowToast);
 
         await fn();
 
         expect(URL.createObjectURL).toHaveBeenCalledOnce();
-        expect(URL.revokeObjectURL).toHaveBeenCalledOnce();
         expect(clickSpy).toHaveBeenCalledOnce();
         expect(mockShowToast).toHaveBeenLastCalledWith('書き出しました');
     });
 
-    it('正しいファイル名が設定される', async () => {
-        const filename = 'oshikoyo_images_backup_2026-03-20.json.gz';
-        const chunks = [{ filename, blob: new Blob(['gz'], { type: 'application/gzip' }) }];
+    it('ファイル名が oshikoyo_images_YYYY-MM-DD.json.gz 形式である', async () => {
         const mockDB = {
             getAllKeys: vi.fn().mockResolvedValue([1]),
-            exportData: vi.fn().mockResolvedValue(chunks),
+            getImage: vi.fn().mockResolvedValue(new File(['img'], 'photo.jpg', { type: 'image/jpeg' })),
         };
-        const fn = makeHandleExportImages(mockDB, mockShowToast);
+        const fn = makeHandleExportImageTagPackage(mockDB, { oshiList: [], localImageMeta: {} }, mockShowToast);
 
-        // ダウンロード時に <a download="..."> が設定されることを確認
         const appendSpy = vi.spyOn(document.body, 'appendChild');
         await fn();
 
         const anchor = appendSpy.mock.calls[0][0];
-        expect(anchor.tagName).toBe('A');
-        expect(anchor.download).toBe(filename);
-    });
-});
-
-// ===========================================================================
-// handleExportSettings
-// ===========================================================================
-describe('handleExportSettings', () => {
-    let clickSpy;
-
-    beforeEach(() => {
-        clickSpy = vi.spyOn(HTMLElement.prototype, 'click').mockImplementation(() => {});
-        URL.createObjectURL.mockReturnValue('blob:test-url');
-    });
-
-    afterEach(() => {
-        vi.restoreAllMocks();
-        vi.clearAllMocks();
-    });
-
-    it('ObjectURL を作成しダウンロードを実行する', () => {
-        const mockSettings = { oshiList: [], startOfWeek: 0 };
-        const fn = makeHandleExportSettings(mockSettings);
-
-        fn();
-
-        expect(URL.createObjectURL).toHaveBeenCalledOnce();
-        expect(clickSpy).toHaveBeenCalledOnce();
-        expect(URL.revokeObjectURL).toHaveBeenCalledOnce();
-    });
-
-    it('ファイル名が oshikoyo_settings_YYYY-MM-DD.json 形式である', () => {
-        const mockSettings = { oshiList: [], startOfWeek: 0 };
-        const fn = makeHandleExportSettings(mockSettings);
-
-        const appendSpy = vi.spyOn(document.body, 'appendChild');
-        fn();
-
-        const anchor = appendSpy.mock.calls[0][0];
-        expect(anchor.download).toMatch(/^oshikoyo_settings_\d{4}-\d{2}-\d{2}\.json$/);
+        expect(anchor.download).toMatch(/^oshikoyo_images_\d{4}-\d{2}-\d{2}\.json\.gz$/);
     });
 });
 
