@@ -2176,6 +2176,75 @@ body {
     line-height: 1;
 }
 
+/* Storage Indicator */
+.storage-indicator {
+    margin-bottom: 8px;
+}
+
+.storage-indicator__track {
+    height: 6px;
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 3px;
+}
+
+.storage-indicator__bar {
+    height: 100%;
+    background: var(--accent-color, #a78bfa);
+    border-radius: 3px;
+    transition: width 0.4s ease;
+    min-width: 2px;
+}
+
+.storage-indicator__label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Compress Setting */
+.compress-setting {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.compress-setting__row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    margin-bottom: 4px;
+}
+
+.compress-setting__row .setting-label-sm {
+    margin: 0;
+    white-space: nowrap;
+}
+
+.radio-group--inline {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    font-size: 0.85rem;
+}
+
+.radio-group--inline label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-sm {
+    font-size: 0.78rem;
+    padding: 3px 10px;
+    margin-left: auto;
+}
+
 /* 画像一覧タグフィルターバー */
 .img-filter-bar {
     display: flex;
@@ -2495,24 +2564,24 @@ body {
 }
 
 /* Media tab */
-.media-action-group { margin-bottom: 18px; }
+.media-action-group { margin-bottom: 12px; }
 
 .media-btn-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
 }
 
 .btn-media {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px 14px;
+    gap: 5px;
+    padding: 5px 11px;
     border: 1px solid rgba(0, 0, 0, 0.12);
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.6);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     cursor: pointer;
     color: var(--text-primary);
     font-family: inherit;
