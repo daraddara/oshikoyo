@@ -1787,8 +1787,10 @@ function convertCsvRowsToOshiItems(rows, fileName) {
 function showOshiCsvPreview(newItems, dupeCount, errorRowCount, onConfirm) {
     const dlg = document.createElement('dialog');
     dlg.className = 'settings-modal';
+    dlg.style.background = 'transparent';
+    dlg.style.padding = '0';
     dlg.innerHTML = `
-        <div style="padding:24px;min-width:340px;max-width:480px;width:90vw;box-sizing:border-box">
+        <div style="padding:24px;min-width:340px;max-width:480px;width:90vw;box-sizing:border-box;background:var(--bg-color);border-radius:var(--border-radius)">
             <h3 style="margin:0 0 12px;font-size:1rem">CSVインポート確認</h3>
             <ul style="list-style:none;padding:0;margin:0 0 12px;display:flex;flex-direction:column;gap:4px;font-size:0.9rem">
                 <li>追加: <strong>${newItems.length} 件</strong></li>
