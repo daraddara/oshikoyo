@@ -1651,120 +1651,281 @@ function handleOshiExport() {
     showToast(`${count}件のデータをエクスポートしました`);
 }
 
+// --- Oshi CSV Import ---
+
+const OSHI_CSV_TEMPLATE_HEADERS = [
+    '名前', 'カラー', '誕生日', 'デビュー記念日',
+    'イベント1_種別', 'イベント1_日付',
+    'イベント2_種別', 'イベント2_日付',
+    'イベント3_種別', 'イベント3_日付',
+    'タグ'
+];
+
+/**
+ * CSVテンプレートファイルをダウンロードする。
+ */
+function downloadOshiCsvTemplate() {
+    const sample = [
+        OSHI_CSV_TEMPLATE_HEADERS.join(','),
+        '推しA,#ff6b9d,3/21,2019/9/1,3Dお披露目,2022/4/1,,,,,VTuber;歌手',
+        '推しB,#3b82f6,11/5,,,,,,,,'
+    ].join('\r\n');
+    const bom = '\uFEFF'; // UTF-8 BOM（Excelで文字化けしないように）
+    const blob = new Blob([bom + sample], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'oshi_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+/**
+ * CSV テキストを解析してオブジェクト配列に変換する。
+ * クォート・CRLF・UTF-8 BOM に対応。
+ * @param {string} text - CSVテキスト
+ * @returns {{ headers: string[], rows: Object[] }} ヘッダーと行データ
+ */
+function parseCSV(text) {
+    // BOM 除去
+    const cleaned = text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
+    const lines = cleaned.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+
+    /**
+     * 1行分のCSVをフィールド配列に分割する（クォート対応）。
+     * @param {string} line
+     * @returns {string[]}
+     */
+    function splitLine(line) {
+        const fields = [];
+        let cur = '';
+        let inQuote = false;
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (inQuote) {
+                if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+                else if (ch === '"') { inQuote = false; }
+                else { cur += ch; }
+            } else {
+                if (ch === '"') { inQuote = true; }
+                else if (ch === ',') { fields.push(cur.trim()); cur = ''; }
+                else { cur += ch; }
+            }
+        }
+        fields.push(cur.trim());
+        return fields;
+    }
+
+    const nonEmptyLines = lines.filter(l => l.trim() !== '');
+    if (nonEmptyLines.length < 2) return { headers: [], rows: [] };
+
+    const headers = splitLine(nonEmptyLines[0]).map(h => h.trim());
+    const rows = nonEmptyLines.slice(1).map(line => {
+        const fields = splitLine(line);
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = (fields[i] || '').trim(); });
+        return obj;
+    });
+    return { headers, rows };
+}
+
+/**
+ * CSV行オブジェクトを推しデータに変換する。
+ * @param {Object[]} rows - parseCSV の出力
+ * @param {string} fileName - エラー表示用ファイル名
+ * @returns {{ items: Object[], skippedRows: number }} 変換結果
+ */
+function convertCsvRowsToOshiItems(rows, fileName) {
+    const items = [];
+    let skippedRows = 0;
+
+    rows.forEach((row, idx) => {
+        const name = row['名前'] || row['name'] || '';
+        if (!name) { skippedRows++; return; } // 名前なしはスキップ
+
+        const color = row['カラー'] || row['color'] || '';
+        const memorial_dates = [];
+
+        // 誕生日・デビュー記念日
+        const birthday = row['誕生日'] || row['birthday'] || '';
+        const debut = row['デビュー記念日'] || row['debutDate'] || '';
+        if (birthday) memorial_dates.push({ type_id: 'bday', date: birthday, is_annual: true });
+        if (debut)    memorial_dates.push({ type_id: 'debut', date: debut, is_annual: true });
+
+        // カスタムイベント（最大3組）
+        if (!appSettings.event_types) appSettings.event_types = [...DEFAULT_SETTINGS.event_types];
+        for (let n = 1; n <= 3; n++) {
+            const label = (row[`イベント${n}_種別`] || '').trim();
+            const date  = (row[`イベント${n}_日付`] || '').trim();
+            if (!label || !date) continue;
+
+            let typeId = getTypeIdForLabel(label);
+            if (!typeId) {
+                typeId = 'ev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+                appSettings.event_types.push({ id: typeId, label, icon: 'star' });
+            }
+            memorial_dates.push({ type_id: typeId, date, is_annual: true });
+        }
+
+        // タグ（セミコロン区切り）
+        const tagRaw = row['タグ'] || row['tags'] || '';
+        const tags = tagRaw ? tagRaw.split(';').map(t => t.trim()).filter(Boolean) : [];
+
+        items.push({ name, color, memorial_dates, tags, source: fileName });
+    });
+
+    return { items, skippedRows };
+}
+
+/**
+ * CSVインポートのプレビューダイアログを表示し、確認後にインポートを実行する。
+ * @param {Object[]} newItems - 追加対象の推しデータ
+ * @param {number} dupeCount - 重複スキップ件数
+ * @param {number} errorRowCount - 不正行スキップ件数
+ * @param {Function} onConfirm - 確定時コールバック
+ */
+function showOshiCsvPreview(newItems, dupeCount, errorRowCount, onConfirm) {
+    const dlg = document.createElement('dialog');
+    dlg.className = 'settings-modal';
+    dlg.innerHTML = `
+        <div style="padding:24px;min-width:280px">
+            <h3 style="margin:0 0 16px;font-size:1rem">CSVインポート確認</h3>
+            <ul style="list-style:none;padding:0;margin:0 0 16px;display:flex;flex-direction:column;gap:6px;font-size:0.9rem">
+                <li>追加: <strong>${newItems.length} 件</strong></li>
+                ${dupeCount > 0 ? `<li style="color:var(--text-secondary)">重複スキップ: ${dupeCount} 件（同名の推しが既存）</li>` : ''}
+                ${errorRowCount > 0 ? `<li style="color:var(--text-secondary)">不正行スキップ: ${errorRowCount} 件（名前が空等）</li>` : ''}
+            </ul>
+            ${newItems.length > 0 ? `
+            <div style="max-height:160px;overflow-y:auto;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:8px;margin-bottom:16px;font-size:0.8rem">
+                ${newItems.map(o => `<div style="display:flex;align-items:center;gap:8px;padding:2px 0">
+                    <span style="width:14px;height:14px;border-radius:50%;background:${escapeHTML(o.color||'#ccc')};flex-shrink:0;display:inline-block;border:1px solid rgba(0,0,0,0.1)"></span>
+                    <span>${escapeHTML(o.name)}</span>
+                    ${o.memorial_dates.length > 0 ? `<span style="color:var(--text-secondary)">(記念日 ${o.memorial_dates.length}件)</span>` : ''}
+                </div>`).join('')}
+            </div>` : `<p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:16px">追加できる推しがありません。</p>`}
+            <div style="display:flex;justify-content:flex-end;gap:10px">
+                <button type="button" id="csvPreviewCancel" class="btn-cancel">キャンセル</button>
+                ${newItems.length > 0 ? `<button type="button" id="csvPreviewConfirm" class="btn-primary">追加する</button>` : ''}
+            </div>
+        </div>
+    `;
+    document.body.appendChild(dlg);
+    dlg.showModal();
+
+    dlg.querySelector('#csvPreviewCancel').onclick = () => { dlg.close(); dlg.remove(); };
+    const confirmBtn = dlg.querySelector('#csvPreviewConfirm');
+    if (confirmBtn) {
+        confirmBtn.onclick = () => { dlg.close(); dlg.remove(); onConfirm(); };
+    }
+}
+
 // --- Oshi Import (for modal) ---
 function handleOshiImportFromModal(files) {
     if (!files || files.length === 0) return;
 
-    let addedCount = 0;
-    let skippedCount = 0;
-    let errorCount = 0;
+    const existingNames = new Set((appSettings.oshiList || []).map(o => o.name));
     const totalFiles = files.length;
     let processedCount = 0;
-    let errorMessages = [];
 
-    const existingNames = new Set((appSettings.oshiList || []).map(o => o.name));
+    // 全ファイル読み込み後にまとめてプレビューを出すため、結果を収集
+    const allNewItems = [];
+    let totalDupes = 0;
+    let totalErrorRows = 0;
+    const errorMessages = [];
 
     Array.from(files).forEach(file => {
+        const isCsv = file.name.toLowerCase().endsWith('.csv');
         const reader = new FileReader();
+
         reader.onload = (e) => {
             try {
-                const data = JSON.parse(e.target.result);
-
-                // Validate data structure
-                if (!Array.isArray(data)) {
-                    errorCount++;
-                    errorMessages.push(`${file.name}: 配列形式ではありません`);
-                    processedCount++;
-                    checkComplete();
-                    return;
-                }
-
-                if (data.length === 0) {
-                    errorCount++;
-                    errorMessages.push(`${file.name}: データが空です`);
-                    processedCount++;
-                    checkComplete();
-                    return;
-                }
-
-                const rawItems = data.map(item => {
-                    const birthday  = item['誕生日']     || item.birthday  || '';
-                    const debutDate = item['周年記念日'] || item.debutDate || '';
-                    const memorial_dates = [];
-                    if (birthday)  memorial_dates.push({ type_id: 'bday',  date: birthday,  is_annual: true });
-                    if (debutDate) memorial_dates.push({ type_id: 'debut', date: debutDate, is_annual: true });
-                    return {
-                        name: item['メンバー名'] || item.name || '',
-                        color: item['公式カラー (Hex/系統)'] || item.color || '',
-                        memorial_dates,
-                        fanArtTag: item['ファンアートタグ'] || item.fanArtTag || '',
-                        source: file.name
-                    };
-                }).filter(item => item.name); // Filter out items without names
-
-                if (rawItems.length === 0) {
-                    errorCount++;
-                    errorMessages.push(`${file.name}: 有効なデータがありません（名前が必須）`);
-                    processedCount++;
-                    checkComplete();
-                    return;
-                }
-
-                const newItems = rawItems.filter(item => {
-                    if (existingNames.has(item.name)) {
-                        skippedCount++;
-                        return false;
+                if (isCsv) {
+                    // --- CSV パス ---
+                    const { rows } = parseCSV(e.target.result);
+                    if (rows.length === 0) {
+                        errorMessages.push(`${file.name}: データが空です`);
+                        processedCount++;
+                        checkAllLoaded();
+                        return;
                     }
-                    existingNames.add(item.name);
-                    return true;
-                });
+                    const { items, skippedRows } = convertCsvRowsToOshiItems(rows, file.name);
+                    totalErrorRows += skippedRows;
 
-                if (!appSettings.oshiList) appSettings.oshiList = [];
-                appSettings.oshiList.push(...newItems);
-                addedCount += newItems.length;
+                    items.forEach(item => {
+                        if (existingNames.has(item.name)) { totalDupes++; return; }
+                        existingNames.add(item.name);
+                        allNewItems.push(item);
+                    });
+                } else {
+                    // --- JSON パス ---
+                    const data = JSON.parse(e.target.result);
+                    if (!Array.isArray(data) || data.length === 0) {
+                        errorMessages.push(`${file.name}: 有効なデータがありません`);
+                        processedCount++;
+                        checkAllLoaded();
+                        return;
+                    }
+                    const rawItems = data.map(item => {
+                        const birthday  = item['誕生日']     || item.birthday  || '';
+                        const debutDate = item['周年記念日'] || item.debutDate || '';
+                        const memorial_dates = [];
+                        if (birthday)  memorial_dates.push({ type_id: 'bday',  date: birthday,  is_annual: true });
+                        if (debutDate) memorial_dates.push({ type_id: 'debut', date: debutDate, is_annual: true });
+                        return {
+                            name: item['メンバー名'] || item.name || '',
+                            color: item['公式カラー (Hex/系統)'] || item.color || '',
+                            memorial_dates,
+                            tags: Array.isArray(item.tags) ? item.tags : [],
+                            source: file.name
+                        };
+                    }).filter(item => item.name);
 
+                    rawItems.forEach(item => {
+                        if (existingNames.has(item.name)) { totalDupes++; return; }
+                        existingNames.add(item.name);
+                        allNewItems.push(item);
+                    });
+                }
             } catch (err) {
                 console.error('Import error:', err);
-                errorCount++;
-                errorMessages.push(`${file.name}: JSONの解析に失敗しました`);
+                errorMessages.push(`${file.name}: 解析に失敗しました`);
             }
 
             processedCount++;
-            checkComplete();
+            checkAllLoaded();
         };
 
         reader.onerror = () => {
-            errorCount++;
-            errorMessages.push(`${file.name}: ファイルの読み込みに失敗しました`);
+            errorMessages.push(`${file.name}: 読み込みに失敗しました`);
             processedCount++;
-            checkComplete();
+            checkAllLoaded();
         };
 
-        reader.readAsText(file);
+        reader.readAsText(file, 'UTF-8');
     });
 
-    function checkComplete() {
-        if (processedCount === totalFiles) {
+    function checkAllLoaded() {
+        if (processedCount < totalFiles) return;
+
+        if (errorMessages.length > 0 && allNewItems.length === 0) {
+            showToast('エラー: ' + errorMessages.slice(0, 2).join(' / '), 5000);
+            return;
+        }
+
+        // プレビューダイアログを表示してから確定
+        showOshiCsvPreview(allNewItems, totalDupes, totalErrorRows, () => {
+            if (!appSettings.oshiList) appSettings.oshiList = [];
+            appSettings.oshiList.push(...allNewItems);
+            addTagsToMaster(allNewItems.flatMap(o => o.tags || []));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
             renderOshiTable();
             renderOshiList();
 
-            let message = `インポート完了: ${addedCount}件追加`;
-            if (skippedCount > 0) {
-                message += `, ${skippedCount}件スキップ（重複）`;
-            }
-            if (errorCount > 0) {
-                message += `\nエラー: ${errorCount}件`;
-                if (errorMessages.length > 0) {
-                    message += '\n' + errorMessages.slice(0, 3).join('\n');
-                    if (errorMessages.length > 3) {
-                        message += `\n...他${errorMessages.length - 3}件`;
-                    }
-                }
-                showToast(message, 5000); // Longer display for errors
-            } else {
-                showToast(message);
-            }
-        }
+            let message = `インポート完了: ${allNewItems.length}件追加`;
+            if (totalDupes > 0) message += `, ${totalDupes}件スキップ（重複）`;
+            if (totalErrorRows > 0) message += `, ${totalErrorRows}件スキップ（不正行）`;
+            showToast(message);
+        });
     }
 }
 
@@ -2783,6 +2944,7 @@ function initSettings() {
 
     const inputOshiImport = document.getElementById('inputOshiImport');
     document.getElementById('btnOshiImport').addEventListener('click', () => inputOshiImport.click());
+    document.getElementById('btnOshiCsvTemplate').addEventListener('click', downloadOshiCsvTemplate);
     inputOshiImport.addEventListener('change', (e) => {
         handleOshiImportFromModal(e.target.files);
         e.target.value = ''; // Reset for re-selection
