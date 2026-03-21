@@ -1788,19 +1788,19 @@ function showOshiCsvPreview(newItems, dupeCount, errorRowCount, onConfirm) {
     const dlg = document.createElement('dialog');
     dlg.className = 'settings-modal';
     dlg.innerHTML = `
-        <div style="padding:24px;min-width:280px">
-            <h3 style="margin:0 0 16px;font-size:1rem">CSVインポート確認</h3>
-            <ul style="list-style:none;padding:0;margin:0 0 16px;display:flex;flex-direction:column;gap:6px;font-size:0.9rem">
+        <div style="padding:24px;min-width:340px;max-width:480px;width:90vw;box-sizing:border-box">
+            <h3 style="margin:0 0 12px;font-size:1rem">CSVインポート確認</h3>
+            <ul style="list-style:none;padding:0;margin:0 0 12px;display:flex;flex-direction:column;gap:4px;font-size:0.9rem">
                 <li>追加: <strong>${newItems.length} 件</strong></li>
                 ${dupeCount > 0 ? `<li style="color:var(--text-secondary)">重複スキップ: ${dupeCount} 件（同名の推しが既存）</li>` : ''}
                 ${errorRowCount > 0 ? `<li style="color:var(--text-secondary)">不正行スキップ: ${errorRowCount} 件（名前が空等）</li>` : ''}
             </ul>
             ${newItems.length > 0 ? `
-            <div style="max-height:160px;overflow-y:auto;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:8px;margin-bottom:16px;font-size:0.8rem">
-                ${newItems.map(o => `<div style="display:flex;align-items:center;gap:8px;padding:2px 0">
-                    <span style="width:14px;height:14px;border-radius:50%;background:${escapeHTML(o.color||'#ccc')};flex-shrink:0;display:inline-block;border:1px solid rgba(0,0,0,0.1)"></span>
-                    <span>${escapeHTML(o.name)}</span>
-                    ${o.memorial_dates.length > 0 ? `<span style="color:var(--text-secondary)">(記念日 ${o.memorial_dates.length}件)</span>` : ''}
+            <div style="max-height:280px;overflow-y:auto;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:8px 12px;margin-bottom:16px;font-size:0.85rem">
+                ${newItems.map(o => `<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.05)">
+                    <span style="width:16px;height:16px;border-radius:50%;background:${escapeHTML(o.color||'#ccc')};flex-shrink:0;display:inline-block;border:1px solid rgba(0,0,0,0.15)"></span>
+                    <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(o.name)}</span>
+                    ${o.memorial_dates.length > 0 ? `<span style="color:var(--text-secondary);font-size:0.78rem;flex-shrink:0">記念日 ${o.memorial_dates.length}件</span>` : ''}
                 </div>`).join('')}
             </div>` : `<p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:16px">追加できる推しがありません。</p>`}
             <div style="display:flex;justify-content:flex-end;gap:10px">
