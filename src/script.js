@@ -3250,7 +3250,7 @@ function initSettings() {
         await updateStorageIndicator();
         renderLocalImageManager();
         btn.disabled = false;
-        btn.textContent = '既存画像を一括圧縮';
+        btn.textContent = '登録済みを一括圧縮';
         showToast(`${compressed} 枚を圧縮しました（${skipped} 枚スキップ）`);
     });
 
