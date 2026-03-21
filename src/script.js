@@ -1044,6 +1044,34 @@ function getOrderedImageKeys(dbKeys) {
     return ordered;
 }
 
+// --- Memorial Tag Logic ---
+function getTodayMemorialOshis() {
+    const today = new Date();
+    const m = today.getMonth() + 1, d = today.getDate(), y = today.getFullYear();
+    return (appSettings.oshiList || []).filter(oshi =>
+        (oshi.memorial_dates || []).some(md => {
+            const parsed = parseDateString(md.date);
+            if (!parsed || parsed.month !== m || parsed.day !== d) return false;
+            if (!md.is_annual && parsed.year && parsed.year !== y) return false;
+            return true;
+        })
+    );
+}
+
+function getEffectiveImagePool(orderedKeys) {
+    const memOshis = getTodayMemorialOshis();
+    if (memOshis.length === 0) return orderedKeys;
+    const targetTags = new Set();
+    memOshis.forEach(oshi => {
+        if (oshi.name) targetTags.add(oshi.name);
+        (oshi.tags || []).forEach(t => targetTags.add(t));
+    });
+    const preferred = orderedKeys.filter(id =>
+        getImageTags(id).some(t => targetTags.has(t))
+    );
+    return preferred.length > 0 ? preferred : orderedKeys;
+}
+
 // --- Tag Logic ---
 function getImageTags(imgId) {
     const meta = appSettings.localImageMeta || {};
@@ -1830,6 +1858,8 @@ function openImageLightbox(src, onDelete = null, imgId = null) {
     dlg.showModal();
 }
 
+let imageTagFilter = new Set(); // タグフィルター状態（セッション中に保持）
+
 async function renderLocalImageManager() {
     const list = document.getElementById('localImageList');
     if (!list) return;
@@ -1864,9 +1894,53 @@ async function renderLocalImageManager() {
     const orderedIds = getOrderedImageKeys(allImages.map(item => item.id));
     const sortedImages = orderedIds.map(id => idToImage.get(id)).filter(Boolean);
 
+    // --- Filter bar ---
+    const allTagsSet = new Set();
+    sortedImages.forEach(item => getImageTags(item.id).forEach(t => allTagsSet.add(t)));
+
+    // Remove stale filter tags (image deleted etc.)
+    [...imageTagFilter].forEach(t => { if (!allTagsSet.has(t)) imageTagFilter.delete(t); });
+
+    const filterContainer = list.parentElement.querySelector('.img-filter-bar');
+    if (filterContainer) filterContainer.remove();
+
+    if (allTagsSet.size > 0) {
+        const filterBar = document.createElement('div');
+        filterBar.className = 'img-filter-bar';
+
+        const allChip = document.createElement('button');
+        allChip.className = 'img-filter-chip' + (imageTagFilter.size === 0 ? ' active' : '');
+        allChip.textContent = 'すべて';
+        allChip.type = 'button';
+        allChip.onclick = () => { imageTagFilter.clear(); renderLocalImageManager(); };
+        filterBar.appendChild(allChip);
+
+        [...allTagsSet].sort().forEach(tag => {
+            const chip = document.createElement('button');
+            chip.className = 'img-filter-chip' + (imageTagFilter.has(tag) ? ' active' : '');
+            chip.textContent = tag;
+            chip.type = 'button';
+            chip.onclick = () => {
+                if (imageTagFilter.has(tag)) imageTagFilter.delete(tag);
+                else imageTagFilter.add(tag);
+                renderLocalImageManager();
+            };
+            filterBar.appendChild(chip);
+        });
+
+        list.insertAdjacentElement('beforebegin', filterBar);
+    }
+
+    // Filter images (OR: any selected tag matches)
+    const displayImages = imageTagFilter.size === 0
+        ? sortedImages
+        : sortedImages.filter(item =>
+            [...imageTagFilter].some(t => getImageTags(item.id).includes(t))
+        );
+
     const fragment = document.createDocumentFragment();
 
-    sortedImages.forEach(item => {
+    displayImages.forEach(item => {
         const div = document.createElement('div');
         div.className = 'local-image-item';
         div.dataset.imgId = item.id;
@@ -3893,7 +3967,7 @@ async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'
     // --- Logic: Local Only ---
     try {
         const dbKeys = await localImageDB.getAllKeys();
-        const keys = getOrderedImageKeys(dbKeys);
+        const keys = getEffectiveImagePool(getOrderedImageKeys(dbKeys));
         if (keys.length === 0) {
             renderDefaultMedia(displayArea);
             return;

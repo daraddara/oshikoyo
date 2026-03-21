@@ -2165,6 +2165,33 @@ body {
     line-height: 1;
 }
 
+/* 画像一覧タグフィルターバー */
+.img-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+.img-filter-chip {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color, #ddd);
+    background: none;
+    cursor: pointer;
+    color: inherit;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.img-filter-chip:hover {
+    border-color: var(--accent-color, #3b82f6);
+    color: var(--accent-color, #3b82f6);
+}
+.img-filter-chip.active {
+    background: var(--accent-color, #3b82f6);
+    color: #fff;
+    border-color: transparent;
+}
+
 /* タグバッジ（共通） */
 .tag-badge {
     display: inline-flex;
