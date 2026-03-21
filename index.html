@@ -263,6 +263,17 @@
                     <button type="button" id="btnResetLayout" class="btn-reset-layout">配置をデフォルトに戻す</button>
                     <p class="help-text" style="margin-top:6px">表示月数・レイアウト方向・画像位置・画像サイズを初期状態に戻します。</p>
                 </div>
+
+                <div class="setting-divider"></div>
+
+                <div class="setting-group">
+                    <label class="setting-label">記念日の画像表示モード</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="memorialDisplayMode" value="preferred" checked> 優先（80%で記念日画像）</label>
+                        <label><input type="radio" name="memorialDisplayMode" value="exclusive"> 専有（記念日画像のみ）</label>
+                    </div>
+                    <p class="help-text">記念日のとき、関連タグの画像を優先または専有で表示します。タグが設定されていない場合は通常表示になります。</p>
+                </div>
             </div>
 
             <!-- 画像タブ -->
