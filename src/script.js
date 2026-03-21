@@ -26,6 +26,7 @@ const DEFAULT_SETTINGS = {
     tags: [],            // master tag list: string[]
     localImageMeta: {},  // { [id: number]: { tags: string[] } }
     memorialDisplayMode: 'preferred',  // 'preferred' (80/20) | 'exclusive' (100%)
+    imageCompressMode: 'standard',     // 'off' | 'standard' | 'aggressive'
 };
 
 // --- IndexedDB Management ---
@@ -334,6 +335,23 @@ class LocalImageDB {
         }
 
         return { added: addedCount, skipped: skippedCount };
+    }
+
+    /**
+     * 既存レコードを同一キーで上書き保存する（圧縮後ファイルの差し替え用）。
+     * @param {number} key - 上書き対象のキー
+     * @param {File} file - 新しいファイル
+     * @returns {Promise<void>}
+     */
+    async updateImage(key, file) {
+        await this.open();
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            const request = store.put(file, key);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
     }
 
     /**
@@ -1995,6 +2013,34 @@ function handleFileImport() {
 
 // --- Local Media UI Handlers ---
 
+/**
+ * navigator.storage.estimate() を使ってストレージインジケーターを更新する。
+ * 未対応ブラウザでは非表示のまま。
+ */
+async function updateStorageIndicator() {
+    const wrap  = document.getElementById('storageIndicatorWrap');
+    const bar   = document.getElementById('storageIndicatorBar');
+    const label = document.getElementById('storageIndicatorLabel');
+    if (!wrap) return;
+
+    if (!navigator.storage || !navigator.storage.estimate) {
+        wrap.hidden = true;
+        return;
+    }
+
+    try {
+        const { quota, usage } = await navigator.storage.estimate();
+        if (!quota) { wrap.hidden = true; return; }
+        const pct = Math.min(100, Math.round((usage / quota) * 100));
+        if (label) label.textContent =
+            `使用中: ${(usage / 1024 / 1024).toFixed(1)} MB / 上限: ${(quota / 1024 / 1024).toFixed(0)} MB`;
+        if (bar) bar.style.width = `${pct}%`;
+        wrap.hidden = false;
+    } catch {
+        wrap.hidden = true;
+    }
+}
+
 async function updateLocalMediaUI() {
     const countEl = document.getElementById('localImageCount');
     if (countEl) {
@@ -2207,6 +2253,7 @@ async function renderLocalImageManager() {
                 list.innerHTML = '<p style="grid-column: 1/-1; color:#888;">画像がありません</p>';
             }
             await updateLocalImageCount();
+            updateStorageIndicator();
         }, item.id));
 
         const handle = document.createElement('div');
@@ -2254,6 +2301,7 @@ async function renderLocalImageManager() {
                 URL.revokeObjectURL(img.src);
                 renderLocalImageManager();
                 updateLocalMediaUI();
+                updateStorageIndicator();
             });
 
             // Handle No
@@ -2721,6 +2769,105 @@ function setupDragAndDrop() {
     }
 }
 
+// --- Image Compression ---
+
+/**
+ * Canvas API を使って画像をリサイズ・JPEG変換する。
+ * GIF はアニメーション保護のためそのまま返す。
+ * @param {File} file 元ファイル
+ * @param {number} maxDimension 長辺の最大px
+ * @param {number} quality JPEG品質 (0-1)
+ * @returns {Promise<File>} 圧縮後の File オブジェクト
+ */
+async function compressImageFile(file, maxDimension, quality) {
+    if (file.type === 'image/gif') return file;
+
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(file);
+
+        img.onload = () => {
+            URL.revokeObjectURL(objectUrl);
+            const { naturalWidth: w, naturalHeight: h } = img;
+            const longestSide = Math.max(w, h);
+            const scale = longestSide > maxDimension ? maxDimension / longestSide : 1;
+            const targetW = Math.round(w * scale);
+            const targetH = Math.round(h * scale);
+
+            const canvas = document.createElement('canvas');
+            canvas.width  = targetW;
+            canvas.height = targetH;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff'; // 透過PNG → 白背景合成
+            ctx.fillRect(0, 0, targetW, targetH);
+            ctx.drawImage(img, 0, 0, targetW, targetH);
+
+            canvas.toBlob(blob => {
+                if (!blob) { reject(new Error('canvas.toBlob が null を返しました')); return; }
+                const newName = file.name.replace(/\.[^/.]+$/, '') + '.jpg';
+                resolve(new File([blob], newName, { type: 'image/jpeg', lastModified: file.lastModified }));
+            }, 'image/jpeg', quality);
+        };
+
+        img.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error(`画像の読み込みに失敗しました: ${file.name}`));
+        };
+
+        img.src = objectUrl;
+    });
+}
+
+/**
+ * appSettings.imageCompressMode に基づき画像リストを圧縮する。
+ * @param {File[]} files
+ * @returns {Promise<File[]>}
+ */
+async function applyImageCompression(files) {
+    const mode = appSettings.imageCompressMode;
+    if (mode === 'off' || !mode) return files;
+
+    const params = mode === 'aggressive'
+        ? { maxDimension: 1920, quality: 0.78 }
+        : { maxDimension: 2560, quality: 0.88 }; // 'standard'
+
+    return Promise.all(
+        files.map(f => compressImageFile(f, params.maxDimension, params.quality).catch(() => f))
+    );
+}
+
+/**
+ * 登録済み全画像を現在の imageCompressMode 設定で一括圧縮・上書き保存する。
+ * 圧縮設定が 'off' の場合は何もしない。
+ * @returns {Promise<{compressed: number, skipped: number}>}
+ */
+async function compressAllExistingImages() {
+    const mode = appSettings.imageCompressMode;
+    if (mode === 'off') return { compressed: 0, skipped: 0 };
+
+    const params = mode === 'aggressive'
+        ? { maxDimension: 1920, quality: 0.78 }
+        : { maxDimension: 2560, quality: 0.88 };
+
+    const images = await localImageDB.getAllImages();
+    let compressed = 0, skipped = 0;
+
+    for (const { id, file } of images) {
+        try {
+            const result = await compressImageFile(file, params.maxDimension, params.quality);
+            if (result !== file) {
+                await localImageDB.updateImage(id, result);
+                compressed++;
+            } else {
+                skipped++;
+            }
+        } catch {
+            skipped++;
+        }
+    }
+    return { compressed, skipped };
+}
+
 // --- Preview Logic ---
 let pendingPreviewFiles = [];
 let hasNewLocalImages = false;
@@ -2771,8 +2918,9 @@ function setupPreviewModal() {
         const modal = document.getElementById('previewModal');
         modal.close(); // Close first
 
-        // Actually save
-        const results = await localImageDB.addImages(pendingPreviewFiles);
+        // Actually save（登録前に圧縮を適用）
+        const filesToSave = await applyImageCompression(pendingPreviewFiles);
+        const results = await localImageDB.addImages(filesToSave);
         const count = results.length;
         const lastKey = results[results.length - 1];
 
@@ -2784,6 +2932,7 @@ function setupPreviewModal() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
             hasNewLocalImages = true;
             updateLocalMediaUI();
+            updateStorageIndicator();
 
             if (document.getElementById('settingsModal').open) {
                 renderLocalImageManager();
@@ -2919,7 +3068,13 @@ function initSettings() {
             document.querySelectorAll('.settings-tab-panel').forEach(p => p.classList.remove('is-active'));
             btn.classList.add('is-active');
             document.querySelector(`.settings-tab-panel[data-panel="${btn.dataset.tab}"]`).classList.add('is-active');
-            if (btn.dataset.tab === 'media') renderLocalImageManager();
+            if (btn.dataset.tab === 'media') {
+                renderLocalImageManager();
+                updateStorageIndicator();
+                document.querySelectorAll('input[name="imageCompressMode"]').forEach(r => {
+                    r.checked = (r.value === (appSettings.imageCompressMode || 'standard'));
+                });
+            }
         });
     });
 
@@ -3062,6 +3217,43 @@ function initSettings() {
         }
     });
 
+    // 圧縮設定ラジオ（change時に即時保存）
+    document.querySelectorAll('input[name="imageCompressMode"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (radio.checked) {
+                appSettings.imageCompressMode = radio.value;
+                saveSettingsSilently();
+            }
+        });
+    });
+
+    // 既存画像を一括圧縮
+    document.getElementById('btnCompressExisting').addEventListener('click', async () => {
+        const mode = appSettings.imageCompressMode;
+        if (mode === 'off') {
+            showToast('圧縮設定を「標準」または「積極的」に切り替えてください');
+            return;
+        }
+        const allKeys = await localImageDB.getAllKeys();
+        if (allKeys.length === 0) {
+            showToast('登録済みの画像がありません');
+            return;
+        }
+        const modeLabel = mode === 'aggressive' ? '積極的（1920px）' : '標準（2560px）';
+        if (!confirm(`登録済み ${allKeys.length} 枚の画像を${modeLabel}で圧縮します。この操作は元に戻せません。続けますか？`)) return;
+
+        const btn = document.getElementById('btnCompressExisting');
+        btn.disabled = true;
+        btn.textContent = '圧縮中...';
+
+        const { compressed, skipped } = await compressAllExistingImages();
+        await updateStorageIndicator();
+        renderLocalImageManager();
+        btn.disabled = false;
+        btn.textContent = '登録済みを一括圧縮';
+        showToast(`${compressed} 枚を圧縮しました（${skipped} 枚スキップ）`);
+    });
+
     // Clear Local
     document.getElementById('btnClearLocal').addEventListener('click', async () => {
         if (confirm('登録済みの画像をすべて削除します。よろしいですか？')) {
@@ -3069,6 +3261,7 @@ function initSettings() {
             appSettings.localImageOrder = [];
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
             updateLocalMediaUI();
+            updateStorageIndicator();
             renderLocalImageManager();
         }
     });
@@ -3180,6 +3373,10 @@ function loadSettings() {
             );
             if (!appSettings.memorialDisplayMode) {
                 appSettings.memorialDisplayMode = 'preferred';
+            }
+            if (!appSettings.imageCompressMode ||
+                !['off', 'standard', 'aggressive'].includes(appSettings.imageCompressMode)) {
+                appSettings.imageCompressMode = 'standard';
             }
         } catch (e) { }
     }
