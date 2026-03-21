@@ -46,6 +46,7 @@ describe('updateMediaArea ロジック (メディア表示更新)', () => {
         // パススルー（localImageOrder が空なので DB キー順をそのまま返す）
         global.getOrderedImageKeys = (keys) => keys;
         global.getEffectiveImagePool = (keys) => keys; // パススルー（記念日フィルターはPhase3テストで個別検証）
+        global.highlightMemorialOshisForImage = vi.fn(); // ハイライト処理はスキップ
     });
 
     it('mode が "layout" の場合、画像取得は行わずレイアウト調整のみ実行されること', async () => {
