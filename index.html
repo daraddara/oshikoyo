@@ -281,7 +281,6 @@
                 <div id="localMediaSettings" class="setting-group">
                     <!-- ストレージ使用量インジケーター -->
                     <div id="storageIndicatorWrap" class="storage-indicator" hidden>
-                        <label class="setting-label-sm">ストレージ使用量</label>
                         <div class="storage-indicator__track">
                             <div id="storageIndicatorBar" class="storage-indicator__bar"></div>
                         </div>
@@ -290,14 +289,16 @@
 
                     <!-- 登録時自動圧縮 -->
                     <div class="compress-setting">
-                        <label class="setting-label-sm">登録時の自動圧縮</label>
-                        <div class="radio-group radio-group--compact">
-                            <label><input type="radio" name="imageCompressMode" value="off"> 圧縮なし</label>
-                            <label><input type="radio" name="imageCompressMode" value="standard" checked> 標準（2560px・高品質）</label>
-                            <label><input type="radio" name="imageCompressMode" value="aggressive"> 積極的（1920px・高圧縮）</label>
+                        <div class="compress-setting__row">
+                            <label class="setting-label-sm">自動圧縮</label>
+                            <div class="radio-group radio-group--inline">
+                                <label title="圧縮せずそのまま保存します"><input type="radio" name="imageCompressMode" value="off"> 圧縮なし</label>
+                                <label title="長辺を最大2560pxにリサイズしJPEG品質88%で保存します（推奨）"><input type="radio" name="imageCompressMode" value="standard" checked> 標準</label>
+                                <label title="長辺を最大1920pxにリサイズしJPEG品質78%で保存します（より容量を削減）"><input type="radio" name="imageCompressMode" value="aggressive"> 積極的</label>
+                            </div>
+                            <button type="button" id="btnCompressExisting" class="btn-secondary btn-sm">既存を一括圧縮</button>
                         </div>
-                        <p class="help-text">※ GIF はアニメーション保護のため対象外。透過 PNG は白背景に変換されます。</p>
-                        <button type="button" id="btnCompressExisting" class="btn-secondary btn-sm">既存画像を一括圧縮</button>
+                        <p class="help-text">※ GIF は対象外。透過 PNG は白背景に変換されます。</p>
                     </div>
 
                     <div class="media-action-group">
