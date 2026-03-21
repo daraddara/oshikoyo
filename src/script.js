@@ -1999,7 +1999,7 @@ async function renderLocalImageManager() {
             untaggedChip.type = 'button';
             untaggedChip.title = 'タグが設定されていない画像のみ表示';
             untaggedChip.onclick = () => {
-                showUntaggedOnly = true;
+                showUntaggedOnly = !showUntaggedOnly;
                 imageTagFilter.clear();
                 renderLocalImageManager();
             };
