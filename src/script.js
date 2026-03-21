@@ -896,6 +896,34 @@ function renderCalendar(container, year, month) {
         };
     });
 
+    // Optimization: Group events by day to avoid O(Days * Oshis) nested loop bottleneck
+    const eventTypesMap = new Map((appSettings.event_types || []).map(t => [t.id, t]));
+    const eventsByDay = Array.from({ length: daysInMonth + 1 }, () => []);
+
+    oshiEventDates.forEach(oshi => {
+        if (!oshi.name) return;
+        const matchedEventsByDay = new Map();
+        for (const md of oshi.parsedMemorialDates) {
+            if (!md.parsed) continue;
+            const { year: pYear, month: pMonth, day: pDay } = md.parsed;
+            if (pMonth !== month || pDay < 1 || pDay > daysInMonth) continue;
+            if (!md.is_annual && pYear && pYear !== year) continue;
+
+            const typeInfo = eventTypesMap.get(md.type_id);
+            const icon = typeInfo?.icon || 'star';
+            const label = escapeHTML(typeInfo?.label || md.type_id);
+
+            if (!matchedEventsByDay.has(pDay)) {
+                matchedEventsByDay.set(pDay, []);
+            }
+            matchedEventsByDay.get(pDay).push({ label, icon });
+        }
+
+        matchedEventsByDay.forEach((matchedEvents, pDay) => {
+            eventsByDay[pDay].push({ oshi, matchedEvents });
+        });
+    });
+
     // Days
     for (let d = 1; d <= daysInMonth; d++) {
         const currentDate = new Date(year, month - 1, d);
@@ -918,42 +946,21 @@ function renderCalendar(container, year, month) {
         if (holidayName) el.classList.add('is-holiday');
 
         // Check Multi-Oshi Events
-        // Check Multi-Oshi Events
         let oshiMarkups = [];
         let oshiPopupEvents = [];
         let dayIcons = new Set();
 
-        // Loop through all oshis
-        oshiEventDates.forEach(oshi => {
-            if (!oshi.name) return;
+        for (const { oshi, matchedEvents } of eventsByDay[d]) {
+            const { baseStyle, isDarkIcon, escapedName } = oshi;
 
-            const { textColor, textShadow, baseStyle, isDarkIcon, escapedName } = oshi;
+            matchedEvents.forEach(e => dayIcons.add(e.icon));
 
-            let matchedEvents = []; // { label, icon }
+            const titleText = `${matchedEvents.map(e => e.label).join('・')}: ${escapedName}`;
+            oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="${titleText}" data-oshi-name="${escapedName}">${escapedName}</div>`);
 
-            // Memorial dates check
-            for (const md of oshi.parsedMemorialDates) {
-                if (!md.parsed) continue;
-                const { year: pYear, month: pMonth, day: pDay } = md.parsed;
-                if (pMonth !== month || pDay !== d) continue;
-                // is_annual=false かつ日付に年がある場合はその年のみ表示
-                if (!md.is_annual && pYear && pYear !== year) continue;
-
-                const typeInfo = (appSettings.event_types || []).find(t => t.id === md.type_id);
-                const icon = typeInfo?.icon || 'star';
-                const label = escapeHTML(typeInfo?.label || md.type_id);
-                dayIcons.add(icon);
-                matchedEvents.push({ label, icon });
-            }
-
-            if (matchedEvents.length > 0) {
-                const titleText = `${matchedEvents.map(e => e.label).join('・')}: ${escapedName}`;
-                oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="${titleText}" data-oshi-name="${escapedName}">${escapedName}</div>`);
-
-                const iconsHtml = matchedEvents.map(e => buildEventIcon(e.icon, isDarkIcon, 'popup'));
-                oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">${iconsHtml.join(' ')} ${escapedName} ${matchedEvents.map(e => e.label).join('・')}</div>`);
-            }
-        });
+            const iconsHtml = matchedEvents.map(e => buildEventIcon(e.icon, isDarkIcon, 'popup'));
+            oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">${iconsHtml.join(' ')} ${escapedName} ${matchedEvents.map(e => e.label).join('・')}</div>`);
+        }
 
         if (oshiMarkups.length > 0) {
             el.classList.add('is-oshi-date');
