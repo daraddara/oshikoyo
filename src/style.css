@@ -1000,6 +1000,17 @@ body {
     cursor: help;
 }
 
+@keyframes memorial-glow {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 220, 80, 0); }
+    30%  { box-shadow: 0 0 6px 3px rgba(255, 220, 80, 0.85); }
+    70%  { box-shadow: 0 0 6px 3px rgba(255, 220, 80, 0.6); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 220, 80, 0); }
+}
+
+.oshi-event.is-memorial-active {
+    animation: memorial-glow 1.4s ease-out forwards;
+}
+
 .oshi-event-icon {
     font-size: 8px;
     display: flex;

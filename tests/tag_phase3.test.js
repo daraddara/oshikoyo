@@ -86,7 +86,7 @@ describe('getEffectiveImagePool', () => {
         expect(getEffectiveImagePool([1, 2, 3])).toEqual([1, 2, 3]);
     });
 
-    it('記念日あり・タグ一致画像あり → 絞り込んだプールを返す', () => {
+    it('記念日あり・タグ一致画像あり（exclusive）→ 絞り込んだプールを返す', () => {
         vi.setSystemTime(new Date('2026-03-21'));
         const oshi = { name: 'A', tags: [], memorial_dates: [{ date: '3/21', is_annual: true }] };
         const meta = {
@@ -94,7 +94,7 @@ describe('getEffectiveImagePool', () => {
             2: { tags: ['B'] },    // 不一致
             3: { tags: ['A', 'C'] } // 一致
         };
-        const { getEffectiveImagePool } = makePhase3({ oshiList: [oshi], localImageMeta: meta });
+        const { getEffectiveImagePool } = makePhase3({ oshiList: [oshi], localImageMeta: meta, memorialDisplayMode: 'exclusive' });
         expect(getEffectiveImagePool([1, 2, 3])).toEqual([1, 3]);
     });
 
@@ -109,18 +109,18 @@ describe('getEffectiveImagePool', () => {
         expect(getEffectiveImagePool([1, 2])).toEqual([1, 2]);
     });
 
-    it('推し名ではなく oshiList[].tags のタグで一致する', () => {
+    it('推し名ではなく oshiList[].tags のタグで一致する（exclusive）', () => {
         vi.setSystemTime(new Date('2026-03-21'));
         const oshi = { name: 'A', tags: ['衣装B'], memorial_dates: [{ date: '3/21', is_annual: true }] };
         const meta = {
             1: { tags: ['衣装B'] },
             2: { tags: ['その他'] }
         };
-        const { getEffectiveImagePool } = makePhase3({ oshiList: [oshi], localImageMeta: meta });
+        const { getEffectiveImagePool } = makePhase3({ oshiList: [oshi], localImageMeta: meta, memorialDisplayMode: 'exclusive' });
         expect(getEffectiveImagePool([1, 2])).toEqual([1]);
     });
 
-    it('複数の記念日推し → 和集合タグでマッチ', () => {
+    it('複数の記念日推し → 和集合タグでマッチ（exclusive）', () => {
         vi.setSystemTime(new Date('2026-03-21'));
         const oshiA = { name: 'A', tags: [], memorial_dates: [{ date: '3/21', is_annual: true }] };
         const oshiB = { name: 'B', tags: [], memorial_dates: [{ date: '3/21', is_annual: true }] };
@@ -129,7 +129,7 @@ describe('getEffectiveImagePool', () => {
             2: { tags: ['B'] },
             3: { tags: ['C'] }
         };
-        const { getEffectiveImagePool } = makePhase3({ oshiList: [oshiA, oshiB], localImageMeta: meta });
+        const { getEffectiveImagePool } = makePhase3({ oshiList: [oshiA, oshiB], localImageMeta: meta, memorialDisplayMode: 'exclusive' });
         expect(getEffectiveImagePool([1, 2, 3])).toEqual([1, 2]);
     });
 
@@ -138,5 +138,50 @@ describe('getEffectiveImagePool', () => {
         const oshi = { name: 'A', tags: [], memorial_dates: [{ date: '3/21', is_annual: true }] };
         const { getEffectiveImagePool } = makePhase3({ oshiList: [oshi], localImageMeta: {} });
         expect(getEffectiveImagePool([1, 2, 3])).toEqual([1, 2, 3]);
+    });
+});
+
+// ---------- memorialDisplayMode (preferred/exclusive) ----------
+
+describe('getEffectiveImagePool — memorialDisplayMode', () => {
+    beforeEach(() => { vi.useFakeTimers(); });
+    afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+
+    const makeSettings = (mode) => ({
+        oshiList: [{ name: 'A', tags: [], memorial_dates: [{ date: '3/21', is_annual: true }] }],
+        localImageMeta: { 1: { tags: ['A'] }, 2: { tags: ['X'] } },
+        memorialDisplayMode: mode,
+    });
+
+    it('exclusive: 記念日画像のみのプールを返す', () => {
+        vi.setSystemTime(new Date('2026-03-21'));
+        const { getEffectiveImagePool } = makePhase3(makeSettings('exclusive'));
+        expect(getEffectiveImagePool([1, 2])).toEqual([1]);
+    });
+
+    it('preferred: Math.random < 0.8 のとき記念日プールを返す', () => {
+        vi.setSystemTime(new Date('2026-03-21'));
+        vi.spyOn(Math, 'random').mockReturnValue(0.5);
+        const { getEffectiveImagePool } = makePhase3(makeSettings('preferred'));
+        expect(getEffectiveImagePool([1, 2])).toEqual([1]);
+    });
+
+    it('preferred: Math.random >= 0.8 のとき全プールを返す', () => {
+        vi.setSystemTime(new Date('2026-03-21'));
+        vi.spyOn(Math, 'random').mockReturnValue(0.9);
+        const { getEffectiveImagePool } = makePhase3(makeSettings('preferred'));
+        expect(getEffectiveImagePool([1, 2])).toEqual([1, 2]);
+    });
+
+    it('preferred: 記念日画像ゼロのときは全プールにフォールバック（random 問わず）', () => {
+        vi.setSystemTime(new Date('2026-03-21'));
+        vi.spyOn(Math, 'random').mockReturnValue(0.5);
+        const settings = {
+            oshiList: [{ name: 'A', tags: [], memorial_dates: [{ date: '3/21', is_annual: true }] }],
+            localImageMeta: { 1: { tags: ['X'] }, 2: { tags: ['Y'] } },
+            memorialDisplayMode: 'preferred',
+        };
+        const { getEffectiveImagePool } = makePhase3(settings);
+        expect(getEffectiveImagePool([1, 2])).toEqual([1, 2]);
     });
 });

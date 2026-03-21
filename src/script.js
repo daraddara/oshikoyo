@@ -25,6 +25,7 @@ const DEFAULT_SETTINGS = {
     localImageOrder: [], // ordered array of IndexedDB image keys
     tags: [],            // master tag list: string[]
     localImageMeta: {},  // { [id: number]: { tags: string[] } }
+    memorialDisplayMode: 'preferred',  // 'preferred' (80/20) | 'exclusive' (100%)
 };
 
 // --- IndexedDB Management ---
@@ -929,7 +930,7 @@ function renderCalendar(container, year, month) {
 
             if (matchedEvents.length > 0) {
                 const titleText = `${matchedEvents.map(e => e.label).join('・')}: ${escapedName}`;
-                oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="${titleText}">${escapedName}</div>`);
+                oshiMarkups.push(`<div class="oshi-event" style="${baseStyle}" title="${titleText}" data-oshi-name="${escapedName}">${escapedName}</div>`);
 
                 const iconsHtml = matchedEvents.map(e => buildEventIcon(e.icon, isDarkIcon, 'popup'));
                 oshiPopupEvents.push(`<div class="popup-event-row" style="${baseStyle}">${iconsHtml.join(' ')} ${escapedName} ${matchedEvents.map(e => e.label).join('・')}</div>`);
@@ -1089,7 +1090,37 @@ function getEffectiveImagePool(orderedKeys) {
     const preferred = orderedKeys.filter(id =>
         getImageTags(id).some(t => targetTags.has(t))
     );
-    return preferred.length > 0 ? preferred : orderedKeys;
+    if (preferred.length === 0) return orderedKeys;
+    if (appSettings.memorialDisplayMode === 'exclusive') return preferred;
+    return Math.random() < 0.8 ? preferred : orderedKeys;
+}
+
+/**
+ * 表示された画像のタグと記念日推しを照合し、カレンダー内の該当推し名を一時的に光らせる。
+ * @param {number} imgId - 表示中の画像ID
+ */
+function highlightMemorialOshisForImage(imgId) {
+    const memOshis = getTodayMemorialOshis();
+    if (memOshis.length === 0) return;
+    const imgTags = getImageTags(imgId);
+    if (imgTags.length === 0) return;
+
+    // タグが記念日推しと一致するか確認
+    const matched = memOshis.filter(oshi => {
+        const oshiTags = new Set([oshi.name, ...(oshi.tags || [])]);
+        return imgTags.some(t => oshiTags.has(t));
+    });
+    if (matched.length === 0) return;
+
+    const matchedNames = new Set(matched.map(o => o.name));
+    document.querySelectorAll('.oshi-event').forEach(el => {
+        if (matchedNames.has(el.dataset.oshiName)) {
+            el.classList.remove('is-memorial-active');
+            // force reflow to restart animation
+            void el.offsetWidth;
+            el.classList.add('is-memorial-active');
+        }
+    });
 }
 
 // --- Tag Logic ---
@@ -2655,6 +2686,10 @@ function initSettings() {
         const radiosStart = document.querySelectorAll('input[name="startOfWeek"]');
         radiosStart.forEach(r => { if (parseInt(r.value) === appSettings.startOfWeek) r.checked = true; });
 
+        // Memorial Display Mode
+        const radiosMemorial = document.querySelectorAll('input[name="memorialDisplayMode"]');
+        radiosMemorial.forEach(r => { r.checked = r.value === (appSettings.memorialDisplayMode || 'preferred'); });
+
         // Auto Layout
         const checkAutoLayout = document.getElementById('checkAutoLayout');
         if (checkAutoLayout) checkAutoLayout.checked = !!appSettings.autoLayoutMode;
@@ -2940,6 +2975,9 @@ function loadSettings() {
             appSettings.oshiList = (appSettings.oshiList || []).map(o =>
                 ({ ...o, tags: Array.isArray(o.tags) ? o.tags : [] })
             );
+            if (!appSettings.memorialDisplayMode) {
+                appSettings.memorialDisplayMode = 'preferred';
+            }
         } catch (e) { }
     }
     // updateView(); // Removed to prevent double rendering on init
@@ -3015,6 +3053,10 @@ function saveSettings() {
     // Auto Layout
     const checkAutoLayout = document.getElementById('checkAutoLayout');
     if (checkAutoLayout) appSettings.autoLayoutMode = checkAutoLayout.checked;
+
+    // Memorial Display Mode
+    const memorialModeEl = document.querySelector('input[name="memorialDisplayMode"]:checked');
+    if (memorialModeEl) appSettings.memorialDisplayMode = memorialModeEl.value;
 
     // Media mode is managed by UI buttons directly
     // Interval is managed by select menu directly
@@ -4012,6 +4054,7 @@ async function updateMediaArea(mode = 'advance') { // Changed to mode: 'advance'
             const record = await localImageDB.getImage(targetKey);
             if (record) {
                 renderMediaRecord(record, displayArea);
+                highlightMemorialOshisForImage(targetKey);
             }
         }
     } catch (e) {
