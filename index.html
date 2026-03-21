@@ -382,8 +382,9 @@
                 <h2 class="settings-title">登録済みの推し一覧</h2>
                 <div class="oshi-manager-toolbar">
                     <button type="button" id="btnOshiAdd" class="btn-secondary">+ 新規追加</button>
-                    <button type="button" id="btnOshiImport" class="btn-secondary">📥 インポート</button>
-                    <input type="file" id="inputOshiImport" accept=".json" multiple style="display:none">
+                    <button type="button" id="btnOshiImport" class="btn-secondary" title="JSON または CSV ファイルから一括インポート">📥 インポート</button>
+                    <button type="button" id="btnOshiCsvTemplate" class="btn-secondary" title="CSVテンプレートをダウンロード">📋 CSVテンプレート</button>
+                    <input type="file" id="inputOshiImport" accept=".json,.csv" multiple style="display:none">
                     <button type="button" id="btnOshiExport" class="btn-secondary">📤 エクスポート</button>
                 </div>
             </div>
