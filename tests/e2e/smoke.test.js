@@ -65,7 +65,7 @@ test.describe('Smoke Test & Layout Verification', () => {
         await expect(page).toHaveScreenshot('settings_modal.png');
 
         // Close modal
-        await page.locator('#btnCancel').click();
+        await page.locator('#btnClose').click();
         await expect(settingsModal).not.toBeVisible();
     });
 });

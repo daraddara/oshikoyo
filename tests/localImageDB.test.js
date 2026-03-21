@@ -94,6 +94,31 @@ describe('LocalImageDB システム', () => {
         expect(restored[0].file.name).toBe('img1.png');
     });
 
+    it('getAllKeys がキーの配列を返すこと', async () => {
+        const file1 = new File(['a'], 'a.png', { type: 'image/png' });
+        const file2 = new File(['b'], 'b.png', { type: 'image/png' });
+        await db.addImage(file1);
+        await db.addImage(file2);
+
+        const keys = await db.getAllKeys();
+        expect(keys).toHaveLength(2);
+        keys.forEach(k => expect(typeof k).toBe('number'));
+    });
+
+    it('updateImage が既存レコードを上書き保存できること', async () => {
+        const original = new File(['original'], 'img.png', { type: 'image/png' });
+        await db.addImage(original);
+        const [{ id }] = await db.getAllImages();
+
+        const updated = new File(['updated'], 'img.jpg', { type: 'image/jpeg' });
+        await db.updateImage(id, updated);
+
+        const images = await db.getAllImages();
+        expect(images).toHaveLength(1);
+        expect(images[0].file.name).toBe('img.jpg');
+        expect(images[0].file.type).toBe('image/jpeg');
+    });
+
     it('インポート時の重複排除ロジックが動作すること', async () => {
         const file1 = new File(['duplicate'], 'dup.png', { type: 'image/png' });
         await db.addImage(file1);
