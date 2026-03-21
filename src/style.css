@@ -3947,3 +3947,18 @@ body.is-immersive.show-overlay .calendar-month:hover {
     padding: 8px;
     margin: 0;
 }
+
+/* --- Keyboard Focus Styles --- */
+:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
