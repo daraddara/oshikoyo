@@ -1,71 +1,90 @@
 import { test, expect } from '@playwright/test';
 
+const BASE_SETTINGS = {
+    startOfWeek: 0,
+    monthCount: 2,
+    layoutDirection: 'row',
+    layoutMode: 'smart',
+    immersiveMode: false,
+    oshiList: [
+        { name: 'テスト長めの名前', color: '#ffb7c5', memorial_dates: [], tags: [] },
+        { name: 'テスト推し２',     color: '#3b82f6', memorial_dates: [], tags: [] },
+    ],
+    mediaMode: 'single',
+    mediaPosition: 'top',
+    imageCompressMode: 'standard',
+};
+
 test.describe('Smoke Test & Layout Verification', () => {
-    test('should load the index page and verify layout and scrollability', async ({ page }, testInfo) => {
+    test('メインUIと設定モーダル全タブが表示されること', async ({ page }) => {
         // 固定の日付を設定（スクリーンショットの差分をなくすため）
         await page.clock.install({ time: new Date('2024-01-01T00:00:00Z') });
 
-        // テスト用データをlocalStorageに挿入
-        await page.addInitScript(() => {
-            const testSettings = {
-                startOfWeek: 0,
-                monthCount: 2,
-                layoutDirection: 'row',
-                oshiList: [
-                    { name: 'テスト長めの名前', birthday: '01/05', debutDate: '01/15', color: '#ffb7c5' },
-                    { name: 'テスト推し２', birthday: '02/10', debutDate: '', color: '#3b82f6' }
-                ],
-                mediaMode: 'single',
-                mediaPosition: 'top',
-                autoLayoutMode: true
-            };
-            window.localStorage.setItem('oshikoyo_settings', JSON.stringify(testSettings));
-        });
+        await page.addInitScript((settings) => {
+            window.localStorage.setItem('oshikoyo_settings', JSON.stringify(settings));
+        }, BASE_SETTINGS);
 
         await page.goto('http://localhost:8081/index.html');
 
-        // Verify calendar visibility
+        // メインUI確認
         const calendar = page.locator('#calendarWrapper');
         await expect(calendar).toBeVisible();
-
-        // Check layout: The app has overflow-x hidden on .app-container or main elements,
-        // and horizontally scrollable areas on the .calendar-wrapper
-        const viewportSize = page.viewportSize();
-        expect(viewportSize).not.toBeNull();
-
-        // Let's verify that the main body does not have a huge horizontal scroll bar
-        // (though depending on the flex layout, there might be some expected scroll)
-        // Instead of strict numeric check that fails on iPad, we can verify that the calendar
-        // fits or has 'overflow-x: auto'
 
         const wrapperOverflowX = await calendar.evaluate((el) => window.getComputedStyle(el).overflowX);
         expect(['auto', 'visible', 'hidden']).toContain(wrapperOverflowX);
 
-        // Verify main page layout with snapshot
         await expect(page).toHaveScreenshot('main_ui.png', { fullPage: true });
 
-        // Open settings modal
-        const btnSettings = page.locator('#btnSettings');
-        await btnSettings.click();
-
+        // 設定モーダルを開く
+        await page.locator('#btnSettings').click();
         const settingsModal = page.locator('#settingsModal');
         await expect(settingsModal).toBeVisible();
-
-        const scrollArea = settingsModal.locator('.settings-tab-panel.is-active');
-        await expect(scrollArea).toBeVisible();
-
-        // Wait for modal transition/rendering
         await page.waitForTimeout(500);
 
-        // Test if scroll area is actually scrollable when content overflows
+        // 一般タブ（デフォルト）
+        const scrollArea = settingsModal.locator('.settings-tab-panel.is-active');
+        await expect(scrollArea).toBeVisible();
         const overflowY = await scrollArea.evaluate((el) => window.getComputedStyle(el).overflowY);
         expect(['auto', 'scroll']).toContain(overflowY);
+        await expect(page).toHaveScreenshot('settings_modal_general.png');
 
-        // Verify modal layout with snapshot
-        await expect(page).toHaveScreenshot('settings_modal.png');
+        // 画像タブ
+        await page.locator('.settings-tab-btn[data-tab="media"]').click();
+        await page.waitForTimeout(300);
+        await expect(page).toHaveScreenshot('settings_modal_media.png');
 
-        // Close modal
-        await page.locator('#btnCancel').click();
+        // データタブ
+        await page.locator('.settings-tab-btn[data-tab="data"]').click();
+        await page.waitForTimeout(300);
+        await expect(page).toHaveScreenshot('settings_modal_data.png');
+
+        // モーダルを閉じる
+        await page.locator('#btnClose').click();
         await expect(settingsModal).not.toBeVisible();
+    });
+
+    test('推し一覧管理ダイアログが開閉できること', async ({ page }) => {
+        await page.clock.install({ time: new Date('2024-01-01T00:00:00Z') });
+
+        await page.addInitScript((settings) => {
+            window.localStorage.setItem('oshikoyo_settings', JSON.stringify(settings));
+        }, BASE_SETTINGS);
+
+        await page.goto('http://localhost:8081/index.html');
+
+        // 設定モーダルを開く → 一覧を管理
+        await page.locator('#btnSettings').click();
+        await expect(page.locator('#settingsModal')).toBeVisible();
+        await page.locator('#btnOpenOshiManager').click();
+
+        const oshiModal = page.locator('#oshiManagementModal');
+        await expect(oshiModal).toBeVisible();
+        await page.waitForTimeout(300);
+        await expect(page).toHaveScreenshot('oshi_management_modal.png');
+
+        // 閉じる → 設定モーダルに戻ること
+        await page.locator('#btnCloseOshiManager').click();
+        await expect(oshiModal).not.toBeVisible();
+        await expect(page.locator('#settingsModal')).toBeVisible();
     });
 });

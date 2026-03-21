@@ -12,7 +12,7 @@ const compressionCode = extractCode('// --- Image Compression ---', '// --- Prev
  * @param {object} imageProps - { naturalWidth, naturalHeight } で Image のモック挙動を指定
  * @param {Blob|null} toBlobResult - canvas.toBlob に渡す Blob（null で失敗テスト）
  */
-function makeCompressionModule(mockAppSettings, imageProps = { naturalWidth: 800, naturalHeight: 600 }, toBlobResult = new Blob(['img'], { type: 'image/jpeg' })) {
+function makeCompressionModule(mockAppSettings, imageProps = { naturalWidth: 800, naturalHeight: 600 }, toBlobResult = new Blob(['img'], { type: 'image/jpeg' }), mockLocalImageDB = null) {
     const mockCtx = {
         fillStyle: '',
         fillRect: vi.fn(),
@@ -68,7 +68,7 @@ function makeCompressionModule(mockAppSettings, imageProps = { naturalWidth: 800
     const mod = new Function('appSettings', 'Image', 'localImageDB', code)(
         mockAppSettings,
         MockImage,
-        null  // compressAllExistingImages のテストでは localImageDB を別途渡す
+        mockLocalImageDB
     );
 
     return { mod, mockCanvas, mockCtx, capturedCanvasSize };
@@ -189,6 +189,70 @@ describe('applyImageCompression', () => {
         const result = await mod.applyImageCompression([original]);
         // エラー時は元ファイルが返る
         expect(result[0]).toBe(original);
+    });
+});
+
+// ─── compressAllExistingImages ────────────────────────────────────────────────
+
+describe('compressAllExistingImages', () => {
+    afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+    it('"off" のとき { compressed: 0, skipped: 0 } を返し updateImage は呼ばれない', async () => {
+        const mockDB = {
+            getAllImages: vi.fn().mockResolvedValue([]),
+            updateImage: vi.fn(),
+        };
+        const { mod } = makeCompressionModule({ imageCompressMode: 'off' }, undefined, undefined, mockDB);
+        const result = await mod.compressAllExistingImages();
+        expect(result).toEqual({ compressed: 0, skipped: 0 });
+        expect(mockDB.updateImage).not.toHaveBeenCalled();
+    });
+
+    it('JPEG×2枚＋GIF×1枚 → { compressed: 2, skipped: 1 }・updateImage が2回呼ばれる', async () => {
+        const jpeg1 = new File(['a'], 'a.jpg', { type: 'image/jpeg' });
+        const jpeg2 = new File(['b'], 'b.jpg', { type: 'image/jpeg' });
+        const gif   = new File(['g'], 'g.gif', { type: 'image/gif' });
+        const mockDB = {
+            getAllImages: vi.fn().mockResolvedValue([
+                { id: 1, file: jpeg1 },
+                { id: 2, file: jpeg2 },
+                { id: 3, file: gif },
+            ]),
+            updateImage: vi.fn().mockResolvedValue(undefined),
+        };
+        const { mod } = makeCompressionModule(
+            { imageCompressMode: 'standard' },
+            { naturalWidth: 800, naturalHeight: 600 },
+            new Blob(['img'], { type: 'image/jpeg' }),
+            mockDB
+        );
+        const result = await mod.compressAllExistingImages();
+        expect(result.compressed).toBe(2);
+        expect(result.skipped).toBe(1); // GIF はスキップ
+        expect(mockDB.updateImage).toHaveBeenCalledTimes(2);
+    });
+
+    it('updateImage が例外を投げた場合は skipped にカウントされ処理が継続される', async () => {
+        const jpeg1 = new File(['a'], 'a.jpg', { type: 'image/jpeg' });
+        const jpeg2 = new File(['b'], 'b.jpg', { type: 'image/jpeg' });
+        const mockDB = {
+            getAllImages: vi.fn().mockResolvedValue([
+                { id: 1, file: jpeg1 },
+                { id: 2, file: jpeg2 },
+            ]),
+            updateImage: vi.fn()
+                .mockResolvedValueOnce(undefined)
+                .mockRejectedValueOnce(new Error('DB write error')),
+        };
+        const { mod } = makeCompressionModule(
+            { imageCompressMode: 'standard' },
+            { naturalWidth: 800, naturalHeight: 600 },
+            new Blob(['img'], { type: 'image/jpeg' }),
+            mockDB
+        );
+        const result = await mod.compressAllExistingImages();
+        expect(result.compressed).toBe(1);
+        expect(result.skipped).toBe(1);
     });
 });
 
