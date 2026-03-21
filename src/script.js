@@ -250,91 +250,46 @@ class LocalImageDB {
      */
     async importData(jsonData) {
         await this.open();
-        // Validation
         if (!jsonData || !jsonData.images || !Array.isArray(jsonData.images)) {
             throw new Error('Invalid backup file format');
         }
 
         const existingImages = await this.getAllImages();
-        let addedCount = 0;
-        let skippedCount = 0;
-
-        // Pre-fetch all existing blobs to compare (might be heavy if many images, but necessary for dedup)
-        // Optimization: Create a signature map (size + type) with cached hashes to prevent O(N^2) ArrayBuffer reads during deduplication comparisons.
-        const existingSignatures = new Map();
-        for (const img of existingImages) {
-            const size = img.file.size;
-            const type = img.file.type;
-            const key = `${size}-${type}`;
-            if (!existingSignatures.has(key)) {
-                existingSignatures.set(key, []);
-            }
-            existingSignatures.get(key).push({ file: img.file, hash: null });
-        }
-
-        // Simple fast hashing function for quick candidate filtering before full byte-by-byte comparison
-        const getBlobHash = async (obj, blob) => {
-            if (obj.hash !== null) return obj.hash;
-            const buf = await blob.arrayBuffer();
-            const view = new Uint8Array(buf);
-            let hash = 5381;
-            const len = view.length;
-            const step = Math.max(1, Math.floor(len / 100000)); // Sample max 100k bytes
-            for (let i = 0; i < len; i += step) {
-                hash = ((hash << 5) + hash) + view[i]; // hash * 33 + c
-            }
-            obj.hash = hash;
-            return hash;
-        };
-
+        const sigMap = buildBlobSignatureMap(existingImages);
+        let addedCount = 0, skippedCount = 0;
         const filesToAdd = [];
 
         for (const item of jsonData.images) {
             const blob = base64ToBlob(item.data, item.type);
-
-            // Deduplication Check
-            let isDuplicate = false;
-            const key = `${blob.size}-${blob.type}`;
-            if (existingSignatures.has(key)) {
-                const candidates = existingSignatures.get(key);
-                const incomingObj = { file: blob, hash: null };
-                const incomingHash = await getBlobHash(incomingObj, blob);
-                for (const candidate of candidates) {
-                    const candidateHash = await getBlobHash(candidate, candidate.file);
-                    if (incomingHash === candidateHash) {
-                        if (await areBlobsEqual(candidate.file, blob)) {
-                            isDuplicate = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (isDuplicate) {
-                skippedCount++;
-                continue;
-            }
-
-            // Restore metadata if possible (File constructor)
-            const file = new File([blob], item.name || 'imported_image', {
-                type: item.type,
-                lastModified: item.lastModified || Date.now()
-            });
-
-            filesToAdd.push(file);
-
-            // Add to ephemeral signature list to prevent duplicates within the same import batch
-            if (!existingSignatures.has(key)) existingSignatures.set(key, []);
-            existingSignatures.get(key).push({ file: file, hash: null });
-
+            if (await isDuplicateBlob(blob, sigMap)) { skippedCount++; continue; }
+            filesToAdd.push(new File([blob], item.name || 'imported_image', {
+                type: item.type, lastModified: item.lastModified || Date.now()
+            }));
             addedCount++;
         }
 
-        if (filesToAdd.length > 0) {
-            await this.addImages(filesToAdd);
-        }
-
+        if (filesToAdd.length > 0) await this.addImages(filesToAdd);
         return { added: addedCount, skipped: skippedCount };
+    }
+
+    /**
+     * 元のIDで画像を一括復元する（全データ復元用）。
+     * @param {Array<{id: number, file: File}>} images
+     * @returns {Promise<void>}
+     */
+    async restoreImages(images) {
+        if (!images || images.length === 0) return;
+        await this.open();
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            tx.oncomplete = () => resolve();
+            tx.onerror  = () => reject(tx.error);
+            tx.onabort  = () => reject(new Error('Transaction aborted'));
+            for (const { id, file } of images) {
+                store.put(file, id);
+            }
+        });
     }
 
     /**
@@ -478,6 +433,66 @@ async function areBlobsEqual(blob1, blob2) {
     }
 
     return true;
+}
+
+// Helper: Blob Deduplication Utilities
+
+/**
+ * 既存画像リストからサイズ+MIMEタイプのシグネチャマップを構築する。
+ * @param {Array<{file: File}>} images
+ * @returns {Map<string, Array<{file: Blob, hash: number|null}>>}
+ */
+function buildBlobSignatureMap(images) {
+    const sigMap = new Map();
+    for (const img of images) {
+        const key = `${img.file.size}-${img.file.type}`;
+        if (!sigMap.has(key)) sigMap.set(key, []);
+        sigMap.get(key).push({ file: img.file, hash: null });
+    }
+    return sigMap;
+}
+
+/**
+ * Blobのサンプリングハッシュを取得する（高速候補フィルタ用）。
+ * @param {{file: Blob, hash: number|null}} obj
+ * @returns {Promise<number>}
+ */
+async function getBlobHash(obj) {
+    if (obj.hash !== null) return obj.hash;
+    const buf = await obj.file.arrayBuffer();
+    const view = new Uint8Array(buf);
+    let hash = 5381;
+    const len = view.length;
+    const step = Math.max(1, Math.floor(len / 100000));
+    for (let i = 0; i < len; i += step) {
+        hash = ((hash << 5) + hash) + view[i];
+    }
+    obj.hash = hash;
+    return hash;
+}
+
+/**
+ * BlobがsigMap内の既存エントリと重複するか判定する。
+ * 非重複の場合はsigMapに登録してバッチ内重複も防ぐ。
+ * @param {Blob} blob
+ * @param {Map} sigMap
+ * @returns {Promise<boolean>}
+ */
+async function isDuplicateBlob(blob, sigMap) {
+    const key = `${blob.size}-${blob.type}`;
+    if (sigMap.has(key)) {
+        const incomingObj = { file: blob, hash: null };
+        const incomingHash = await getBlobHash(incomingObj);
+        for (const candidate of sigMap.get(key)) {
+            const candidateHash = await getBlobHash(candidate);
+            if (incomingHash === candidateHash && await areBlobsEqual(candidate.file, blob)) {
+                return true;
+            }
+        }
+    }
+    if (!sigMap.has(key)) sigMap.set(key, []);
+    sigMap.get(key).push({ file: blob, hash: null });
+    return false;
 }
 
 // Helper: Escape HTML
@@ -2337,40 +2352,175 @@ async function renderLocalImageManager() {
 }
 
 
-async function handleExportImages() {
-    showToast('画像データを書き出し中...');
+// --- Backup & Restore ---
+
+async function handleExportFullBackup() {
+    showToast('バックアップを作成中...');
     const dbKeys = await localImageDB.getAllKeys();
     const orderedKeys = getOrderedImageKeys(dbKeys);
-    const chunks = await localImageDB.exportData(orderedKeys);
-    if (chunks.length === 0) {
-        showToast('書き出す画像がありません');
-        return;
+    const date = new Date().toISOString().slice(0, 10);
+
+    const encoder = new TextEncoder();
+    const { readable, writable } = new TransformStream();
+    const compressed = readable.pipeThrough(new CompressionStream('gzip'));
+    const writer = writable.getWriter();
+    const blobPromise = new Response(compressed).blob();
+
+    const header = JSON.stringify({
+        version: 3, type: 'full_backup',
+        timestamp: new Date().toISOString(),
+        settings: appSettings
+    });
+    await writer.write(encoder.encode(header.slice(0, -1) + ',"images":['));
+    for (let i = 0; i < orderedKeys.length; i++) {
+        const file = await localImageDB.getImage(orderedKeys[i]);
+        const base64 = await blobToBase64(file);
+        const entry = JSON.stringify({
+            id: orderedKeys[i], name: file.name,
+            type: file.type, lastModified: file.lastModified, data: base64
+        });
+        await writer.write(encoder.encode((i > 0 ? ',' : '') + entry));
     }
-    for (const chunk of chunks) {
-        const url = URL.createObjectURL(chunk.blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = chunk.filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+    await writer.write(encoder.encode(']}'));
+    await writer.close();
+
+    const blob = await blobPromise;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `oshikoyo_backup_${date}.json.gz`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    showToast('バックアップを保存しました');
+}
+
+async function handleImportFullBackup(file) {
+    if (!confirm('現在のすべてのデータ（画像・設定・タグ）を削除し、バックアップから復元します。続けますか？')) return;
+    try {
+        const decompressed = file.stream().pipeThrough(new DecompressionStream('gzip'));
+        const json = JSON.parse(await new Response(decompressed).text());
+
+        if (json.type !== 'full_backup' || json.version !== 3) {
+            alert('全データバックアップ用のファイルではありません。');
+            return;
+        }
+
+        await localImageDB.clearAll();
+
+        const filesToRestore = (json.images || []).map(item => ({
+            id: item.id,
+            file: new File([base64ToBlob(item.data, item.type)], item.name || 'image', {
+                type: item.type, lastModified: item.lastModified || Date.now()
+            })
+        }));
+        await localImageDB.restoreImages(filesToRestore);
+
+        appSettings = { ...DEFAULT_SETTINGS, ...json.settings };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+
+        alert('復元が完了しました。画面を更新します。');
+        location.reload();
+    } catch (e) {
+        console.error(e);
+        alert('復元に失敗しました: ' + e.message);
     }
+}
+
+async function handleExportImageTagPackage() {
+    const dbKeys = await localImageDB.getAllKeys();
+    if (dbKeys.length === 0) { showToast('書き出す画像がありません'); return; }
+    showToast('画像を書き出し中...');
+    const orderedKeys = getOrderedImageKeys(dbKeys);
+    const date = new Date().toISOString().slice(0, 10);
+
+    const allTagStrings = new Set();
+    for (const key of orderedKeys) {
+        (appSettings.localImageMeta?.[key]?.tags ?? []).forEach(t => allTagStrings.add(t));
+    }
+    const tagMap = {};
+    [...allTagStrings].forEach((label, i) => { tagMap[`t${i}`] = label; });
+    const labelToId = Object.fromEntries(Object.entries(tagMap).map(([k, v]) => [v, k]));
+
+    const encoder = new TextEncoder();
+    const { readable, writable } = new TransformStream();
+    const compressed = readable.pipeThrough(new CompressionStream('gzip'));
+    const writer = writable.getWriter();
+    const blobPromise = new Response(compressed).blob();
+
+    const header = JSON.stringify({
+        version: 1, type: 'image_tag_package',
+        timestamp: new Date().toISOString(), tagMap
+    });
+    await writer.write(encoder.encode(header.slice(0, -1) + ',"images":['));
+    for (let i = 0; i < orderedKeys.length; i++) {
+        const key = orderedKeys[i];
+        const file = await localImageDB.getImage(key);
+        const base64 = await blobToBase64(file);
+        const tags = (appSettings.localImageMeta?.[key]?.tags ?? []).map(t => labelToId[t]).filter(Boolean);
+        const entry = JSON.stringify({
+            name: file.name, type: file.type,
+            lastModified: file.lastModified, data: base64, tags
+        });
+        await writer.write(encoder.encode((i > 0 ? ',' : '') + entry));
+    }
+    await writer.write(encoder.encode(']}'));
+    await writer.close();
+
+    const blob = await blobPromise;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `oshikoyo_images_${date}.json.gz`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
     showToast('書き出しました');
 }
 
-function handleExportSettings() {
-    const dataStr = JSON.stringify(appSettings, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
+async function handleImportImageTagPackage(file) {
+    try {
+        const decompressed = file.stream().pipeThrough(new DecompressionStream('gzip'));
+        const json = JSON.parse(await new Response(decompressed).text());
 
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `oshikoyo_settings_${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+        if (json.type !== 'image_tag_package') {
+            alert('画像＋タグパッケージ用のファイルではありません。');
+            return;
+        }
+
+        const tagMap = json.tagMap ?? {};
+        const existingImages = await localImageDB.getAllImages();
+        const sigMap = buildBlobSignatureMap(existingImages);
+
+        let added = 0, skipped = 0;
+        const filesToAdd = [];
+        const pendingTags = [];
+
+        for (const item of (json.images ?? [])) {
+            const blob = base64ToBlob(item.data, item.type);
+            if (await isDuplicateBlob(blob, sigMap)) { skipped++; continue; }
+            filesToAdd.push(new File([blob], item.name || 'image', {
+                type: item.type, lastModified: item.lastModified || Date.now()
+            }));
+            pendingTags.push((item.tags ?? []).map(id => tagMap[id]).filter(Boolean));
+            added++;
+        }
+
+        if (filesToAdd.length > 0) {
+            const newKeys = await localImageDB.addImages(filesToAdd);
+            if (!appSettings.localImageMeta) appSettings.localImageMeta = {};
+            newKeys.forEach((key, i) => {
+                if (pendingTags[i].length > 0) appSettings.localImageMeta[key] = { tags: pendingTags[i] };
+            });
+            const masterTags = appSettings.tags ?? [];
+            pendingTags.flat().forEach(t => { if (!masterTags.includes(t)) masterTags.push(t); });
+            appSettings.tags = masterTags;
+            appSettings.localImageOrder = [...(appSettings.localImageOrder ?? []), ...newKeys];
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+        }
+
+        alert(`取り込み完了: 追加 ${added} 件 / スキップ ${skipped} 件`);
+        if (added > 0) { updateLocalMediaUI(); renderLocalImageManager(); }
+    } catch (e) {
+        console.error(e);
+        alert('取り込みに失敗しました: ' + e.message);
+    }
 }
 
 // Helper: Validate Imported Settings
@@ -2415,7 +2565,7 @@ function validateImportedSettings(data) {
                 name: typeof item.name === 'string' ? item.name : 'Unknown',
                 color: typeof item.color === 'string' ? item.color : '#3b82f6',
                 memorial_dates,
-                fanArtTag: typeof item.fanArtTag === 'string' ? item.fanArtTag : '',
+                tags: Array.isArray(item.tags) ? item.tags.filter(t => typeof t === 'string') : [],
                 source: typeof item.source === 'string' ? item.source : ''
             };
         }).filter(item => item !== null);
@@ -2434,84 +2584,6 @@ function validateImportedSettings(data) {
 }
 // --- Validation Logic End ---
 
-function handleImportSettings(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const data = JSON.parse(e.target.result);
-            const validatedData = validateImportedSettings(data);
-
-            if (validatedData) {
-                if (confirm('現在の設定を上書きします。よろしいですか？')) {
-                    appSettings = { ...DEFAULT_SETTINGS, ...validatedData };
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
-                    alert('設定を復元しました。画面を更新します。');
-                    location.reload();
-                }
-            } else {
-                alert('無効な設定ファイルです。');
-            }
-        } catch (err) {
-            console.error(err);
-            alert('ファイルの読み込みに失敗しました。');
-        }
-    };
-    reader.readAsText(file);
-}
-
-async function handleImportImages(files) {
-    if (!files || files.length === 0) {
-        return;
-    }
-
-    let totalAdded = 0;
-    let totalSkipped = 0;
-    let errorCount = 0;
-
-    let lastError = null;
-
-    for (const file of Array.from(files)) {
-        try {
-            let json;
-            if (file.name.endsWith('.json.gz')) {
-                const decompressed = file.stream().pipeThrough(new DecompressionStream('gzip'));
-                const text = await new Response(decompressed).text();
-                json = JSON.parse(text);
-            } else {
-                const text = await file.text();
-                json = JSON.parse(text);
-            }
-            const keysBefore = new Set(await localImageDB.getAllKeys());
-            const result = await localImageDB.importData(json);
-            totalAdded += result.added;
-            totalSkipped += result.skipped;
-            if (result.added > 0) {
-                const keysAfter = await localImageDB.getAllKeys();
-                const newKeys = keysAfter.filter(k => !keysBefore.has(k));
-                appSettings.localImageOrder = [...(appSettings.localImageOrder || []), ...newKeys];
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
-            }
-        } catch (e) {
-            console.error("Import failed for file:", file.name, e);
-            errorCount++;
-            lastError = e;
-        }
-    }
-
-    let msg = `インポート完了: \n追加: ${totalAdded} 件\n重複スキップ: ${totalSkipped} 件`;
-    if (errorCount > 0) {
-        msg += `\nエラー: ${errorCount} ファイル`;
-        if (lastError) {
-            msg += `\n詳細: ${lastError.message} `;
-        }
-    }
-
-    alert(msg);
-    if (totalAdded > 0) {
-        updateLocalMediaUI();
-        renderLocalImageManager();
-    }
-}
 
 // --- Image Grid Drag & Drop Reorder ---
 function setupImageGridDnD(list) {
@@ -3266,23 +3338,20 @@ function initSettings() {
         }
     });
 
-    // Export Settings
-    document.getElementById('btnExportSettings').addEventListener('click', handleExportSettings);
-
-    // Import Settings
-    const inputImport = document.getElementById('inputImportSettings');
-    document.getElementById('btnImportSettings').addEventListener('click', () => inputImport.click());
-    inputImport.addEventListener('change', (e) => {
-        if (e.target.files[0]) handleImportSettings(e.target.files[0]);
+    // Full backup
+    document.getElementById('btnExportFullBackup').addEventListener('click', handleExportFullBackup);
+    const inputFullBackup = document.getElementById('inputFullBackup');
+    document.getElementById('btnImportFullBackup').addEventListener('click', () => inputFullBackup.click());
+    inputFullBackup.addEventListener('change', (e) => {
+        if (e.target.files[0]) { handleImportFullBackup(e.target.files[0]); e.target.value = ''; }
     });
 
-    // Image Backup/Restore
-    document.getElementById('btnExportImages').addEventListener('click', handleExportImages);
-    const inputImportImages = document.getElementById('inputImportImages');
-    document.getElementById('btnImportImages').addEventListener('click', () => inputImportImages.click());
-    inputImportImages.addEventListener('change', (e) => {
-        handleImportImages(e.target.files);
-        e.target.value = '';
+    // Image + Tag package
+    document.getElementById('btnExportImageTag').addEventListener('click', handleExportImageTagPackage);
+    const inputImageTag = document.getElementById('inputImageTag');
+    document.getElementById('btnImportImageTag').addEventListener('click', () => inputImageTag.click());
+    inputImageTag.addEventListener('change', (e) => {
+        if (e.target.files[0]) { handleImportImageTagPackage(e.target.files[0]); e.target.value = ''; }
     });
 
     // (Legacy cleanup: mediaIntervalSelect listener removed)
