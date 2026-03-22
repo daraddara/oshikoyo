@@ -3295,6 +3295,27 @@ function initSettings() {
         document.getElementById('settingsModal').close();
     });
 
+    // Check Update
+    const btnCheckUpdate = document.getElementById('btnCheckUpdate');
+    if (btnCheckUpdate) {
+        btnCheckUpdate.addEventListener('click', async () => {
+            if ('serviceWorker' in navigator) {
+                const reg = await navigator.serviceWorker.getRegistration();
+                if (reg) {
+                    showToast('更新を確認中...');
+                    await reg.update();
+                    // update() won't return anything, but onupdatefound will be triggered if something found.
+                    // If no update is found, show a message after a short delay.
+                    setTimeout(() => {
+                        showToast('現在、最新の状態です');
+                    }, 2000);
+                }
+            } else {
+                showToast('お使いの環境ではアプリの更新機能が利用できません');
+            }
+        });
+    }
+
     // 全般タブ: 各コントロールの変更を即時保存・適用
     document.querySelectorAll('input[name="startOfWeek"]').forEach(r => {
         r.addEventListener('change', saveSettings);
@@ -4353,12 +4374,63 @@ function setupMediaTimer(isInit = false) {
 
 if (typeof document !== 'undefined') { document.addEventListener('DOMContentLoaded', init); }
 
-// PWA Service Worker Registration
+// PWA Service Worker Registration with Update Handling
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-            .catch(err => console.warn('Service Worker registration failed.', err));
+        navigator.serviceWorker.register('sw.js').then(reg => {
+            reg.onupdatefound = () => {
+                const newWorker = reg.installing;
+                if (newWorker) {
+                    newWorker.onstatechange = () => {
+                        if (newWorker.state === 'installed') {
+                            if (navigator.serviceWorker.controller) {
+                                // New update available
+                                showUpdateNotification();
+                            }
+                        }
+                    };
+                }
+            };
+        }).catch(err => console.warn('Service Worker registration failed.', err));
     });
+
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return;
+        refreshing = true;
+        window.location.reload();
+    });
+}
+
+/**
+ * 更新通知を表示する
+ */
+function showUpdateNotification() {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'toast-message update-toast';
+    toast.style.padding = '12px 16px';
+    toast.style.display = 'flex';
+    toast.style.flexDirection = 'column';
+    toast.style.gap = '8px';
+    toast.innerHTML = `
+        <div class="update-toast-content" style="font-size: 0.95rem; font-weight: 500;">
+            新しいバージョンが利用可能です。
+        </div>
+        <button type="button" class="btn-primary" style="width: 100%;" onclick="window.location.reload()">更新を反映する</button>
+    `;
+    container.appendChild(toast);
+    
+    if (container.showPopover) {
+        try {
+            if (container.matches(':popover-open')) {
+                container.hidePopover();
+            }
+            container.showPopover();
+        } catch (e) {}
+    }
 }
 
 // --- Media Logic ---

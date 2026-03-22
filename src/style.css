@@ -4075,3 +4075,26 @@ textarea:focus-visible,
     outline: 2px solid var(--accent-color);
     outline-offset: 2px;
 }
+
+/* --- Version Info --- */
+.version-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.version-badge {
+    padding: 2px 8px;
+    background: var(--btn-secondary-bg);
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 500;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.version-info .btn-secondary {
+    padding: 4px 12px;
+    font-size: 0.85rem;
+}
