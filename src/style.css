@@ -3154,11 +3154,11 @@ details[open]>summary::before {
     line-height: 1;
 }
 
-/* A. アクション列 — ホバー時のみ表示 */
+/* アクション列 */
 .oshi-table-actions {
     text-align: right;
     white-space: nowrap;
-    width: 36px;
+    width: 68px;
 }
 
 .btn-icon-delete {
@@ -3192,8 +3192,94 @@ details[open]>summary::before {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+    align-items: center;
 }
 
+.toolbar-text-link {
+    background: none;
+    border: none;
+    padding: 4px 6px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    opacity: 0.65;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+.toolbar-text-link:hover {
+    opacity: 1;
+    color: var(--accent-color);
+}
+
+/* Empty State */
+.oshi-empty-state {
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.oshi-empty-state__title {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin: 0 0 16px;
+}
+
+.oshi-empty-state__actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+/* Tag chips in oshi table */
+.oshi-tags-cell {
+    max-width: 180px;
+}
+
+.oshi-tag-chip {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 2px 7px;
+    border-radius: 99px;
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-color);
+    margin: 1px 2px 1px 0;
+    white-space: nowrap;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.oshi-tag-chip--more {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-secondary);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Edit button in action column */
+.btn-icon-edit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 6px;
+    background: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s;
+}
+
+.oshi-table tbody tr:hover .btn-icon-edit {
+    opacity: 1;
+}
+
+.btn-icon-edit:hover {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-color);
+}
 
 /* Oshi Edit Modal */
 .oshi-edit-modal {
