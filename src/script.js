@@ -1652,7 +1652,6 @@ function saveOshiFromForm() {
         color,
         memorial_dates,
         tags,
-        source: index >= 0 ? (appSettings.oshiList[index]?.source || 'manual') : 'manual'
     };
 
     if (index >= 0) {
@@ -1811,7 +1810,7 @@ function convertCsvRowsToOshiItems(rows, fileName) {
         const tagRaw = row['タグ'] || row['tags'] || '';
         const tags = tagRaw ? tagRaw.split(';').map(t => t.trim()).filter(Boolean) : [];
 
-        items.push({ name, color, memorial_dates, tags, source: fileName });
+        items.push({ name, color, memorial_dates, tags });
     });
 
     return { items, skippedRows };
@@ -1918,7 +1917,6 @@ function handleOshiImportFromModal(files) {
                             color: item['公式カラー (Hex/系統)'] || item.color || '',
                             memorial_dates,
                             tags: Array.isArray(item.tags) ? item.tags : [],
-                            source: file.name
                         };
                     }).filter(item => item.name);
 
@@ -1996,7 +1994,6 @@ function handleFileImport() {
                         debutDate: item['周年記念日'] || item.debutDate,
                         color: item['公式カラー (Hex/系統)'] || item.color,
                         fanArtTag: item['ファンアートタグ'] || item.fanArtTag,
-                        source: file.name
                     }));
 
                     // Deduplication Logic
@@ -2573,7 +2570,6 @@ function validateImportedSettings(data) {
                 color: typeof item.color === 'string' ? item.color : '#3b82f6',
                 memorial_dates,
                 tags: Array.isArray(item.tags) ? item.tags.filter(t => typeof t === 'string') : [],
-                source: typeof item.source === 'string' ? item.source : ''
             };
         }).filter(item => item !== null);
     } else {
@@ -3382,7 +3378,6 @@ function loadSettings() {
                     birthday: appSettings.oshiBirthday,
                     debutDate: appSettings.oshiDebutDay,
                     color: appSettings.oshiColor,
-                    source: 'legacy'
                 }];
             }
             // Clear legacy properties explicitly as they are no longer in DEFAULT_SETTINGS
