@@ -880,11 +880,13 @@ function renderCalendar(container, year, month) {
     const totalCellsFilled = startDayIndex + daysInMonth;
     const TOTAL_SLOTS = 42;
 
+    const fragment = document.createDocumentFragment();
+
     // Padding Cells
     for (let i = 0; i < startDayIndex; i++) {
         const emptyCell = document.createElement('div');
         emptyCell.className = 'day-cell is-other-month';
-        daysGrid.appendChild(emptyCell);
+        fragment.appendChild(emptyCell);
     }
 
     // Pre-calculate parsed memorial dates and styles for each oshi
@@ -1019,15 +1021,17 @@ function renderCalendar(container, year, month) {
         el.addEventListener('mouseenter', (e) => showPopup(e, popupHtml));
         el.addEventListener('mouseleave', hidePopup);
 
-        daysGrid.appendChild(el);
+        fragment.appendChild(el);
     }
 
     // Trailing Padding
     for (let i = totalCellsFilled; i < TOTAL_SLOTS; i++) {
         const emptyCell = document.createElement('div');
         emptyCell.className = 'day-cell is-other-month';
-        daysGrid.appendChild(emptyCell);
+        fragment.appendChild(emptyCell);
     }
+
+    daysGrid.appendChild(fragment);
 }
 
 function updateView() {
