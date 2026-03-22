@@ -1220,6 +1220,28 @@ function renderOshiTable() {
         nameCell.textContent = oshi.name || '-';
         row.appendChild(nameCell);
 
+        // Tags
+        const tagsCell = document.createElement('td');
+        tagsCell.className = 'oshi-tags-cell';
+        const tagList = oshi.tags || [];
+        if (tagList.length > 0) {
+            tagList.slice(0, 3).forEach(tag => {
+                const chip = document.createElement('span');
+                chip.className = 'oshi-tag-chip';
+                chip.textContent = tag;
+                tagsCell.appendChild(chip);
+            });
+            if (tagList.length > 3) {
+                const more = document.createElement('span');
+                more.className = 'oshi-tag-chip oshi-tag-chip--more';
+                more.textContent = `+${tagList.length - 3}`;
+                tagsCell.appendChild(more);
+            }
+        } else {
+            tagsCell.textContent = '-';
+        }
+        row.appendChild(tagsCell);
+
         // Memorial dates count (C. バッジ表示)
         const datesCell = document.createElement('td');
         const datesCount = (oshi.memorial_dates || []).length;
@@ -1233,9 +1255,21 @@ function renderOshiTable() {
         }
         row.appendChild(datesCell);
 
-        // Actions（削除のみ。編集は行クリックで行う）
+        // Actions（編集・削除。編集は行クリックでも可）
         const actCell = document.createElement('td');
         actCell.className = 'oshi-table-actions';
+
+        // Edit Button
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'btn-icon-edit';
+        editBtn.title = '編集';
+        editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+        editBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openOshiEditForm(index);
+        });
+        actCell.appendChild(editBtn);
 
         // Delete Button
         const delBtn = document.createElement('button');
@@ -3188,6 +3222,11 @@ function initSettings() {
         handleOshiImportFromModal(e.target.files);
         e.target.value = ''; // Reset for re-selection
     });
+
+    // 空状態UIのボタン（同じ機能）
+    document.getElementById('btnOshiAddEmpty').addEventListener('click', () => openOshiEditForm(-1));
+    document.getElementById('btnOshiImportEmpty').addEventListener('click', () => inputOshiImport.click());
+    document.getElementById('btnOshiCsvTemplateEmpty').addEventListener('click', downloadOshiCsvTemplate);
 
     // --- Oshi Edit Form ---
     document.getElementById('btnOshiEditSave').addEventListener('click', saveOshiFromForm);
