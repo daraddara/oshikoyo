@@ -62,12 +62,9 @@ describe('PWA: アイコン設定', () => {
     });
 
     it('アイコンファイルが実際に存在する', () => {
-        // manifest の src はWebサーバー相対パス。assets/* は src/assets/* として配置される
         manifest.icons.forEach(icon => {
-            const directPath = resolve(ROOT, icon.src);
-            const srcPrefixedPath = resolve(ROOT, 'src', icon.src);
-            const found = existsSync(directPath) || existsSync(srcPrefixedPath);
-            expect(found, `アイコンが見つかりません: ${icon.src}`).toBe(true);
+            const iconPath = resolve(ROOT, icon.src);
+            expect(existsSync(iconPath), `アイコンが見つかりません: ${icon.src}`).toBe(true);
         });
     });
 });
