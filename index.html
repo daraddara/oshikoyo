@@ -284,7 +284,11 @@
                         <div class="storage-indicator__track">
                             <div id="storageIndicatorBar" class="storage-indicator__bar"></div>
                         </div>
-                        <p id="storageIndicatorLabel" class="storage-indicator__label">計算中...</p>
+                        <div class="storage-indicator__footer">
+                            <p id="storageIndicatorLabel" class="storage-indicator__label">計算中...</p>
+                            <span class="storage-indicator__count"><strong id="localImageCount">0</strong> 枚</span>
+                            <button type="button" id="btnClearLocal" class="btn-danger-outline btn-sm">全削除</button>
+                        </div>
                     </div>
 
                     <!-- 登録時自動圧縮 -->
@@ -300,6 +304,8 @@
                         </div>
                         <p class="help-text">※ GIF は対象外。透過 PNG は白背景に変換されます。</p>
                     </div>
+
+                    <div class="setting-section-divider"></div>
 
                     <div class="media-action-group">
                         <label class="setting-label-sm">画像を追加</label>
@@ -319,11 +325,6 @@
                                 貼り付け
                             </button>
                         </div>
-                    </div>
-
-                    <div class="media-status-row">
-                        <span>登録済み: <strong id="localImageCount">0</strong> 枚</span>
-                        <button type="button" id="btnClearLocal" class="btn-danger-text">全削除</button>
                     </div>
 
                     <div id="localImageList" class="local-image-grid local-image-manager">
