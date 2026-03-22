@@ -1264,6 +1264,7 @@ function renderOshiTable() {
         editBtn.type = 'button';
         editBtn.className = 'btn-icon-edit';
         editBtn.title = '編集';
+        editBtn.setAttribute('aria-label', '推しの編集');
         editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
         editBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1276,6 +1277,7 @@ function renderOshiTable() {
         delBtn.type = 'button';
         delBtn.className = 'btn-icon-delete';
         delBtn.title = '削除';
+        delBtn.setAttribute('aria-label', '推しの削除');
         delBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
         delBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1345,7 +1347,7 @@ function renderEventTypeManager() {
         const svg = iconSVGHtml(t.icon || 'star', 'et-icon-svg');
         const action = isBuiltin
             ? '<span class="et-builtin">組込み</span>'
-            : `<button type="button" class="et-delete" data-type-id="${escapeHTML(t.id)}">削除</button>`;
+            : `<button type="button" class="et-delete" data-type-id="${escapeHTML(t.id)}" aria-label="イベントタイプを削除">削除</button>`;
         return `<div class="event-type-row">${svg}<span class="et-label">${escapeHTML(t.label)}</span>${action}</div>`;
     }).join('');
     list.querySelectorAll('.et-delete').forEach(btn => {
@@ -1477,13 +1479,14 @@ function addMemorialDateRow(md = null) {
     iconBtn.type = 'button';
     iconBtn.className = 'mdate-icon-btn';
     iconBtn.title = 'アイコンを変更';
+    iconBtn.setAttribute('aria-label', 'アイコンを変更');
     iconBtn.innerHTML = iconSVGHtml(initIconId, 'mdate-icon-svg');
 
     // アイコンピッカー (position:fixed で配置)
     const picker = document.createElement('div');
     picker.className = 'icon-picker-popup';
     picker.innerHTML = Object.keys(EVENT_ICON_PATHS).map(id =>
-        `<button type="button" class="icon-chip${id === initIconId ? ' is-selected' : ''}" data-icon-id="${id}" title="${id}">${iconSVGHtml(id, 'icon-chip-svg')}</button>`
+        `<button type="button" class="icon-chip${id === initIconId ? ' is-selected' : ''}" data-icon-id="${id}" title="${id}" aria-label="${id}アイコン">${iconSVGHtml(id, 'icon-chip-svg')}</button>`
     ).join('');
 
     const updateIconUI = (id) => {
@@ -1570,6 +1573,7 @@ function addMemorialDateRow(md = null) {
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
     deleteBtn.className = 'mdate-delete';
+    deleteBtn.setAttribute('aria-label', '記念日を削除');
     deleteBtn.textContent = '×';
     deleteBtn.addEventListener('click', () => row.remove());
 
@@ -2223,6 +2227,7 @@ function openImageLightbox(src, onDelete = null, imgId = null) {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'img-lightbox-close';
     closeBtn.title = '閉じる';
+    closeBtn.setAttribute('aria-label', '閉じる');
     closeBtn.textContent = '×';
     imgLightboxInner.appendChild(closeBtn);
 
@@ -2231,6 +2236,7 @@ function openImageLightbox(src, onDelete = null, imgId = null) {
         deleteBtn.className = 'img-lightbox-delete';
         deleteBtn.type = 'button';
         deleteBtn.title = '削除';
+        deleteBtn.setAttribute('aria-label', '画像を削除');
         deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
         imgLightboxInner.appendChild(deleteBtn);
     }
@@ -2422,6 +2428,7 @@ async function renderLocalImageManager() {
         btnDel.type = 'button';
         btnDel.className = 'btn-img-delete';
         btnDel.title = '削除';
+        btnDel.setAttribute('aria-label', '画像を削除');
         btnDel.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
 
         btnDel.onclick = async (e) => {
