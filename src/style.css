@@ -2084,6 +2084,17 @@ body {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
+@media (prefers-color-scheme: dark) {
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.13);
+        border-color: var(--accent-color);
+    }
+}
+
 .btn-danger-outline {
     background: none;
     border: 1px solid rgba(220, 38, 38, 0.35);
@@ -2121,6 +2132,13 @@ body {
     border-radius: 3px;
 }
 
+@media (prefers-color-scheme: dark) {
+    .local-image-grid {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+}
+
 /* 画像サムネイルアイテム */
 .local-image-item {
     position: relative;
@@ -2129,6 +2147,13 @@ body {
     overflow: hidden;
     border: 1px solid rgba(0, 0, 0, 0.08);
     background: #f0f0f0;
+}
+
+@media (prefers-color-scheme: dark) {
+    .local-image-item {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
 }
 
 .local-image-item img {
@@ -2200,6 +2225,12 @@ body {
     margin-bottom: 3px;
 }
 
+@media (prefers-color-scheme: dark) {
+    .storage-indicator__track {
+        background: rgba(255, 255, 255, 0.1);
+    }
+}
+
 .storage-indicator__bar {
     height: 100%;
     background: var(--accent-color, #a78bfa);
@@ -2240,11 +2271,23 @@ body {
     margin: 12px 0;
 }
 
+@media (prefers-color-scheme: dark) {
+    .setting-section-divider {
+        border-top-color: rgba(255, 255, 255, 0.08);
+    }
+}
+
 /* Compress Setting */
 .compress-setting {
     margin-bottom: 10px;
     padding-bottom: 10px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+    .compress-setting {
+        border-bottom-color: rgba(255, 255, 255, 0.08);
+    }
 }
 
 .compress-setting__row {
@@ -2630,6 +2673,16 @@ body {
     border-color: rgba(0, 0, 0, 0.22);
 }
 
+@media (prefers-color-scheme: dark) {
+    .btn-media {
+        background: rgba(255, 255, 255, 0.07);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+    .btn-media:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.25);
+    }
+}
 
 /* Data tab */
 .data-btn-row {
@@ -2661,6 +2714,17 @@ body {
     background: rgba(255, 255, 255, 0.9);
     border-color: var(--accent-color);
     box-shadow: 0 2px 10px rgba(59, 130, 246, 0.15);
+}
+
+@media (prefers-color-scheme: dark) {
+    .btn-data-action {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+    .btn-data-action:hover {
+        background: rgba(255, 255, 255, 0.11);
+        border-color: var(--accent-color);
+    }
 }
 
 .btn-data-action svg {
@@ -4086,12 +4150,17 @@ textarea:focus-visible,
 
 .version-badge {
     padding: 2px 8px;
-    background: var(--btn-secondary-bg);
+    background: rgba(0, 0, 0, 0.07);
     border-radius: 4px;
     font-size: 0.85em;
     font-weight: 500;
-    color: var(--text-color);
-    opacity: 0.8;
+    color: var(--text-secondary);
+}
+
+@media (prefers-color-scheme: dark) {
+    .version-badge {
+        background: rgba(255, 255, 255, 0.1);
+    }
 }
 
 .version-info .btn-secondary {
