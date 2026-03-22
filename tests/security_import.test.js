@@ -91,7 +91,6 @@ describe('Security: Import Settings Validation', () => {
                     ],
                     color: '#ff0000',
                     tags: ['ライブ', '衣装A'],
-                    source: 'test_source.json'
                 }
             ]
         };
@@ -106,7 +105,6 @@ describe('Security: Import Settings Validation', () => {
                     name: 'Test Oshi',
                     color: '#ff0000',
                     fanArtTag: '#testart',
-                    source: 'test_source.json'
                 }
             ]
         };
