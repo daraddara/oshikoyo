@@ -2084,8 +2084,19 @@ body {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
-.btn-danger-text:hover {
-    opacity: 0.8;
+.btn-danger-outline {
+    background: none;
+    border: 1px solid rgba(220, 38, 38, 0.35);
+    color: #dc2626;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.btn-danger-outline:hover {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: rgba(220, 38, 38, 0.7);
 }
 
 .local-image-grid {
