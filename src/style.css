@@ -3154,7 +3154,7 @@ details[open]>summary::before {
     line-height: 1;
 }
 
-/* A. アクション列 — ホバー時のみ表示 */
+/* アクション列 */
 .oshi-table-actions {
     text-align: right;
     white-space: nowrap;

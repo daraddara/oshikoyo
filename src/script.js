@@ -1255,7 +1255,7 @@ function renderOshiTable() {
         }
         row.appendChild(datesCell);
 
-        // Actions（編集・削除。編集は行クリックでも可）
+        // Actions（編集・削除）
         const actCell = document.createElement('td');
         actCell.className = 'oshi-table-actions';
 
@@ -1287,10 +1287,6 @@ function renderOshiTable() {
         });
         actCell.appendChild(delBtn);
         row.appendChild(actCell);
-
-        // B. 行クリックで編集
-        row.style.cursor = 'pointer';
-        row.addEventListener('click', () => openOshiEditForm(index));
 
         // D. ドラッグ&ドロップ並び替え
         row.addEventListener('dragstart', (e) => {
