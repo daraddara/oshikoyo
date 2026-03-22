@@ -1703,21 +1703,120 @@ function handleOshiExport() {
         showToast('エクスポートするデータがありません。');
         return;
     }
+    showOshiExportDialog();
+}
 
+function showOshiExportDialog() {
     const count = appSettings.oshiList.length;
-    const dataStr = JSON.stringify(appSettings.oshiList, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    const dlg = document.createElement('dialog');
+    dlg.className = 'settings-modal';
+    dlg.style.background = 'transparent';
+    dlg.style.padding = '0';
+    dlg.innerHTML = `
+        <div style="padding:24px;min-width:320px;max-width:440px;width:90vw;box-sizing:border-box;background:var(--bg-color);border-radius:var(--border-radius)">
+            <h3 style="margin:0 0 8px;font-size:1rem">推しデータをエクスポート</h3>
+            <p style="margin:0 0 20px;font-size:0.88rem;color:var(--text-secondary)">${count}件の推しデータを書き出します。</p>
+            <div style="display:flex;gap:12px;margin-bottom:20px">
+                <button type="button" id="oshiExportJson" style="flex:1;padding:12px 8px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;background:var(--card-bg);cursor:pointer;text-align:center">
+                    <div style="font-size:1.2rem;margin-bottom:4px">📄</div>
+                    <div style="font-weight:600;font-size:0.9rem;margin-bottom:4px">JSON形式</div>
+                    <div style="font-size:0.75rem;color:var(--text-secondary)">全データを完全に保存<br>（推奨）</div>
+                </button>
+                <button type="button" id="oshiExportCsv" style="flex:1;padding:12px 8px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;background:var(--card-bg);cursor:pointer;text-align:center">
+                    <div style="font-size:1.2rem;margin-bottom:4px">📊</div>
+                    <div style="font-weight:600;font-size:0.9rem;margin-bottom:4px">CSV形式</div>
+                    <div style="font-size:0.75rem;color:var(--text-secondary)">テンプレートと同じ形式<br>Excelで編集可能</div>
+                </button>
+            </div>
+            <div style="display:flex;justify-content:flex-end">
+                <button type="button" id="oshiExportCancel" class="btn-cancel">キャンセル</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(dlg);
+    dlg.showModal();
 
+    dlg.querySelector('#oshiExportCancel').onclick = () => { dlg.close(); dlg.remove(); };
+
+    dlg.querySelector('#oshiExportJson').onclick = () => {
+        dlg.close(); dlg.remove();
+        const dataStr = JSON.stringify(appSettings.oshiList, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `oshi_list_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast(`${count}件のデータをエクスポートしました`);
+    };
+
+    dlg.querySelector('#oshiExportCsv').onclick = () => {
+        dlg.close(); dlg.remove();
+        exportOshiAsCsv();
+    };
+}
+
+function escapeCsvField(str) {
+    if (str == null) return '';
+    const s = String(str);
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+        return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+}
+
+function exportOshiAsCsv() {
+    const rows = [OSHI_CSV_TEMPLATE_HEADERS.join(',')];
+    let truncatedCount = 0;
+
+    appSettings.oshiList.forEach(oshi => {
+        const dates = oshi.memorial_dates || [];
+        const bday  = (dates.find(d => d.type_id === 'bday')  || {}).date || '';
+        const debut = (dates.find(d => d.type_id === 'debut') || {}).date || '';
+        const custom = dates.filter(d => d.type_id !== 'bday' && d.type_id !== 'debut');
+
+        if (custom.length > 3) truncatedCount++;
+
+        const eventCols = [];
+        for (let i = 0; i < 3; i++) {
+            const ev = custom[i];
+            if (ev) {
+                const typeEntry = (appSettings.event_types || []).find(t => t.id === ev.type_id);
+                eventCols.push(escapeCsvField(typeEntry ? typeEntry.label : ev.type_id));
+                eventCols.push(escapeCsvField(ev.date));
+            } else {
+                eventCols.push('', '');
+            }
+        }
+
+        const tags = (oshi.tags || []).join(';');
+        rows.push([
+            escapeCsvField(oshi.name),
+            escapeCsvField(oshi.color),
+            escapeCsvField(bday),
+            escapeCsvField(debut),
+            ...eventCols,
+            escapeCsvField(tags)
+        ].join(','));
+    });
+
+    const bom = '\uFEFF';
+    const blob = new Blob([bom + rows.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `oshi_list_${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
+    a.download = `oshi_list_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
-    document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    showToast(`${count}件のデータをエクスポートしました`);
+    if (truncatedCount > 0) {
+        showToast(`CSVエクスポート完了（${truncatedCount}件: カスタム記念日が4件以上のため一部省略）`, 4000);
+    } else {
+        showToast(`${appSettings.oshiList.length}件のデータをCSVでエクスポートしました`);
+    }
 }
 
 // --- Oshi CSV Import ---
