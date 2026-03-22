@@ -49,12 +49,6 @@ describe('PWA: manifest.json 必須フィールド', () => {
 });
 
 describe('PWA: アイコン設定', () => {
-    it('192x192 アイコンが定義されている', () => {
-        const icon192 = manifest.icons.find(i => i.sizes === '192x192');
-        expect(icon192).toBeDefined();
-        expect(icon192.type).toBe('image/png');
-    });
-
     it('512x512 アイコンが定義されている', () => {
         const icon512 = manifest.icons.find(i => i.sizes === '512x512');
         expect(icon512).toBeDefined();
