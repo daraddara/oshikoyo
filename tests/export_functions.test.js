@@ -56,6 +56,12 @@ function makeHandleOshiExport(mockAppSettings, mockShowToast) {
     )(mockAppSettings, mockShowToast);
 }
 
+function makeExportOshiAsCsv(mockAppSettings, mockShowToast) {
+    return new Function('appSettings', 'showToast',
+        `${exportOshiCode}; return exportOshiAsCsv;`
+    )(mockAppSettings, mockShowToast);
+}
+
 // ===========================================================================
 // handleExportFullBackup
 // ===========================================================================
@@ -191,25 +197,40 @@ describe('handleOshiExport', () => {
         mockShowToast = vi.fn();
         clickSpy = vi.spyOn(HTMLElement.prototype, 'click').mockImplementation(() => {});
         URL.createObjectURL.mockReturnValue('blob:test-url');
+        // jsdom does not implement showModal/close for <dialog>
+        HTMLDialogElement.prototype.showModal = vi.fn();
+        HTMLDialogElement.prototype.close = vi.fn();
     });
 
     afterEach(() => {
         vi.restoreAllMocks();
         vi.clearAllMocks();
+        // Remove any dialogs left in the DOM
+        document.querySelectorAll('dialog').forEach(d => d.remove());
     });
 
-    it('oshiList が空の場合はダウンロードせずトーストを表示する', () => {
+    it('oshiList が空の場合はダイアログを開かずトーストを表示する', () => {
         const mockSettings = { oshiList: [] };
         const fn = makeHandleOshiExport(mockSettings, mockShowToast);
 
         fn();
 
-        expect(URL.createObjectURL).not.toHaveBeenCalled();
-        expect(clickSpy).not.toHaveBeenCalled();
+        expect(HTMLDialogElement.prototype.showModal).not.toHaveBeenCalled();
         expect(mockShowToast).toHaveBeenCalledWith('エクスポートするデータがありません。');
     });
 
-    it('oshiList がある場合はダウンロードを実行し件数をトーストに表示する', () => {
+    it('oshiList がある場合はエクスポートダイアログを表示する', () => {
+        const mockSettings = {
+            oshiList: [{ name: '推しA', color: '#ff0000', memorial_dates: [] }]
+        };
+        const fn = makeHandleOshiExport(mockSettings, mockShowToast);
+
+        fn();
+
+        expect(HTMLDialogElement.prototype.showModal).toHaveBeenCalledOnce();
+    });
+
+    it('JSON形式ボタンをクリックするとダウンロードを実行し件数をトーストに表示する', () => {
         const mockSettings = {
             oshiList: [
                 { name: '推しA', color: '#ff0000', memorial_dates: [] },
@@ -217,22 +238,139 @@ describe('handleOshiExport', () => {
             ]
         };
         const fn = makeHandleOshiExport(mockSettings, mockShowToast);
-
         fn();
 
+        // .click() on HTMLElement is mocked; invoke onclick directly
+        document.getElementById('oshiExportJson').onclick();
+
         expect(URL.createObjectURL).toHaveBeenCalledOnce();
-        expect(clickSpy).toHaveBeenCalledOnce();
         expect(mockShowToast).toHaveBeenCalledWith('2件のデータをエクスポートしました');
     });
 
-    it('ファイル名が oshi_list_YYYY-MM-DD.json 形式である', () => {
+    it('JSON形式のファイル名が oshi_list_YYYY-MM-DD.json 形式である', () => {
         const mockSettings = { oshiList: [{ name: '推しA', color: '#ff0000', memorial_dates: [] }] };
         const fn = makeHandleOshiExport(mockSettings, mockShowToast);
 
         const appendSpy = vi.spyOn(document.body, 'appendChild');
         fn();
+        document.getElementById('oshiExportJson').onclick();
 
-        const anchor = appendSpy.mock.calls[0][0];
-        expect(anchor.download).toMatch(/^oshi_list_\d{4}-\d{2}-\d{2}\.json$/);
+        const anchors = appendSpy.mock.calls.map(c => c[0]).filter(el => el.tagName === 'A');
+        expect(anchors[0].download).toMatch(/^oshi_list_\d{4}-\d{2}-\d{2}\.json$/);
+    });
+});
+
+// ===========================================================================
+// exportOshiAsCsv
+// ===========================================================================
+describe('exportOshiAsCsv', () => {
+    let clickSpy;
+    let mockShowToast;
+
+    beforeEach(() => {
+        mockShowToast = vi.fn();
+        clickSpy = vi.spyOn(HTMLElement.prototype, 'click').mockImplementation(() => {});
+        URL.createObjectURL.mockReturnValue('blob:test-url');
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+        vi.clearAllMocks();
+    });
+
+    it('CSVファイルをダウンロードしトーストを表示する', () => {
+        const mockSettings = {
+            oshiList: [{ name: '推しA', color: '#ff69b4', memorial_dates: [], tags: [] }],
+            event_types: []
+        };
+        const fn = makeExportOshiAsCsv(mockSettings, mockShowToast);
+        fn();
+
+        expect(URL.createObjectURL).toHaveBeenCalledOnce();
+        expect(clickSpy).toHaveBeenCalledOnce();
+        expect(mockShowToast).toHaveBeenCalledWith('1件のデータをCSVでエクスポートしました');
+    });
+
+    it('ファイル名が oshi_list_YYYY-MM-DD.csv 形式である', () => {
+        const mockSettings = {
+            oshiList: [{ name: '推しA', color: '#ff0000', memorial_dates: [], tags: [] }],
+            event_types: []
+        };
+        const fn = makeExportOshiAsCsv(mockSettings, mockShowToast);
+
+        // Capture the <a> element via createElement spy
+        let capturedAnchor;
+        const origCreate = document.createElement.bind(document);
+        vi.spyOn(document, 'createElement').mockImplementation((tag) => {
+            const el = origCreate(tag);
+            if (tag === 'a') capturedAnchor = el;
+            return el;
+        });
+        fn();
+        expect(capturedAnchor.download).toMatch(/^oshi_list_\d{4}-\d{2}-\d{2}\.csv$/);
+    });
+
+    it('bday・debut・カスタムイベント・タグを正しくCSVに変換する', () => {
+        const createdBlobs = [];
+        const origBlob = global.Blob;
+        global.Blob = class extends origBlob {
+            constructor(parts, opts) { super(parts, opts); createdBlobs.push(parts.join('')); }
+        };
+
+        const mockSettings = {
+            oshiList: [{
+                name: '推しA',
+                color: '#ff69b4',
+                memorial_dates: [
+                    { type_id: 'bday',  date: '3/21', is_annual: true },
+                    { type_id: 'debut', date: '2019/9/1', is_annual: true },
+                    { type_id: 'ev_abc', date: '2022/4/1', is_annual: true },
+                ],
+                tags: ['VTuber', '歌手']
+            }],
+            event_types: [
+                { id: 'bday',   label: '誕生日' },
+                { id: 'debut',  label: 'デビュー記念日' },
+                { id: 'ev_abc', label: '3Dお披露目' },
+            ]
+        };
+        const fn = makeExportOshiAsCsv(mockSettings, mockShowToast);
+        fn();
+
+        const csvText = createdBlobs[0].replace('\uFEFF', ''); // remove BOM
+        const lines = csvText.split('\r\n');
+        expect(lines[0]).toBe('名前,カラー,誕生日,デビュー記念日,イベント1_種別,イベント1_日付,イベント2_種別,イベント2_日付,イベント3_種別,イベント3_日付,タグ');
+        expect(lines[1]).toBe('推しA,#ff69b4,3/21,2019/9/1,3Dお披露目,2022/4/1,,,,, VTuber;歌手'.replace(' ', ''));
+
+        global.Blob = origBlob;
+    });
+
+    it('カスタムイベントが4件以上の場合は警告トーストを表示する', () => {
+        const mockSettings = {
+            oshiList: [{
+                name: '推しA',
+                color: '#ff0000',
+                memorial_dates: [
+                    { type_id: 'ev_1', date: '1/1', is_annual: true },
+                    { type_id: 'ev_2', date: '2/1', is_annual: true },
+                    { type_id: 'ev_3', date: '3/1', is_annual: true },
+                    { type_id: 'ev_4', date: '4/1', is_annual: true }, // 4件目 → 省略
+                ],
+                tags: []
+            }],
+            event_types: [
+                { id: 'ev_1', label: 'A' },
+                { id: 'ev_2', label: 'B' },
+                { id: 'ev_3', label: 'C' },
+                { id: 'ev_4', label: 'D' },
+            ]
+        };
+        const fn = makeExportOshiAsCsv(mockSettings, mockShowToast);
+        fn();
+
+        expect(mockShowToast).toHaveBeenCalledWith(
+            expect.stringContaining('一部省略'),
+            expect.any(Number)
+        );
     });
 });
