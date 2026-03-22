@@ -1769,7 +1769,7 @@ function escapeCsvField(str) {
 }
 
 function exportOshiAsCsv() {
-    const rows = [OSHI_CSV_TEMPLATE_HEADERS.join(',')];
+    const rows = [OSHI_CSV_TEMPLATE_HEADERS.join(','), OSHI_CSV_FORMAT_COMMENT];
     let truncatedCount = 0;
 
     appSettings.oshiList.forEach(oshi => {
@@ -1829,12 +1829,19 @@ const OSHI_CSV_TEMPLATE_HEADERS = [
     'タグ'
 ];
 
+// CSV の2行目に挿入する書式説明コメント行（# 始まりの行はインポート時にスキップされる）
+const OSHI_CSV_FORMAT_COMMENT =
+    '# 書式:,,M/D または YYYY/M/D,M/D または YYYY/M/D,' +
+    '(種別名),(M/D または YYYY/M/D),(種別名),(M/D または YYYY/M/D),(種別名),(M/D または YYYY/M/D),' +
+    'タグ1;タグ2';
+
 /**
  * CSVテンプレートファイルをダウンロードする。
  */
 function downloadOshiCsvTemplate() {
     const sample = [
         OSHI_CSV_TEMPLATE_HEADERS.join(','),
+        OSHI_CSV_FORMAT_COMMENT,
         '推しA,#ff6b9d,3/21,2019/9/1,3Dお披露目,2022/4/1,,,,,VTuber;歌手',
         '推しB,#3b82f6,11/5,,,,,,,,'
     ].join('\r\n');
@@ -1909,7 +1916,8 @@ function convertCsvRowsToOshiItems(rows, fileName) {
 
     rows.forEach((row, idx) => {
         const name = row['名前'] || row['name'] || '';
-        if (!name) { skippedRows++; return; } // 名前なしはスキップ
+        if (!name) { skippedRows++; return; }    // 名前なし → 不正行
+        if (name.startsWith('#')) { return; }    // # 始まり → 書式説明コメント行、スキップ
 
         const color = row['カラー'] || row['color'] || '';
         const memorial_dates = [];
