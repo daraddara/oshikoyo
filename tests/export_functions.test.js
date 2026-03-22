@@ -340,7 +340,8 @@ describe('exportOshiAsCsv', () => {
         const csvText = createdBlobs[0].replace('\uFEFF', ''); // remove BOM
         const lines = csvText.split('\r\n');
         expect(lines[0]).toBe('名前,カラー,誕生日,デビュー記念日,イベント1_種別,イベント1_日付,イベント2_種別,イベント2_日付,イベント3_種別,イベント3_日付,タグ');
-        expect(lines[1]).toBe('推しA,#ff69b4,3/21,2019/9/1,3Dお披露目,2022/4/1,,,,, VTuber;歌手'.replace(' ', ''));
+        expect(lines[1]).toMatch(/^# 書式:/); // 書式説明コメント行
+        expect(lines[2]).toBe('推しA,#ff69b4,3/21,2019/9/1,3Dお披露目,2022/4/1,,,,, VTuber;歌手'.replace(' ', ''));
 
         global.Blob = origBlob;
     });
