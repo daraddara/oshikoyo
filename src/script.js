@@ -1040,8 +1040,10 @@ function updateView() {
     wrapper.innerHTML = ''; // Clear current views
 
     // Apply Layout Class
+    // モバイル（768px以下）では設定値に関わらず1ヶ月表示に制限（設定値は保持）
+    const effectiveMonthCount = window.innerWidth <= 768 ? 1 : appSettings.monthCount;
     // 1ヶ月表示時は方向設定を無視してcolumnで統一（設定値は保持）
-    const effectiveDirection = appSettings.monthCount === 1 ? 'column' : appSettings.layoutDirection;
+    const effectiveDirection = effectiveMonthCount === 1 ? 'column' : appSettings.layoutDirection;
     wrapper.className = `calendar-wrapper direction-${effectiveDirection}`;
 
     // Apply Media Position Class to Main Layout
@@ -1053,7 +1055,7 @@ function updateView() {
     // Loop for Month Count
     let targetDate = new Date(currentRefDate); // Clone
 
-    for (let i = 0; i < appSettings.monthCount; i++) {
+    for (let i = 0; i < effectiveMonthCount; i++) {
         const section = document.createElement('section');
         section.className = 'calendar-month';
         section.id = `month-${i}`;
