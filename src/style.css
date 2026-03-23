@@ -3398,6 +3398,15 @@ details[open]>summary::before {
         width: 100% !important;
         max-width: 100% !important;
         position: static !important;
+        order: 1 !important; /* 画像を常に上に固定（仕様 2.1） */
+    }
+
+    .layout-splitter {
+        order: 2 !important;
+    }
+
+    .calendar-section {
+        order: 3 !important; /* カレンダーを常に下に固定 */
     }
 
     /* Ensure image container doesn't take full height */
