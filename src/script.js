@@ -1432,6 +1432,7 @@ function createTagInputUI(initialTags, onChange) {
             const rm = document.createElement('button');
             rm.type = 'button';
             rm.className = 'tag-remove';
+            rm.setAttribute('aria-label', `${tag}タグを削除`);
             rm.textContent = '×';
             rm.addEventListener('click', (e) => {
                 e.stopPropagation();
