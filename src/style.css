@@ -1,3 +1,18 @@
+/* === Step 1: Windows/Meiryo font metrics override ===
+ * WinDescent が大きい Meiryo/游ゴシックで Chromium が
+ * 行ボックス外のインク領域をクリップする問題を回避するため、
+ * ascent/descent を明示的に上書きした仮想フォントを定義する。
+ */
+@font-face {
+  font-family: 'AdjustedMeiryo';
+  src: local('Meiryo UI'), local('Meiryo'), local('Yu Gothic UI'), local('Yu Gothic'), local('MS PGothic');
+  ascent-override: 90%;
+  descent-override: 40%;
+  line-gap-override: 0%;
+  font-style: normal;
+  font-weight: 100 900;
+}
+
 /* Base Variables */
 :root {
     /* Light Theme */
@@ -24,7 +39,8 @@
     --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.05);
     --font-jp: 'Noto Sans JP', sans-serif;
     --font-en: 'Outfit', sans-serif;
-    --font-rounded: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
+    /* Step 1: AdjustedMeiryo を先頭に置き Windows 環境でオーバーライドを優先させる */
+    --font-rounded: 'M PLUS Rounded 1c', 'AdjustedMeiryo', 'Noto Sans JP', sans-serif;
     --icon-pink:   #e07090;
     --icon-gold:   #b8860b;
     --icon-red:    #e53e3e;
@@ -107,9 +123,7 @@ body {
     width: fit-content;
     max-width: 95vw;
     z-index: var(--z-sticky);
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: transparent; /* 背景・blur は ::before が担当 */
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 999px;
     padding: 4px 8px;
@@ -117,10 +131,27 @@ body {
     margin: 0 auto;
 }
 
+/* backdrop-filter を疑似要素に移動して compositor clip からテキストを分離する。
+ * .controls 本体に backdrop-filter があると Chromium がコンポジットレイヤー境界で
+ * 子テキストのインク領域をクリップする（Windows 日本語フォント見切れの根本原因）。 */
+.controls::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: -1;
+}
+
 @media (prefers-color-scheme: dark) {
     .controls {
-        background: rgba(30, 41, 59, 0.4);
+        background: transparent;
         border: 1px solid rgba(255, 140, 175, 0.18);
+    }
+    .controls::before {
+        background: rgba(30, 41, 59, 0.4);
     }
 }
 
@@ -192,7 +223,7 @@ body {
     line-height: 1.5;
     color: var(--text-primary);
     font-weight: 600;
-    font-family: var(--font-rounded);
+    font-family: 'Noto Sans JP', sans-serif;
     cursor: pointer;
     transition: background 0.2s, color 0.2s;
     padding: 6px 16px;
