@@ -229,6 +229,7 @@ body {
     padding: 6px 16px;
     border-radius: 999px;
     letter-spacing: 0.01em;
+    white-space: nowrap;
 }
 
 .current-date-display:hover {
@@ -3397,17 +3398,29 @@ details[open]>summary::before {
         width: 100% !important;
         max-width: 100% !important;
         position: static !important;
+        order: 1 !important; /* 画像を常に上に固定（仕様 2.1） */
+    }
+
+    .layout-splitter {
+        order: 2 !important;
+    }
+
+    .calendar-section {
+        order: 3 !important; /* カレンダーを常に下に固定 */
     }
 
     /* Ensure image container doesn't take full height */
+    /* 仕様 2.1: 画像:カレンダー ≈ 4:6 比率 */
     .media-container {
-        height: 35vh !important;
+        height: 40vh !important;
         min-height: 250px !important;
     }
 
     .calendar-section {
         width: 100% !important;
         margin-top: 10px !important;
+        /* 下部固定コントロールに被られないようスペースを確保 */
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
     }
 
     .calendar-wrapper {
@@ -3427,6 +3440,16 @@ details[open]>summary::before {
     .layout-splitter {
         display: none !important;
     }
+
+    /* 仕様 3.1: コントロールピルを下部中央に固定（親指ゾーン） */
+    .controls {
+        position: fixed;
+        bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: var(--z-modal);
+        margin: 0;
+    }
 }
 
 @media (max-width: 600px) {
@@ -3445,7 +3468,7 @@ details[open]>summary::before {
         font-size: 14px;
     }
 
-    #currentDate {
+    .current-date-display {
         font-size: 0.9em;
         padding: 4px 8px;
     }
