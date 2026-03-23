@@ -229,6 +229,7 @@ body {
     padding: 6px 16px;
     border-radius: 999px;
     letter-spacing: 0.01em;
+    white-space: nowrap;
 }
 
 .current-date-display:hover {
@@ -3445,7 +3446,7 @@ details[open]>summary::before {
         font-size: 14px;
     }
 
-    #currentDate {
+    .current-date-display {
         font-size: 0.9em;
         padding: 4px 8px;
     }
