@@ -3899,6 +3899,21 @@ function init() {
     const btnTodayLogo = document.getElementById('btnTodayLogo');
     if (btnTodayLogo) {
         btnTodayLogo.addEventListener('click', resetToToday);
+
+        // 7連打でPWAデバッグパネルを表示（standalone環境でのデバッグ用）
+        let debugTapCount = 0;
+        let debugTapTimer = null;
+        btnTodayLogo.addEventListener('click', () => {
+            debugTapCount++;
+            clearTimeout(debugTapTimer);
+            debugTapTimer = setTimeout(() => { debugTapCount = 0; }, 2000);
+            if (debugTapCount >= 7) {
+                debugTapCount = 0;
+                if (typeof showPwaDebugPanel === 'function') {
+                    showPwaDebugPanel();
+                }
+            }
+        });
     }
 
     updateView();
@@ -5219,6 +5234,155 @@ if (typeof module !== 'undefined' && module.exports) {
         getWeekdayHeaderHTML,
         getJPHoliday
     };
+}
+
+// --- PWA Debug Panel ---
+// ロゴ7連打 または ?debug パラメータでパネルを表示
+// beforeinstallprompt は常にキャプチャしておく（standalone 起動時にも対応）
+if (typeof window !== 'undefined') {
+    let _debugInstallPromptCaptured = false;
+    let _debugInstallPromptEvent = null;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        _debugInstallPromptCaptured = true;
+        _debugInstallPromptEvent = e;
+    });
+
+    async function collectPwaDebugInfo() {
+        const info = {};
+        info.ua = navigator.userAgent;
+        const isEdge = /Edg\/|EdgA\//.test(info.ua);
+        const isChrome = /Chrome\//.test(info.ua) && !isEdge;
+        info.browser = isEdge ? 'Edge' : isChrome ? 'Chrome' : 'Other';
+
+        info.displayMode = window.matchMedia('(display-mode: standalone)').matches
+            ? 'standalone (インストール済み)'
+            : window.matchMedia('(display-mode: minimal-ui)').matches
+                ? 'minimal-ui'
+                : 'browser (未インストール)';
+
+        if ('serviceWorker' in navigator) {
+            try {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                if (regs.length === 0) {
+                    info.sw = '未登録';
+                } else {
+                    const reg = regs[0];
+                    const sw = reg.active || reg.installing || reg.waiting;
+                    info.sw = sw ? `登録済み (state: ${sw.state})` : '登録済み (SWなし)';
+                    info.swScope = reg.scope;
+                }
+                const cacheNames = await caches.keys();
+                info.caches = cacheNames.length > 0 ? cacheNames.join(', ') : 'なし';
+            } catch (e) {
+                info.sw = 'エラー: ' + e.message;
+            }
+        } else {
+            info.sw = 'Service Worker 非対応';
+        }
+
+        try {
+            const manifestLink = document.querySelector('link[rel="manifest"]');
+            const manifestUrl = manifestLink ? manifestLink.href : null;
+            if (manifestUrl) {
+                const res = await fetch(manifestUrl);
+                const manifest = await res.json();
+                const icons = manifest.icons || [];
+                info.manifestIcons = icons.map(i => `${i.sizes} (${i.purpose || 'any'})`).join(', ') || 'なし';
+                info.shareTarget = manifest.share_target
+                    ? `action: ${manifest.share_target.action}`
+                    : 'なし';
+            } else {
+                info.manifestIcons = 'manifest.json リンクなし';
+            }
+        } catch (e) {
+            info.manifestIcons = 'fetch エラー: ' + e.message;
+        }
+
+        info.installPrompt = _debugInstallPromptCaptured
+            ? 'beforeinstallprompt 発火済み (インストール可能)'
+            : 'beforeinstallprompt 未発火';
+
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+            || window.navigator.standalone === true;
+        info.installVerify = isStandalone
+            ? 'standalone で動作中 → PWAとして正常インストール済み'
+            : 'browser モードで動作中 → ショートカット or 未インストール';
+
+        return info;
+    }
+
+    async function refreshPwaDebugPanel() {
+        const panel = document.getElementById('pwa-debug-panel');
+        if (!panel) return;
+        const info = await collectPwaDebugInfo();
+        const rows = [
+            ['ブラウザ', info.browser],
+            ['表示モード', info.displayMode],
+            ['インストール確認', info.installVerify],
+            ['SW状態', info.sw],
+            ['SWスコープ', info.swScope || '-'],
+            ['キャッシュ', info.caches || '-'],
+            ['Manifestアイコン', info.manifestIcons || '-'],
+            ['share_target', info.shareTarget || '-'],
+            ['インストールプロンプト', info.installPrompt],
+            ['UA', info.ua],
+        ];
+        panel.querySelector('#pwa-debug-body').innerHTML = rows.map(([k, v]) =>
+            `<tr><td style="color:#aaa;padding:2px 8px 2px 0;white-space:nowrap;vertical-align:top">${k}</td><td style="word-break:break-all">${v}</td></tr>`
+        ).join('');
+        const installBtn = panel.querySelector('#pwa-debug-install');
+        if (installBtn) {
+            installBtn.style.display = _debugInstallPromptCaptured ? 'block' : 'none';
+        }
+    }
+
+    function showPwaDebugPanel() {
+        if (document.getElementById('pwa-debug-panel')) {
+            refreshPwaDebugPanel();
+            return;
+        }
+        const panel = document.createElement('div');
+        panel.id = 'pwa-debug-panel';
+        panel.style.cssText = [
+            'position:fixed', 'bottom:0', 'left:0', 'right:0', 'z-index:99999',
+            'background:rgba(0,0,0,0.92)', 'color:#eee', 'font-size:12px',
+            'font-family:monospace', 'padding:10px 12px', 'max-height:55vh',
+            'overflow-y:auto', 'border-top:2px solid #3b82f6',
+        ].join(';');
+        panel.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <strong style="color:#3b82f6">PWA Debug</strong>
+                <button id="pwa-debug-refresh" style="background:#3b82f6;color:#fff;border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">更新</button>
+                <button id="pwa-debug-close" style="background:#555;color:#fff;border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;margin-left:4px">閉じる</button>
+            </div>
+            <button id="pwa-debug-install" style="display:none;width:100%;margin-bottom:8px;padding:8px;background:#22c55e;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:bold;cursor:pointer">
+                このアプリをインストール
+            </button>
+            <table id="pwa-debug-body" style="width:100%;border-collapse:collapse"></table>
+        `;
+        document.body.appendChild(panel);
+        panel.querySelector('#pwa-debug-refresh').addEventListener('click', refreshPwaDebugPanel);
+        panel.querySelector('#pwa-debug-close').addEventListener('click', () => panel.remove());
+        panel.querySelector('#pwa-debug-install').addEventListener('click', async () => {
+            if (!_debugInstallPromptEvent) return;
+            _debugInstallPromptEvent.prompt();
+            await _debugInstallPromptEvent.userChoice;
+            _debugInstallPromptEvent = null;
+            _debugInstallPromptCaptured = false;
+            refreshPwaDebugPanel();
+        });
+        refreshPwaDebugPanel();
+    }
+
+    // ?debug パラメータでも起動
+    if (new URLSearchParams(window.location.search).has('debug')) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', showPwaDebugPanel);
+        } else {
+            showPwaDebugPanel();
+        }
+    }
 }
 
 // Fallback for Vitest when loaded directly without transpilation matching standard browser env

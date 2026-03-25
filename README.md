@@ -54,6 +54,30 @@
 
 ---
 
+## 📱 ブラウザ対応・既知の制約
+
+### PWA インストール
+
+| ブラウザ | PWAインストール | ホーム画面追加 |
+|---|---|---|
+| Android Chrome | ✅ | ✅ |
+| Android Edge | ✅ | ✅ |
+| iOS Safari | ✅ | ✅ |
+
+### Web Share Target（他アプリからの画像共有）
+
+他のアプリから「共有」でおしこよに画像を直接送る機能です。
+
+| ブラウザ | 対応状況 |
+|---|---|
+| Android Chrome | ✅ 対応 |
+| Android Edge | ✗ 非対応（ブラウザの制限） |
+
+> [!NOTE]
+> Android Edge は PWA としての正常インストールには対応していますが、Web Share Target API（他アプリからの画像共有）を Android の Intent システムに登録しないため、共有先一覧に表示されません。これはアプリ側では解決できないブラウザの制限です。Edge をご利用の場合は、設定画面の「画像を追加」ボタンからファイルを直接選択してください。
+
+---
+
 ## 📖 使い方 (Quick Start)
 
 1. **アプリを開く**: [デモサイト](https://daraddara.github.io/oshikoyo/)へアクセス。
