@@ -68,8 +68,8 @@ describe('PWA: share_target 設定', () => {
         expect(manifest.share_target).toBeDefined();
     });
 
-    it('share_target の action が /share-target である', () => {
-        expect(manifest.share_target.action).toBe('/share-target');
+    it('share_target の action が share-target である', () => {
+        expect(manifest.share_target.action).toBe('share-target');
     });
 
     it('share_target が POST メソッドを使用する', () => {

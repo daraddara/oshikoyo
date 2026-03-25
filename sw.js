@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oshikoyo-v28';
+const CACHE_NAME = 'oshikoyo-v30';
 const ASSETS = [
     './',
     './index.html',
@@ -26,7 +26,7 @@ self.addEventListener('activate', (event) => {
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
+                    if (cacheName !== CACHE_NAME && cacheName !== 'shared-image') {
                         return caches.delete(cacheName);
                     }
                 })
@@ -38,7 +38,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
-    if (event.request.method === 'POST' && url.pathname === '/share-target') {
+    if (event.request.method === 'POST' && url.pathname.endsWith('/share-target')) {
         event.respondWith((async () => {
             try {
                 const formData = await event.request.formData();
@@ -50,10 +50,10 @@ self.addEventListener('fetch', (event) => {
                 }
 
                 // Redirect to the main page with a query parameter
-                return Response.redirect('/?shared=true', 303);
+                return Response.redirect('./?shared=true', 303);
             } catch (error) {
                 console.error('Error handling share target:', error);
-                return Response.redirect('/', 303);
+                return Response.redirect('./', 303);
             }
         })());
         return;
@@ -61,6 +61,6 @@ self.addEventListener('fetch', (event) => {
 
     event.respondWith(
         caches.match(event.request, { ignoreSearch: true })
-            .then((response) => response || fetch(event.request))
+            .then((response) => response || fetch(event.request).catch(() => caches.match('./')))
     );
 });
