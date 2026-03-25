@@ -1,4 +1,8 @@
-import { describe, it, expect } from 'vitest';
+const fs = require('fs');
+let content = fs.readFileSync('tests/tag_logic.test.js', 'utf8');
+
+// The file got mangled. Let's fix it properly.
+const goodContent = `import { describe, it, expect } from 'vitest';
 import { extractCode, setupTestEnvironment } from './test-utils.js';
 
 setupTestEnvironment();
@@ -7,7 +11,7 @@ setupTestEnvironment();
 const tagLogicCode = extractCode('// --- Tag Logic ---', '// --- Tag UI ---');
 
 function makeTagLogic(mockAppSettings) {
-    return new Function('appSettings', `${tagLogicCode}; return { getImageTags, setImageTags, addTagsToMaster };`)(mockAppSettings);
+    return new Function('appSettings', \`\${tagLogicCode}; return { getImageTags, setImageTags, addTagsToMaster };\`)(mockAppSettings);
 }
 
 describe('getImageTags', () => {
@@ -94,3 +98,6 @@ describe('addTagsToMaster', () => {
         expect(appSettings.tags).toEqual(['タグ']);
     });
 });
+`;
+
+fs.writeFileSync('tests/tag_logic.test.js', goodContent);
