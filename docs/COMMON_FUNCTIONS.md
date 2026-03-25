@@ -1,0 +1,42 @@
+# 共通関数リファレンス (Common Functions Reference)
+
+`src/script.js` 内で定義されている、再利用可能な主要関数およびクラスのリストです。
+
+## 1. ストレージ / データベース管理
+| 関数/クラス名 | 内容 |
+|:---|:---|
+| `LocalImageDB` (Class) | IndexedDB (`OshikoyoDB`) を操作するためのラッパークラス。画像の追加・削除・取得、Gzipエクスポート/インポートを担当。 |
+| `loadSettings()` / `saveSettings()` | `localStorage` (`oshikoyo_settings`) への設定保存と読み込み。 |
+| `loadState()` / `saveState()` | `localStorage` (`oshikoyo_state`) への実行時状態（最後に表示した画像等）の保存と読み込み。 |
+
+## 2. 画像処理 / メディア管理
+| 関数名 | 内容 |
+|:---|:---|
+| `blobToBase64(blob)` | Blob を Data URI 形式の Base64 文字列に変換。 |
+| `base64ToBlob(base64, type)` | Base64 文字列を Blob に戻す（インポート用）。 |
+| `isDuplicateBlob(blob, sigMap)` | 画像の重複チェック（サイズ、MIME、サンプリングハッシュによる高速判定）。 |
+| `compressImageFile(file, maxDimension, quality)` | `canvas` を使用した画像リサイズおよび JPEG 圧縮。最大ピクセル数と品質を指定して圧縮。 |
+| `updateMediaArea(mode)` | 画像表示エリアの更新。ランダム、サイクル、固定表示の切り替えロジックを含む。 |
+
+## 3. カレンダーロジック
+| 関数名 | 内容 |
+|:---|:---|
+| `getJPHoliday(date)` | 日本の祝日計算（特例措置や振替休日にも対応）。 |
+| `parseDateString(str)` | "M/D", "YYYY/M/D", "M月D日" などの多様な日付形式をパース。 |
+| `renderCalendar(container, y, m)` | 指定した DOM コンテナに 1 ヶ月分のカレンダーを描画。 |
+| `getTodayMemorialOshis()` | 今日の日付に対応する「推し」の記念日情報を取得。 |
+
+## 4. UI ユーティリティ
+| 関数名 | 内容 |
+|:---|:---|
+| `escapeHTML(str)` | XSS 対策のための HTML エスケープ。 |
+| `getContrastColor(hex)` | 背景色に応じた最適な文字色（黒系/白系）を計算。 |
+| `showToast(msg, type)` | 画面下部にトースト通知を表示。 |
+| `showPopup(e, html)` | デスクトップ表示時のホバーポップアップ制御。 |
+
+## 5. モバイル対応
+| 関数名 | 内容 |
+|:---|:---|
+| `isMobile()` | 画面幅によるモバイル端末判定（768px以下）。 |
+| `openDayDetailSheet(label, html)` | モバイル専用のボトムシート（日付詳細）を表示。 |
+| `setupSwipeGestures()` | モバイルでのスワイプによる月移動などのジェスチャー制御。 |
