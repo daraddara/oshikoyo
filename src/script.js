@@ -2,6 +2,8 @@
  * おしこよ (Oshikoyo) ロジック & アプリケーション
  */
 
+const APP_VERSION = 'v28';
+
 // --- Settings State ---
 const DEFAULT_SETTINGS = {
     startOfWeek: 0, // 0: Sun, 1: Mon
@@ -1017,9 +1019,16 @@ function renderCalendar(container, year, month) {
             popupHtml += `<div class="popup-events-container">${oshiPopupEvents.join('')}</div>`;
         }
 
-        // Attach Hover Logic
+        // Attach Hover Logic (Desktop)
         el.addEventListener('mouseenter', (e) => showPopup(e, popupHtml));
         el.addEventListener('mouseleave', hidePopup);
+
+        // Attach Mobile Tap Logic (Bottom Sheet)
+        el.dataset.dateLabel = `${month}月${d}日 (${dayLabel})`;
+        el.dataset.popupHtml = popupHtml;
+        el.addEventListener('click', () => {
+            if (isMobile()) openDayDetailSheet(el.dataset.dateLabel, el.dataset.popupHtml);
+        });
 
         fragment.appendChild(el);
     }
@@ -3227,6 +3236,19 @@ function applyImmersiveState() {
         }
     }
 
+    // モバイル3段状態の同期: 没入モード開始時は is-expanded/is-minimal をリセット
+    if (isMobile()) {
+        // 没入モード切替時: カレンダーを閉じて画像モードに戻す
+        if (calendarSection) calendarSection.classList.remove('is-expanded');
+        const calBtn = document.querySelector('.mobile-cal-btn');
+        if (calBtn) {
+            calBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+            calBtn.setAttribute('aria-label', 'カレンダーを開く');
+        }
+        mobileCalendarExpanded = false;
+        closeDayDetailSheet();
+    }
+
     // Save original direction for full overlay restoring
     const calendarWrapper = document.getElementById('calendarWrapper');
     if (calendarWrapper) {
@@ -3435,7 +3457,14 @@ function initSettings() {
             }
         } catch (err) {
             console.error('Failed to read clipboard:', err);
-            showToast('クリップボードの読み取りに失敗しました。権限が許可されているか確認してください。', 'error');
+            if (err.name === 'NotAllowedError') {
+                const msg = isMobile()
+                    ? 'クリップボードへのアクセスが拒否されました。ブラウザの設定から権限を許可してください。'
+                    : 'クリップボードの読み取り権限が必要です。アドレスバーの鍵アイコンから許可してください。';
+                showToast(msg, 'warning');
+            } else {
+                showToast('クリップボードの読み取りに失敗しました。', 'error');
+            }
         }
     };
 
@@ -3829,6 +3858,11 @@ function init() {
     setupPreviewModal();
     setupLayoutMenu();
     setupMiniCalendarInteractions();
+
+    // Mobile UI 初期化
+    setupSwipeGestures();
+    setupDayDetailSheet();
+    setupMobileCalendarFab(); // カレンダーはCSSデフォルトで非表示。FABとクローズバーを配置するだけ。
 
     const dateDisplay = document.getElementById('currentDateDisplay');
     const resetToToday = () => {
@@ -4826,11 +4860,19 @@ function adjustMediaLayout() {
     area.style.maxWidth = '';
     container.style.height = '';
 
-    // Mobile Override
+    // Landscape mobile: CSSが完全にレイアウトを制御するためJSの上書きを行わない
+    if (window.matchMedia('(max-height: 500px) and (orientation: landscape)').matches) {
+        area.style.width = '';
+        area.style.maxWidth = '';
+        container.style.height = '';
+        return;
+    }
+
+    // Mobile Override — 高さはCSSの calc(100dvh - 70px) に委ねる
     if (window.innerWidth <= 768) {
         area.style.width = '100%';
         area.style.maxWidth = '100%';
-        container.style.height = 'auto';
+        container.style.height = '';
         return;
     }
 
@@ -4895,7 +4937,229 @@ function adjustMediaLayout() {
 
 
 
-if (typeof window !== 'undefined') { window.addEventListener('resize', adjustMediaLayout); }
+// =========================================================
+// Mobile UI — State Variables
+// =========================================================
+let mobileCalendarExpanded = false;
+let swipeMediaLocked = false;
+const SWIPE_MIN_PX = 50;
+const SWIPE_MAX_MS = 400;
+const SWIPE_MAX_VERT_RATIO = 0.7;
+
+// =========================================================
+// Mobile UI — Helper
+// =========================================================
+function isMobile() {
+    return window.innerWidth <= 768;
+}
+
+// =========================================================
+// Mobile UI — 2ステートカレンダートグル
+// =========================================================
+function toggleMobileCalendar() {
+    if (!isMobile()) return;
+    const calSection = document.querySelector('.calendar-section');
+    const calBtn = document.querySelector('.mobile-cal-btn');
+    if (!calSection) return;
+
+    mobileCalendarExpanded = !mobileCalendarExpanded;
+    if (mobileCalendarExpanded) {
+        calSection.classList.add('is-expanded');
+        calSection.scrollTop = 0;
+        if (calBtn) {
+            calBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>`;
+            calBtn.setAttribute('aria-label', '閉じる');
+        }
+    } else {
+        calSection.classList.remove('is-expanded');
+        closeDayDetailSheet();
+        if (calBtn) {
+            calBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+            calBtn.setAttribute('aria-label', 'カレンダーを開く');
+        }
+    }
+    adjustMediaLayout();
+}
+
+function setupMobileCalendarFab() {
+    if (!isMobile()) return;
+
+    // backdrop-filter を持つ .media-container の内部では position:fixed が機能しないため
+    // body 直下に追加して確実に z-index 2001 で表示する（冪等性確保）
+    if (!document.querySelector('.mobile-cal-btn')) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'mobile-cal-btn';
+        btn.setAttribute('aria-label', 'カレンダーを開く');
+        btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+        btn.addEventListener('click', toggleMobileCalendar);
+        document.body.appendChild(btn);
+    }
+
+    // .controls ピルは .calendar-section の子要素だが、
+    // display:none の親に入ると position:fixed でも非表示になるため body 直下に移動する
+    if (!document.querySelector('body > .controls[data-mobile-detached]')) {
+        const controls = document.querySelector('.calendar-section .controls');
+        if (controls) {
+            controls.dataset.mobileDetached = '1';
+            document.body.appendChild(controls);
+        }
+    }
+}
+
+// =========================================================
+// Mobile UI — スワイプジェスチャ（エリア別）
+//
+// 【スワイプ対応モード仕様】
+//   対象エリア          | 対応モード              | 動作
+//   -------------------|-------------------------|------------------
+//   .media-container   | 全モード（没入モード除く）  | 左スワイプ→次画像、右→前画像
+//   .calendar-wrapper  | 全モード                 | 左スワイプ→翌月、右→先月
+//
+//   ※ 没入モード（is-immersive）時は media-container のスワイプは
+//     イマーシブドラッグと競合するため calendar-wrapper のみ有効
+//   ※ スワイプ判定条件:
+//     - 水平移動量 ≥ 50px
+//     - タッチ時間 ≤ 400ms
+//     - 垂直/水平 比率 ≤ 0.7（縦スクロールと競合しない）
+// =========================================================
+function setupSwipeGestures() {
+    // ---- 画像エリアのスワイプ ----
+    const mediaContainer = document.getElementById('mediaContainer');
+    if (mediaContainer && !mediaContainer.dataset.swipeSetup) {
+        mediaContainer.dataset.swipeSetup = '1';
+
+        let startX = 0, startY = 0, startTime = 0;
+
+        mediaContainer.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            startTime = Date.now();
+        }, { passive: true });
+
+        mediaContainer.addEventListener('touchend', (e) => {
+            if (swipeMediaLocked) return;
+            const dx = e.changedTouches[0].clientX - startX;
+            const dy = e.changedTouches[0].clientY - startY;
+            const dt = Date.now() - startTime;
+            if (dt > SWIPE_MAX_MS) return;
+            if (Math.abs(dx) < SWIPE_MIN_PX) return;
+            if (Math.abs(dy) / Math.abs(dx) > SWIPE_MAX_VERT_RATIO) return;
+
+            swipeMediaLocked = true;
+            setTimeout(() => { swipeMediaLocked = false; }, 300);
+
+            if (dx < 0) {
+                updateMediaArea('next');
+            } else {
+                updateMediaArea('prev');
+            }
+        }, { passive: true });
+    }
+
+    // ---- カレンダーエリアのスワイプ ----
+    const calWrapper = document.getElementById('calendarWrapper');
+    if (calWrapper && !calWrapper.dataset.swipeSetup) {
+        calWrapper.dataset.swipeSetup = '1';
+
+        let startX = 0, startY = 0, startTime = 0;
+
+        calWrapper.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            startTime = Date.now();
+        }, { passive: true });
+
+        calWrapper.addEventListener('touchend', (e) => {
+            const dx = e.changedTouches[0].clientX - startX;
+            const dy = e.changedTouches[0].clientY - startY;
+            const dt = Date.now() - startTime;
+            if (dt > SWIPE_MAX_MS) return;
+            if (Math.abs(dx) < SWIPE_MIN_PX) return;
+            if (Math.abs(dy) / Math.abs(dx) > SWIPE_MAX_VERT_RATIO) return;
+
+            if (dx < 0) {
+                currentRefDate.setMonth(currentRefDate.getMonth() + 1);
+            } else {
+                currentRefDate.setMonth(currentRefDate.getMonth() - 1);
+            }
+            updateView();
+        }, { passive: true });
+    }
+}
+
+// =========================================================
+// Mobile UI — Day Detail Bottom Sheet
+// =========================================================
+function openDayDetailSheet(dateLabel, bodyHtml) {
+    const sheet = document.getElementById('dayDetailSheet');
+    const dateEl = document.getElementById('dayDetailDate');
+    const bodyEl = document.getElementById('dayDetailBody');
+    if (!sheet || !dateEl || !bodyEl) return;
+
+    dateEl.textContent = dateLabel;
+    bodyEl.innerHTML = bodyHtml || '<p style="color:var(--text-secondary);font-size:13px;">予定はありません</p>';
+    sheet.setAttribute('aria-hidden', 'false');
+    sheet.classList.add('is-open');
+}
+
+function closeDayDetailSheet() {
+    const sheet = document.getElementById('dayDetailSheet');
+    if (!sheet) return;
+    sheet.classList.remove('is-open');
+    sheet.setAttribute('aria-hidden', 'true');
+}
+
+function setupDayDetailSheet() {
+    const sheet = document.getElementById('dayDetailSheet');
+    if (!sheet || sheet.dataset.sheetSetup) return;
+    sheet.dataset.sheetSetup = '1';
+
+    // シート内スワイプダウンで閉じる
+    let startY = 0;
+    sheet.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].clientY;
+    }, { passive: true });
+    sheet.addEventListener('touchend', (e) => {
+        const dy = e.changedTouches[0].clientY - startY;
+        if (dy > 60) closeDayDetailSheet();
+    }, { passive: true });
+
+    // シート外タップで閉じる
+    document.addEventListener('click', (e) => {
+        if (sheet.classList.contains('is-open') && !sheet.contains(e.target)) {
+            closeDayDetailSheet();
+        }
+    });
+}
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('resize', () => {
+        adjustMediaLayout();
+
+        const calSection = document.querySelector('.calendar-section');
+        if (!calSection) return;
+
+        if (isMobile()) {
+            // モバイル: FABとクローズバーを確認・再セットアップ（冪等性あり）
+            setupMobileCalendarFab();
+        } else {
+            // デスクトップ: モバイルUIを完全削除
+            const calBtn = document.querySelector('.mobile-cal-btn');
+            if (calBtn) calBtn.remove();
+            calSection.classList.remove('is-expanded');
+            mobileCalendarExpanded = false;
+            closeDayDetailSheet();
+
+            // .controls を calendar-section の先頭に戻す
+            const controls = document.querySelector('body > .controls[data-mobile-detached]');
+            if (controls) {
+                calSection.insertBefore(controls, calSection.firstChild);
+                delete controls.dataset.mobileDetached;
+            }
+        }
+    });
+}
 
 // script ends here
 
@@ -4914,6 +5178,16 @@ window.parseDateString = parseDateString;
 window.getWeekdayHeaderHTML = getWeekdayHeaderHTML;
 /** @export */
 window.getJPHoliday = getJPHoliday;
+/** @export */
+window.isMobile = isMobile;
+/** @export */
+window.toggleMobileCalendar = toggleMobileCalendar;
+/** @export */
+window.setupMobileCalendarFab = setupMobileCalendarFab;
+/** @export */
+window.openDayDetailSheet = openDayDetailSheet;
+/** @export */
+window.closeDayDetailSheet = closeDayDetailSheet;
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {

@@ -55,6 +55,7 @@
     --z-popup: 1000;
     --z-modal: 2000;
     --z-overlay: 3000;
+    --z-sheet: 1500;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -3386,8 +3387,68 @@ details[open]>summary::before {
     max-width: 400px;
 }
 
+/* =========================================================
+   Day Detail Bottom Sheet (Mobile Only)
+   ========================================================= */
+.day-detail-sheet {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-sheet);
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px 20px 0 0;
+    padding: 8px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.day-detail-sheet.is-open {
+    transform: translateY(0);
+}
+
+.day-detail-handle {
+    width: 36px;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+    margin: 0 auto 12px;
+}
+
+.day-detail-header {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.day-detail-date {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.day-detail-body {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+/* 没入モード中（デスクトップ）はシートを非表示 */
+body.is-immersive .day-detail-sheet {
+    display: none !important;
+}
+
 /* Mobile Specific Overrides */
 @media (max-width: 768px) {
+    body {
+        padding: 0 !important;
+    }
+
     .main-layout {
         flex-direction: column !important;
         height: auto !important;
@@ -3409,18 +3470,41 @@ details[open]>summary::before {
         order: 3 !important; /* カレンダーを常に下に固定 */
     }
 
-    /* Ensure image container doesn't take full height */
-    /* 仕様 2.1: 画像:カレンダー ≈ 4:6 比率 */
+    /* 画像エリアを全画面表示
+     * position:fixed で viewport y=0 に固定する理由:
+     * Chrome Mobile では body{min-height:100vh} が URL バーを含む大ビューポートで計算され、
+     * ドキュメントが実際の viewport より ~92px 長くなる。その結果 .main-layout が
+     * viewport の上方にはみ出し画像に黒余白が生じるため、fixed で viewport に直接貼り付ける。
+     */
     .media-container {
-        height: 40vh !important;
-        min-height: 250px !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: 100dvh !important;
+        min-height: unset !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: #000 !important;
+        justify-content: center !important;
     }
 
-    .calendar-section {
+    /* 画像を全幅表示（縦長画像も幅いっぱいに） */
+    .media-container img {
         width: 100% !important;
-        margin-top: 10px !important;
-        /* 下部固定コントロールに被られないようスペースを確保 */
-        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+        max-width: 100% !important;
+        max-height: 100dvh !important;
+        height: auto !important;
+        border-radius: 0 !important;
+        object-fit: contain !important;
+    }
+
+    /* カレンダーセクションはデフォルト非表示 */
+    .calendar-section {
+        display: none;
+        width: 100% !important;
     }
 
     .calendar-wrapper {
@@ -3441,14 +3525,121 @@ details[open]>summary::before {
         display: none !important;
     }
 
-    /* 仕様 3.1: コントロールピルを下部中央に固定（親指ゾーン） */
+    /* コントロールピルを下部中央に固定（親指ゾーン） */
     .controls {
         position: fixed;
         bottom: calc(20px + env(safe-area-inset-bottom, 0px));
         left: 50%;
         transform: translateX(-50%);
-        z-index: var(--z-modal);
+        z-index: calc(var(--z-modal) + 1); /* 2001: カレンダー(2000)の上 */
         margin: 0;
+    }
+
+    /* モバイルでシートを有効化・z-index修正 */
+    .day-detail-sheet {
+        display: block;
+        z-index: calc(var(--z-modal) + 2); /* 2002: カレンダー・コントロールの上 */
+    }
+
+    /* ---- 2ステートモバイルUI ---- */
+
+    /* カレンダーモード: 全画面オーバーレイ */
+    .calendar-section.is-expanded {
+        display: flex;
+        position: fixed;
+        inset: 0;
+        z-index: var(--z-modal);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        background: var(--bg-color);
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .calendar-section.is-expanded .calendar-wrapper {
+        padding: 0 16px;
+    }
+
+    /* 画像コントロール: 画像下部に左寄せオーバーレイ（backdrop-filterを避けてabsoluteを使用） */
+    .media-controls-wrapper {
+        position: absolute !important;
+        top: auto !important;
+        bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+        left: 12px !important;
+        right: auto !important;
+        opacity: 0.9 !important;
+        pointer-events: auto !important;
+        gap: 4px !important;
+        justify-content: flex-start !important;
+    }
+
+    /* カレンダートグルボタン（body直下に追加・backdrop-filterの影響外） */
+    .mobile-cal-btn {
+        position: fixed !important;
+        bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+        right: 12px !important;
+        z-index: calc(var(--z-modal) + 1) !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: var(--card-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        color: var(--text-secondary);
+        cursor: pointer;
+        border-radius: 12px;
+        touch-action: manipulation;
+        box-shadow: var(--shadow-soft);
+    }
+
+    /* カレンダー展開時: ハイライト（閉じるボタンと認識させる） */
+    .mobile-cal-btn[aria-label="閉じる"] {
+        color: var(--accent-color, #ec4899);
+        border-color: rgba(236, 72, 153, 0.4);
+    }
+
+    .mobile-cal-btn:active {
+        opacity: 0.7;
+    }
+
+    /* 旧FABピルを非表示 */
+    .mobile-cal-fab {
+        display: none !important;
+    }
+
+    /* モバイルでは上/下/左/右は常に同じ結果になるため非表示。通常(smart)と没入のみ表示 */
+    .layout-item[data-layout="top"],
+    .layout-item[data-layout="bottom"],
+    .layout-item[data-layout="left"],
+    .layout-item[data-layout="right"] {
+        display: none !important;
+    }
+
+    /* 没入モード時: ミニウィジェット(180px)を抑制 */
+    body.is-immersive .calendar-section {
+        display: none !important;
+        position: static !important;
+        width: auto !important;
+    }
+    /* カレンダーモード時は全画面で表示（没入モード上に被せる） */
+    body.is-immersive .calendar-section.is-expanded {
+        display: flex !important;
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: calc(var(--z-modal) + 5) !important;
+        width: auto !important;
+    }
+    /* FABは没入モード中も表示維持 */
+    body.is-immersive .mobile-cal-fab {
+        display: flex !important;
+        z-index: calc(var(--z-modal) + 10) !important;
+    }
+    /* モバイルでは没入中もデイ詳細シートを有効化（グローバルの display:none を上書き） */
+    body.is-immersive .day-detail-sheet {
+        display: block !important;
     }
 }
 
@@ -3471,6 +3662,113 @@ details[open]>summary::before {
     .current-date-display {
         font-size: 0.9em;
         padding: 4px 8px;
+    }
+}
+
+/* ランドスケープ（横向き）スマートフォン対応 */
+@media (max-height: 500px) and (orientation: landscape) {
+    body {
+        padding: 0 !important;
+    }
+
+    .main-layout {
+        flex-direction: row !important;
+        align-items: stretch !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
+        gap: 0 !important;
+        padding: 0 !important;
+    }
+
+    .media-area {
+        width: 60% !important;
+        max-width: 60% !important;
+        height: 100dvh !important;
+        position: static !important;
+        display: block !important;
+        flex-shrink: 0;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* スプリッターはランドスケープでは不要 */
+    .layout-splitter {
+        display: none !important;
+    }
+
+    .media-container {
+        /* ポートレートquery(max-width:768px)が同時適用される端末では
+         * position:fixed/left:0/right:0 が設定されてしまうためここでリセットする。
+         * relative にすることで .media-backdrop の position:absolute の基準にもなる */
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        width: 100% !important;
+        height: 100dvh !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    /* .media-display-area は JS で display:flex / align-items:center / justify-content:center の
+     * インラインスタイルが設定されるため、同じ flex 方向で center 揃えを明示する */
+    .media-display-area {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    /* .media-backdrop は img 要素だが全体を覆う必要があるため除外 */
+    .media-container img:not(.media-backdrop),
+    .media-main-img {
+        width: auto !important;
+        height: auto !important;
+        max-width: 100% !important;
+        max-height: 100dvh !important;
+        object-position: center center !important;
+        border-radius: 0 !important;
+    }
+
+    /* backdrop はコンテナ全体を覆い、z-index:0 で左右両側にぼかし効果を表示する */
+    .media-backdrop {
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 0 !important;
+    }
+
+    /* カレンダーを右側に表示（スクロール可能） */
+    .calendar-section {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 40% !important;
+        height: 100dvh !important;
+        overflow-y: auto !important;
+        padding: 8px !important;
+    }
+
+    /* ランドスケープではカレンダーが常時表示されるためFABは不要 */
+    .mobile-cal-btn {
+        display: none !important;
+    }
+
+    /* コントロールボタンを左上に配置 */
+    .media-controls-wrapper {
+        position: absolute !important;
+        top: 8px !important;
+        bottom: auto !important;
+        left: 8px !important;
+        right: auto !important;
+        opacity: 0.8 !important;
+        pointer-events: auto !important;
     }
 }
 
