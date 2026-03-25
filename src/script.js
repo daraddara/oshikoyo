@@ -1026,8 +1026,11 @@ function renderCalendar(container, year, month) {
         // Attach Mobile Tap Logic (Bottom Sheet)
         el.dataset.dateLabel = `${month}月${d}日 (${dayLabel})`;
         el.dataset.popupHtml = popupHtml;
-        el.addEventListener('click', () => {
-            if (isMobile()) openDayDetailSheet(el.dataset.dateLabel, el.dataset.popupHtml);
+        el.addEventListener('click', (e) => {
+            if (isMobile()) {
+                e.stopPropagation();
+                openDayDetailSheet(el.dataset.dateLabel, el.dataset.popupHtml);
+            }
         });
 
         fragment.appendChild(el);

@@ -39,6 +39,26 @@ export default defineConfig({
             name: 'Tablet',
             use: { ...devices['iPad (gen 7)'] },
         },
+        // --- モバイル専用プロジェクト（testMatchで専用ファイルに限定）---
+        {
+            name: 'Mobile Landscape (Galaxy S25)',
+            testMatch: '**/mobile_landscape.test.js',
+            use: {
+                ...devices['Galaxy S9+'],
+                viewport: { width: 702, height: 360 },
+                // width(702) > height(360) → orientation:landscape クエリが適用される
+                // height(360) < 500px     → max-height:500px クエリも適用される
+                // width(702) < 768px      → max-width:768px クエリも同時適用（実機再現）
+            },
+        },
+        {
+            name: 'Mobile Portrait (Galaxy S25)',
+            testMatch: '**/mobile_portrait.test.js',
+            use: {
+                ...devices['Galaxy S9+'],
+                viewport: { width: 360, height: 780 },
+            },
+        },
     ],
     webServer: {
         command: 'npm run serve',
