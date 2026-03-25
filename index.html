@@ -239,13 +239,13 @@
             </div>
 
             <nav class="settings-tabs" role="tablist">
-                <button type="button" class="settings-tab-btn is-active" data-tab="general" role="tab">一般</button>
-                <button type="button" class="settings-tab-btn" data-tab="media" role="tab">画像</button>
-                <button type="button" class="settings-tab-btn" data-tab="data" role="tab">データ</button>
+                <button type="button" id="tabBtnGeneral" class="settings-tab-btn is-active" data-tab="general" role="tab" aria-selected="true" aria-controls="tabPanelGeneral">一般</button>
+                <button type="button" id="tabBtnMedia" class="settings-tab-btn" data-tab="media" role="tab" aria-selected="false" aria-controls="tabPanelMedia">画像</button>
+                <button type="button" id="tabBtnData" class="settings-tab-btn" data-tab="data" role="tab" aria-selected="false" aria-controls="tabPanelData">データ</button>
             </nav>
 
             <!-- 一般タブ -->
-            <div class="settings-tab-panel is-active" data-panel="general">
+            <div id="tabPanelGeneral" class="settings-tab-panel is-active" data-panel="general" role="tabpanel" aria-labelledby="tabBtnGeneral">
                 <div class="setting-group">
                     <label class="setting-label">週の開始日</label>
                     <div class="radio-group">
@@ -296,7 +296,7 @@
             </div>
 
             <!-- 画像タブ -->
-            <div class="settings-tab-panel" data-panel="media">
+            <div id="tabPanelMedia" class="settings-tab-panel" data-panel="media" role="tabpanel" aria-labelledby="tabBtnMedia">
                 <div id="localMediaSettings" class="setting-group">
                     <!-- ストレージ使用量インジケーター -->
                     <div id="storageIndicatorWrap" class="storage-indicator" hidden>
@@ -355,7 +355,7 @@
             </div>
 
             <!-- データタブ -->
-            <div class="settings-tab-panel" data-panel="data">
+            <div id="tabPanelData" class="settings-tab-panel" data-panel="data" role="tabpanel" aria-labelledby="tabBtnData">
                 <div class="setting-group">
                     <label class="setting-label">全データのバックアップと復元</label>
                     <p class="help-text" style="margin-bottom:10px">推しリスト・画像・タグをすべて含みます。復元時は現在のデータが削除されます。</p>
