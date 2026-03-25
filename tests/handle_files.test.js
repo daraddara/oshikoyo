@@ -38,7 +38,7 @@ describe('handleFiles', () => {
         };
         mockGrid = {
             innerHTML: '',
-            appendChild: vi.fn()
+            appendChild: vi.fn(), querySelectorAll: vi.fn(() => [])
         };
 
         global.document.getElementById = vi.fn((id) => {
@@ -48,8 +48,8 @@ describe('handleFiles', () => {
         });
 
         global.document.createElement = vi.fn(() => ({
-            appendChild: vi.fn(),
-            appendChild: vi.fn(),
+            appendChild: vi.fn(), querySelectorAll: vi.fn(() => []),
+            appendChild: vi.fn(), querySelectorAll: vi.fn(() => []),
         }));
 
         vi.clearAllMocks();

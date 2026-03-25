@@ -2311,11 +2311,17 @@ async function renderLocalImageManager() {
     // Check keys first to avoid unnecessary loading state
     const keys = await localImageDB.getAllKeys();
     if (keys.length === 0) {
+        // ⚡ Bolt: Free memory from old blob URLs before removing elements
+        // Impact: Prevents massive memory leaks when re-rendering local image grid
+        list.querySelectorAll('img').forEach(img => URL.revokeObjectURL(img.src));
         list.innerHTML = '<p style="grid-column: 1/-1; color:#888;">画像がありません</p>';
         return;
     }
 
     // Simple clear & loading
+    // ⚡ Bolt: Free memory from old blob URLs before removing elements
+    // Impact: Prevents massive memory leaks when re-rendering local image grid
+    list.querySelectorAll('img').forEach(img => URL.revokeObjectURL(img.src));
     list.innerHTML = '<p style="grid-column: 1/-1;">読み込み中...</p>';
 
     // Get all keys (lighter than getting all blobs)
@@ -3129,6 +3135,9 @@ async function handleFiles(files) {
 function renderPreview() {
     const grid = document.getElementById('previewGrid');
     if (!grid) return;
+    // ⚡ Bolt: Free memory from old blob URLs before removing elements
+    // Impact: Reduces memory usage during image preview updates
+    grid.querySelectorAll('img').forEach(img => URL.revokeObjectURL(img.src));
     grid.innerHTML = '';
 
     pendingPreviewFiles.forEach(file => {
@@ -3188,6 +3197,13 @@ function setupPreviewModal() {
     // Cancel Button
     document.getElementById('btnCancelPreview').addEventListener('click', () => {
         pendingPreviewFiles = [];
+        const grid = document.getElementById('previewGrid');
+        if (grid) {
+            // ⚡ Bolt: Free memory from old blob URLs before removing elements
+            // Impact: Cleans up orphaned blobs when preview is cancelled
+            grid.querySelectorAll('img').forEach(img => URL.revokeObjectURL(img.src));
+            grid.innerHTML = '';
+        }
         document.getElementById('previewModal').close();
     });
 }
