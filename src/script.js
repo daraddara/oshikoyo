@@ -5329,7 +5329,7 @@ if (typeof window !== 'undefined') {
             ['UA', info.ua],
         ];
         panel.querySelector('#pwa-debug-body').innerHTML = rows.map(([k, v]) =>
-            `<tr><td style="color:#aaa;padding:2px 8px 2px 0;white-space:nowrap;vertical-align:top">${k}</td><td style="word-break:break-all">${v}</td></tr>`
+            `<tr><td style="color:#aaa;padding:2px 8px 2px 0;white-space:nowrap;vertical-align:top">${escapeHTML(k)}</td><td style="word-break:break-all">${escapeHTML(String(v))}</td></tr>`
         ).join('');
         const installBtn = panel.querySelector('#pwa-debug-install');
         if (installBtn) {
