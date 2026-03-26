@@ -1182,9 +1182,16 @@ function highlightMemorialOshisForImage(imgId) {
 }
 
 // --- Tag Logic ---
+const EMPTY_TAGS = Object.freeze([]);
+
 function getImageTags(imgId) {
-    const meta = appSettings.localImageMeta || {};
-    return meta[imgId]?.tags ? [...meta[imgId].tags] : [];
+    // ⚡ Bolt: Return frozen array reference for empty states to avoid massive GC pressure in loops.
+    // We MUST return a copy of populated arrays to maintain the encapsulation contract,
+    // but empty arrays can be safely shared as frozen singletons.
+    const meta = appSettings.localImageMeta;
+    if (!meta) return EMPTY_TAGS;
+    const item = meta[imgId];
+    return item && item.tags && item.tags.length > 0 ? [...item.tags] : EMPTY_TAGS;
 }
 
 function setImageTags(imgId, tags) {
