@@ -1,0 +1,3 @@
+## 2025-03-26 - Hide Background/Decorative Images from Screen Readers
+**Learning:** In apps that dynamically create image tags for pure background blur effects (`.media-backdrop`) or visual-only grids (preview thumbnails), these `img` elements generate excessive noise for screen reader users by reading unhelpful default filenames or URLs when the `alt` attribute is missing.
+**Action:** Always ensure that decorative `<img src="...">` elements instantiated dynamically via `document.createElement('img')` explicitly set `alt = ''` and ideally `setAttribute('aria-hidden', 'true')` immediately upon creation to prevent accessibility regressions.

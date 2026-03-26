@@ -3147,6 +3147,7 @@ function renderPreview() {
         const item = document.createElement('div');
         item.className = 'preview-item';
         const img = document.createElement('img');
+        img.alt = ''; // Decorative for visual preview
         img.src = URL.createObjectURL(file);
         // clean up object url later? for preview it's short lived
         item.appendChild(img);
@@ -4730,6 +4731,8 @@ function renderMediaRecord(record, displayArea) {
         // Create Background Layer (Blur)
         const backdrop = document.createElement('img');
         backdrop.className = 'media-backdrop';
+        backdrop.alt = '';
+        backdrop.setAttribute('aria-hidden', 'true');
         backdrop.src = currentMediaObjectURL;
 
         // Create Main Image Layer
