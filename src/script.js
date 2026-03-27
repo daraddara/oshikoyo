@@ -551,27 +551,36 @@ function saveState() {
     } catch (e) { console.error('Failed to save state', e); }
 }
 
+// ⚡ Bolt: Cache pure parsing/conversion results
+// Impact: Significantly reduces regex parsing and string slicing in the hot renderCalendar loop.
+const _contrastColorCache = new Map();
+const _hexRgbaCache = new Map();
+const _parseDateCache = new Map();
+
 // Helper: Get Contrast Color (Black or White)
 function getContrastColor(hex) {
     if (!hex || !hex.startsWith('#')) return '#000000';
-    hex = hex.replace('#', '');
+    if (_contrastColorCache.has(hex)) return _contrastColorCache.get(hex);
 
+    let cleanHex = hex.replace('#', '');
     let r, g, b;
-    if (hex.length === 3) {
-        r = parseInt(hex[0] + hex[0], 16);
-        g = parseInt(hex[1] + hex[1], 16);
-        b = parseInt(hex[2] + hex[2], 16);
-    } else if (hex.length === 6) {
-        r = parseInt(hex.substring(0, 2), 16);
-        g = parseInt(hex.substring(2, 4), 16);
-        b = parseInt(hex.substring(4, 6), 16);
+    if (cleanHex.length === 3) {
+        r = parseInt(cleanHex[0] + cleanHex[0], 16);
+        g = parseInt(cleanHex[1] + cleanHex[1], 16);
+        b = parseInt(cleanHex[2] + cleanHex[2], 16);
+    } else if (cleanHex.length === 6) {
+        r = parseInt(cleanHex.substring(0, 2), 16);
+        g = parseInt(cleanHex.substring(2, 4), 16);
+        b = parseInt(cleanHex.substring(4, 6), 16);
     } else {
         return '#000000';
     }
 
     // YIQ equation
     var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-    return (yiq >= 140) ? '#1a1a1a' : '#ffffff'; // 140 threshold, using dark gray for black for softer look
+    const result = (yiq >= 140) ? '#1a1a1a' : '#ffffff'; // 140 threshold, using dark gray for black for softer look
+    _contrastColorCache.set(hex, result);
+    return result;
 }
 
 /**
@@ -582,50 +591,58 @@ function getContrastColor(hex) {
  */
 function hexToRgba(hex, alpha) {
     if (!hex || !hex.startsWith('#')) return hex;
-    hex = hex.replace('#', '');
+    const cacheKey = hex + alpha;
+    if (_hexRgbaCache.has(cacheKey)) return _hexRgbaCache.get(cacheKey);
+
+    let cleanHex = hex.replace('#', '');
     let r, g, b;
-    if (hex.length === 3) {
-        r = parseInt(hex[0] + hex[0], 16);
-        g = parseInt(hex[1] + hex[1], 16);
-        b = parseInt(hex[2] + hex[2], 16);
+    if (cleanHex.length === 3) {
+        r = parseInt(cleanHex[0] + cleanHex[0], 16);
+        g = parseInt(cleanHex[1] + cleanHex[1], 16);
+        b = parseInt(cleanHex[2] + cleanHex[2], 16);
     } else {
-        r = parseInt(hex.substring(0, 2), 16);
-        g = parseInt(hex.substring(2, 4), 16);
-        b = parseInt(hex.substring(4, 6), 16);
+        r = parseInt(cleanHex.substring(0, 2), 16);
+        g = parseInt(cleanHex.substring(2, 4), 16);
+        b = parseInt(cleanHex.substring(4, 6), 16);
     }
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    const result = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    _hexRgbaCache.set(cacheKey, result);
+    return result;
 }
 
 // Helper: Parse Date String to {month, day}
 function parseDateString(str) {
     if (!str) return null;
     str = str.trim();
+    if (_parseDateCache.has(str)) return _parseDateCache.get(str);
 
+    let result = null;
     // Format: "YYYY/MM/DD" or "YYYY-MM-DD"
     let match = str.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
     if (match) {
-        return { year: parseInt(match[1]), month: parseInt(match[2]), day: parseInt(match[3]) };
+        result = { year: parseInt(match[1]), month: parseInt(match[2]), day: parseInt(match[3]) };
+    } else {
+        // Format: "M/D" (year-less, e.g., 1/15)
+        match = str.match(/^(\d{1,2})\/(\d{1,2})$/);
+        if (match) {
+            result = { year: null, month: parseInt(match[1]), day: parseInt(match[2]) };
+        } else {
+            // Format: "M月D日"
+            match = str.match(/^(\d{1,2})月(\d{1,2})日$/);
+            if (match) {
+                result = { year: null, month: parseInt(match[1]), day: parseInt(match[2]) };
+            } else {
+                // Format: "YYYY-MM-DD" standard date input value
+                match = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+                if (match) {
+                    result = { year: parseInt(match[1]), month: parseInt(match[2]), day: parseInt(match[3]) };
+                }
+            }
+        }
     }
 
-    // Format: "M/D" (year-less, e.g., 1/15)
-    match = str.match(/^(\d{1,2})\/(\d{1,2})$/);
-    if (match) {
-        return { year: null, month: parseInt(match[1]), day: parseInt(match[2]) };
-    }
-
-    // Format: "M月D日"
-    match = str.match(/^(\d{1,2})月(\d{1,2})日$/);
-    if (match) {
-        return { year: null, month: parseInt(match[1]), day: parseInt(match[2]) };
-    }
-
-    // Format: "YYYY-MM-DD" standard date input value
-    match = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (match) {
-        return { year: parseInt(match[1]), month: parseInt(match[2]), day: parseInt(match[3]) };
-    }
-
-    return null;
+    _parseDateCache.set(str, result);
+    return result;
 }
 
 // --- Holiday Logic ---

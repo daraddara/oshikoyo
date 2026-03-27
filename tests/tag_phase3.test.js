@@ -15,6 +15,7 @@ const tagLogicCode   = extractCode('// --- Tag Logic ---', '// --- Tag UI ---');
  */
 function makePhase3(mockAppSettings, fakeToday) {
     const code = `
+        const _parseDateCache = new Map();
         ${parseDateCode}
         ${tagLogicCode}
         ${memorialCode}
