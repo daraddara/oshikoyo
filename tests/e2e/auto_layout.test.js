@@ -6,8 +6,11 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
         await page.goto('/index.html');
         await page.waitForLoadState('networkidle');
 
-        const autoLayoutBtn = page.locator('.layout-mode-btn');
-        await expect(autoLayoutBtn).toBeVisible();
+        const isMobile = await page.evaluate(() => window.innerWidth <= 768);
+        if (!isMobile) {
+            // モバイルではレイアウトボタンは非表示（選択肢が自動のみのため）
+            await expect(page.locator('#btnLayoutMode')).toBeVisible();
+        }
     });
 
     test('should optimize layout for landscape images with glassmorphism backdrop', async ({ page }) => {

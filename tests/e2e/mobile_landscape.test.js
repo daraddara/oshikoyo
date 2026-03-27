@@ -86,25 +86,16 @@ test.describe('ランドスケープレイアウト検証 (Galaxy S25: 702×360)
     });
 
     // -------------------------------------------------------------------------
-    // TC-L-1: 60/40 レイアウト分割の確認
+    // TC-L-1 (→TC-L-9): ランドスケープでは .calendar-section が非表示であること
     // -------------------------------------------------------------------------
-    test('TC-L-1: .media-area が約60%幅、.calendar-section が約40%幅で横並びになること', async ({ page }) => {
+    test('TC-L-1: ランドスケープでは .calendar-section が非表示（display:none）であること', async ({ page }) => {
         await injectMockPortraitImage(page);
 
-        const mediaAreaWidth = await page.locator('#mediaArea').evaluate(
-            el => el.getBoundingClientRect().width
-        );
-        const calSectionWidth = await page.locator('.calendar-section').evaluate(
-            el => el.getBoundingClientRect().width
+        const display = await page.locator('.calendar-section').evaluate(
+            el => window.getComputedStyle(el).display
         );
 
-        // 702px × 60% = 421.2px、誤差 ±3px を許容
-        expect(mediaAreaWidth).toBeGreaterThanOrEqual(418);
-        expect(mediaAreaWidth).toBeLessThanOrEqual(424);
-
-        // 702px × 40% = 280.8px、誤差 ±3px を許容
-        expect(calSectionWidth).toBeGreaterThanOrEqual(278);
-        expect(calSectionWidth).toBeLessThanOrEqual(284);
+        expect(display).toBe('none');
     });
 
     // -------------------------------------------------------------------------
@@ -179,30 +170,26 @@ test.describe('ランドスケープレイアウト検証 (Galaxy S25: 702×360)
     });
 
     // -------------------------------------------------------------------------
-    // TC-L-5: カレンダーが viewport 右半分に配置されていること
+    // TC-L-5 (→TC-L-10): ランドスケープでは .media-area がほぼフル幅であること
     // -------------------------------------------------------------------------
-    test('TC-L-5: .calendar-section が viewport の右半分（left > 351px）に配置されること', async ({ page }) => {
+    test('TC-L-5: ランドスケープでは .media-area がビューポートの大部分（>600px）を占めること', async ({ page }) => {
         await injectMockPortraitImage(page);
 
-        const calLeft = await page.locator('.calendar-section').evaluate(
-            el => el.getBoundingClientRect().left
+        const mediaAreaWidth = await page.locator('#mediaArea').evaluate(
+            el => el.getBoundingClientRect().width
         );
 
-        // 702px / 2 = 351px。カレンダーの左端は右半分にあるべき
-        expect(calLeft).toBeGreaterThan(351);
+        // カレンダー非表示なので media-area は全幅 (702px) に近いはず
+        expect(mediaAreaWidth).toBeGreaterThan(600);
     });
 
     // -------------------------------------------------------------------------
-    // TC-L-6: FABボタンがランドスケープでは非表示
-    // -------------------------------------------------------------------------
-    test('TC-L-6: .mobile-cal-btn がランドスケープでは非表示であること', async ({ page }) => {
+    // TC-L-6: スマートボトムバーがランドスケープでは非表示であること
+    // ランドスケープではカレンダーが常時表示されるためボトムバーは不要（CSS で意図的に非表示）
+    test('TC-L-6: .smart-bottom-bar がランドスケープでは非表示であること', async ({ page }) => {
         await injectMockPortraitImage(page);
-
-        const count = await page.locator('.mobile-cal-btn').count();
-        if (count > 0) {
-            await expect(page.locator('.mobile-cal-btn')).toBeHidden();
-        }
-        // 要素が存在しない場合もテストは合格（ランドスケープでは追加しない実装も合格）
+        const bar = page.locator('.smart-bottom-bar');
+        await expect(bar).toBeHidden();
     });
 
     // -------------------------------------------------------------------------

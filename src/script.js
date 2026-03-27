@@ -854,11 +854,29 @@ function renderCalendar(container, year, month) {
 
     // Structure creation if empty
     if (!container.querySelector('.days-grid')) {
-        container.innerHTML = `
-            <div class="month-header"><h2 class="month-title"></h2></div>
-            <div class="weekday-header">${getWeekdayHeaderHTML(appSettings.startOfWeek)}</div>
-            <div class="days-grid"></div>
-        `;
+        if (isMobile()) {
+            container.innerHTML = `
+                <div class="month-header">
+                    <button type="button" class="month-nav-inline month-nav-prev">‹</button>
+                    <h2 class="month-title"></h2>
+                    <button type="button" class="month-nav-inline month-nav-next">›</button>
+                </div>
+                <div class="weekday-header">${getWeekdayHeaderHTML(appSettings.startOfWeek)}</div>
+                <div class="days-grid"></div>
+            `;
+            container.querySelector('.month-nav-prev').addEventListener('click', () => {
+                currentRefDate.setMonth(currentRefDate.getMonth() - 1); updateView();
+            });
+            container.querySelector('.month-nav-next').addEventListener('click', () => {
+                currentRefDate.setMonth(currentRefDate.getMonth() + 1); updateView();
+            });
+        } else {
+            container.innerHTML = `
+                <div class="month-header"><h2 class="month-title"></h2></div>
+                <div class="weekday-header">${getWeekdayHeaderHTML(appSettings.startOfWeek)}</div>
+                <div class="days-grid"></div>
+            `;
+        }
     }
 
     // Update Headers
@@ -1044,6 +1062,44 @@ function renderCalendar(container, year, month) {
     }
 
     daysGrid.appendChild(fragment);
+
+    // モバイルイベントリストの生成（当月分）
+    if (isMobile()) {
+        const mobileEventList = document.getElementById('mobileEventList');
+        if (mobileEventList) {
+            mobileEventList.innerHTML = '';
+            mobileEventList.style.display = 'block';
+            let listHtml = `<div class="mobile-event-list-header">${year}年 ${month}月のイベント</div>`;
+            let hasEvents = false;
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                if (eventsByDay[d] && eventsByDay[d].length > 0) {
+                    hasEvents = true;
+                    listHtml += `<div class="mobile-event-row">
+                        <div class="mobile-event-date">${month}/${d}</div>
+                        <div class="mobile-event-details">`;
+                    
+                    for (const { oshi, matchedEvents } of eventsByDay[d]) {
+                        const { baseStyle, escapedName } = oshi;
+                        const eventLabels = matchedEvents.map(e => e.label).join('・');
+                        listHtml += `<div class="mobile-event-item" style="${baseStyle}">
+                            <span class="mobile-event-name">${escapedName}</span>
+                            <span class="mobile-event-label">${eventLabels}</span>
+                        </div>`;
+                    }
+                    listHtml += `</div></div>`;
+                }
+            }
+
+            if (!hasEvents) {
+                listHtml += `<div class="mobile-event-empty">予定はありません</div>`;
+            }
+            mobileEventList.innerHTML = listHtml;
+        }
+    } else {
+        const mobileEventList = document.getElementById('mobileEventList');
+        if (mobileEventList) mobileEventList.style.display = 'none';
+    }
 }
 
 function updateView() {
@@ -1083,6 +1139,7 @@ function updateView() {
     }
 
     updateMediaArea('layout');
+    updateTickerBar();
 }
 
 // --- Media Logic ---
@@ -1205,12 +1262,15 @@ function renderOshiTable() {
 
     tbody.innerHTML = '';
 
+    const oshiAddRow = document.getElementById('oshiAddRow');
     if (!appSettings.oshiList || appSettings.oshiList.length === 0) {
         if (emptyMsg) emptyMsg.style.display = 'block';
+        if (oshiAddRow) oshiAddRow.style.display = 'none';
         return;
     }
 
     if (emptyMsg) emptyMsg.style.display = 'none';
+    if (oshiAddRow) oshiAddRow.style.display = 'block';
 
     appSettings.oshiList.forEach((oshi, index) => {
         const row = document.createElement('tr');
@@ -1297,9 +1357,15 @@ function renderOshiTable() {
         delBtn.title = '削除';
         delBtn.setAttribute('aria-label', '推しの削除');
         delBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
-        delBtn.addEventListener('click', (e) => {
+        delBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            if (confirm(`「${oshi.name}」を削除しますか？`)) {
+            const ok = await showConfirmDialog({
+                title: `「${oshi.name}」を削除しますか？`,
+                sub: '削除したデータは復元できません',
+                confirmLabel: '削除する',
+                danger: true,
+            });
+            if (ok) {
                 appSettings.oshiList.splice(index, 1);
                 renderOshiTable();
                 renderOshiList();
@@ -1398,6 +1464,23 @@ function getTypeIdForLabel(label) {
 function getIconForTypeId(typeId) {
     const found = (appSettings.event_types || []).find(t => t.id === typeId);
     return found ? (found.icon || 'star') : 'star';
+}
+
+/** 記念日が今日と一致するか判定 */
+function isMatchingToday(md) {
+    const today = new Date();
+    const m = today.getMonth() + 1, d = today.getDate(), y = today.getFullYear();
+    const parsed = parseDateString(md.date);
+    if (!parsed || parsed.month !== m || parsed.day !== d) return false;
+    if (!md.is_annual && parsed.year && parsed.year !== y) return false;
+    return true;
+}
+
+/** テロップ用イベント絵文字を返す */
+function getEventEmoji(typeId) {
+    if (typeId === 'bday') return '🎂';
+    if (typeId === 'debut') return '🌟';
+    return '📅';
 }
 
 /** datalist に現在の event_types を反映する */
@@ -1657,6 +1740,33 @@ function openOshiEditForm(index = -1) {
         existingTagArea.replaceWith(tagUI);
     }
 
+    // モバイル編集モード時のみ削除ボタンを表示
+    const deleteBtn = document.getElementById('btnOshiEditDelete');
+    if (deleteBtn) {
+        const showDelete = isMobile() && index >= 0;
+        deleteBtn.style.display = showDelete ? '' : 'none';
+        // イベントを毎回付け直す（古いハンドラを除去）
+        const newDeleteBtn = deleteBtn.cloneNode(true);
+        deleteBtn.replaceWith(newDeleteBtn);
+        if (showDelete) {
+            const oshi = appSettings.oshiList[index];
+            newDeleteBtn.addEventListener('click', async () => {
+                const ok = await showConfirmDialog({
+                    title: `「${oshi.name}」を削除しますか？`,
+                    sub: '削除したデータは復元できません',
+                    confirmLabel: '削除する',
+                    danger: true,
+                });
+                if (ok) {
+                    document.getElementById('oshiEditModal').close();
+                    appSettings.oshiList.splice(index, 1);
+                    renderOshiTable();
+                    renderOshiList();
+                }
+            });
+        }
+    }
+
     document.getElementById('oshiEditModal').showModal();
 }
 
@@ -1718,6 +1828,7 @@ function saveOshiFromForm() {
     document.getElementById('oshiEditModal').close();
     renderOshiTable();
     renderOshiList();
+    if (isMobile()) renderMobileOshiPanel(true);
 }
 
 // --- Oshi Export ---
@@ -1989,19 +2100,19 @@ function showOshiCsvPreview(newItems, dupeCount, errorRowCount, onConfirm) {
     dlg.style.background = 'transparent';
     dlg.style.padding = '0';
     dlg.innerHTML = `
-        <div style="padding:24px;min-width:340px;max-width:480px;width:90vw;box-sizing:border-box;background:var(--bg-color);border-radius:var(--border-radius)">
-            <h3 style="margin:0 0 12px;font-size:1rem">CSVインポート確認</h3>
-            <ul style="list-style:none;padding:0;margin:0 0 12px;display:flex;flex-direction:column;gap:4px;font-size:0.9rem">
+        <div style="padding:24px;min-width:320px;max-width:480px;width:90vw;box-sizing:border-box;background:var(--bg-color);color:var(--text-primary);border-radius:var(--border-radius)">
+            <h3 style="margin:0 0 12px;font-size:1rem;color:var(--text-primary)">CSVインポート確認</h3>
+            <ul style="list-style:none;padding:0;margin:0 0 12px;display:flex;flex-direction:column;gap:4px;font-size:0.9rem;color:var(--text-primary)">
                 <li>追加: <strong>${newItems.length} 件</strong></li>
                 ${dupeCount > 0 ? `<li style="color:var(--text-secondary)">重複スキップ: ${dupeCount} 件（同名の推しが既存）</li>` : ''}
                 ${errorRowCount > 0 ? `<li style="color:var(--text-secondary)">不正行スキップ: ${errorRowCount} 件（名前が空等）</li>` : ''}
             </ul>
             ${newItems.length > 0 ? `
-            <div style="max-height:280px;overflow-y:auto;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:8px 12px;margin-bottom:16px;font-size:0.85rem">
-                ${newItems.map(o => `<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.05)">
-                    <span style="width:16px;height:16px;border-radius:50%;background:${escapeHTML(o.color||'#ccc')};flex-shrink:0;display:inline-block;border:1px solid rgba(0,0,0,0.15)"></span>
-                    <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(o.name)}</span>
-                    ${o.memorial_dates.length > 0 ? `<span style="color:var(--text-secondary);font-size:0.78rem;flex-shrink:0">記念日 ${o.memorial_dates.length}件</span>` : ''}
+            <div style="max-height:260px;overflow-y:auto;border:1px solid rgba(128,128,128,0.2);border-radius:8px;padding:4px 12px;margin-bottom:16px;font-size:0.85rem">
+                ${newItems.map(o => `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
+                    <span style="width:18px;height:18px;border-radius:50%;background:${escapeHTML(o.color||'#ccc')};flex-shrink:0;display:inline-block;box-shadow:0 1px 3px rgba(0,0,0,0.25)"></span>
+                    <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary)">${escapeHTML(o.name)}</span>
+                    ${o.memorial_dates.length > 0 ? `<span style="color:var(--text-secondary);font-size:0.76rem;flex-shrink:0;white-space:nowrap">記念日 ${o.memorial_dates.length}件</span>` : ''}
                 </div>`).join('')}
             </div>` : `<p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:16px">追加できる推しがありません。</p>`}
             <div style="display:flex;justify-content:flex-end;gap:10px">
@@ -2120,6 +2231,7 @@ function handleOshiImportFromModal(files) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
             renderOshiTable();
             renderOshiList();
+            if (isMobile()) renderMobileOshiPanel(true);
 
             let message = `インポート完了: ${allNewItems.length}件追加`;
             if (totalDupes > 0) message += `, ${totalDupes}件スキップ（重複）`;
@@ -2567,7 +2679,13 @@ async function handleExportFullBackup() {
 }
 
 async function handleImportFullBackup(file) {
-    if (!confirm('現在のすべてのデータ（画像・設定・タグ）を削除し、バックアップから復元します。続けますか？')) return;
+    const ok = await showConfirmDialog({
+        title: 'バックアップから復元しますか？',
+        sub: '現在のすべてのデータ（画像・設定・タグ）を削除し、バックアップから上書きします。この操作は元に戻せません。',
+        confirmLabel: '復元する',
+        danger: true,
+    });
+    if (!ok) return;
     try {
         const decompressed = file.stream().pipeThrough(new DecompressionStream('gzip'));
         const json = JSON.parse(await new Response(decompressed).text());
@@ -2877,6 +2995,37 @@ function setupDragAndDrop() {
         await handleFiles(files);
     }
 
+    // --- Full-page Drop Zone (desktop only) ---
+    if (!isMobile()) {
+        const overlay = document.getElementById('page-drop-overlay');
+        let dragDepth = 0;
+
+        document.body.addEventListener('dragenter', (e) => {
+            if (e.dataTransfer && e.dataTransfer.types.includes('Files')) {
+                dragDepth++;
+                if (overlay) overlay.hidden = false;
+            }
+        });
+
+        document.body.addEventListener('dragleave', () => {
+            dragDepth--;
+            if (dragDepth <= 0) {
+                dragDepth = 0;
+                if (overlay) overlay.hidden = true;
+            }
+        });
+
+        document.body.addEventListener('dragover', (e) => { e.preventDefault(); });
+
+        document.body.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            dragDepth = 0;
+            if (overlay) overlay.hidden = true;
+            if (e.dataTransfer.getData('application/x-oshigoto-internal') === 'true') return;
+            await handleFiles(e.dataTransfer.files);
+        });
+    }
+
     // --- Layout Drag & Drop ---
     const dragHandle = document.getElementById('mediaDragHandle');
     const mainLayout = document.getElementById('mainLayout');
@@ -3112,6 +3261,40 @@ async function compressAllExistingImages() {
     return { compressed, skipped };
 }
 
+// --- Clipboard Paste (module-level, reused by FAB / clipboard notification) ---
+async function pasteFromClipboard() {
+    try {
+        if (!navigator.clipboard || !navigator.clipboard.read) {
+            showToast('お使いのブラウザはクリップボードからの画像読み取りに対応していません。');
+            return;
+        }
+        const clipboardItems = await navigator.clipboard.read();
+        const files = [];
+        for (const item of clipboardItems) {
+            const imageTypes = item.types.filter(type => type.startsWith('image/'));
+            for (const type of imageTypes) {
+                const blob = await item.getType(type);
+                files.push(new File([blob], `pasted-${Date.now()}.${type.split('/')[1] || 'png'}`, { type }));
+            }
+        }
+        if (files.length > 0) {
+            handleFiles(files);
+        } else {
+            showToast('クリップボードに画像が見つかりませんでした。');
+        }
+    } catch (err) {
+        console.error('Failed to read clipboard:', err);
+        if (err.name === 'NotAllowedError') {
+            const msg = isMobile()
+                ? 'クリップボードへのアクセスが拒否されました。ブラウザの設定から権限を許可してください。'
+                : 'クリップボードの読み取り権限が必要です。アドレスバーの鍵アイコンから許可してください。';
+            showToast(msg);
+        } else {
+            showToast('クリップボードの読み取りに失敗しました。');
+        }
+    }
+}
+
 // --- Preview Logic ---
 let pendingPreviewFiles = [];
 let hasNewLocalImages = false;
@@ -3127,7 +3310,8 @@ async function handleFiles(files) {
         updateTagDatalist();
         const tagArea = document.getElementById('previewTagInputArea');
         if (tagArea) {
-            const tagUI = createTagInputUI([], () => {});
+            const defaultTags = appState.lastMediaKey ? getImageTags(appState.lastMediaKey) : [];
+            const tagUI = createTagInputUI([...defaultTags], () => {});
             tagUI.id = 'previewTagInputArea';
             tagArea.replaceWith(tagUI);
         }
@@ -3260,12 +3444,8 @@ function applyImmersiveState() {
     if (isMobile()) {
         // 没入モード切替時: カレンダーを閉じて画像モードに戻す
         if (calendarSection) calendarSection.classList.remove('is-expanded');
-        const calBtn = document.querySelector('.mobile-cal-btn');
-        if (calBtn) {
-            calBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
-            calBtn.setAttribute('aria-label', 'カレンダーを開く');
-        }
         mobileCalendarExpanded = false;
+        updateCalendarBarButton();
         closeDayDetailSheet();
     }
 
@@ -3396,7 +3576,6 @@ function initSettings() {
 
     const inputOshiImport = document.getElementById('inputOshiImport');
     document.getElementById('btnOshiImport').addEventListener('click', () => inputOshiImport.click());
-    document.getElementById('btnOshiCsvTemplate').addEventListener('click', downloadOshiCsvTemplate);
     inputOshiImport.addEventListener('change', (e) => {
         handleOshiImportFromModal(e.target.files);
         e.target.value = ''; // Reset for re-selection
@@ -3417,6 +3596,7 @@ function initSettings() {
     // アイコンピッカーをクリック外で閉じる
     document.addEventListener('click', () => {
         document.querySelectorAll('.icon-picker-popup.is-open').forEach(p => p.classList.remove('is-open'));
+        document.getElementById('mobileOshiMenu')?.classList.remove('is-open');
     });
 
     // カラーチップ ↔ Hexテキスト ↔ ネイティブピッカー 同期
@@ -3454,39 +3634,7 @@ function initSettings() {
     inputFiles.addEventListener('change', (e) => handleFiles(e.target.files));
 
     // Clipboard Paste Helper
-    const handleClipboardPaste = async () => {
-        try {
-            if (!navigator.clipboard || !navigator.clipboard.read) {
-                showToast('お使いのブラウザはクリップボードからの画像読み取りに対応していません。', 'warning');
-                return;
-            }
-            const clipboardItems = await navigator.clipboard.read();
-            let files = [];
-            for (const item of clipboardItems) {
-                const imageTypes = item.types.filter(type => type.startsWith('image/'));
-                for (const type of imageTypes) {
-                    const blob = await item.getType(type);
-                    const file = new File([blob], `pasted-${Date.now()}.${type.split('/')[1] || 'png'}`, { type });
-                    files.push(file);
-                }
-            }
-            if (files.length > 0) {
-                handleFiles(files); // Reuse preview logic
-            } else {
-                showToast('クリップボードに画像が見つかりませんでした。', 'warning');
-            }
-        } catch (err) {
-            console.error('Failed to read clipboard:', err);
-            if (err.name === 'NotAllowedError') {
-                const msg = isMobile()
-                    ? 'クリップボードへのアクセスが拒否されました。ブラウザの設定から権限を許可してください。'
-                    : 'クリップボードの読み取り権限が必要です。アドレスバーの鍵アイコンから許可してください。';
-                showToast(msg, 'warning');
-            } else {
-                showToast('クリップボードの読み取りに失敗しました。', 'error');
-            }
-        }
-    };
+    const handleClipboardPaste = pasteFromClipboard;
 
     // Clipboard Paste (Settings)
     const btnClipboardPaste = document.getElementById('btnClipboardPaste');
@@ -3540,7 +3688,12 @@ function initSettings() {
             return;
         }
         const modeLabel = mode === 'aggressive' ? '積極的（1920px）' : '標準（2560px）';
-        if (!confirm(`登録済み ${allKeys.length} 枚の画像を${modeLabel}で圧縮します。この操作は元に戻せません。続けますか？`)) return;
+        const ok = await showConfirmDialog({
+            title: `登録済み ${allKeys.length} 枚の画像を圧縮しますか？`,
+            sub: `${modeLabel}で圧縮します。この操作は元に戻せません。`,
+            confirmLabel: '圧縮する',
+        });
+        if (!ok) return;
 
         const btn = document.getElementById('btnCompressExisting');
         btn.disabled = true;
@@ -3556,7 +3709,13 @@ function initSettings() {
 
     // Clear Local
     document.getElementById('btnClearLocal').addEventListener('click', async () => {
-        if (confirm('登録済みの画像をすべて削除します。よろしいですか？')) {
+        const ok = await showConfirmDialog({
+            title: '登録済みの画像をすべて削除しますか？',
+            sub: '削除した画像は復元できません。',
+            confirmLabel: '削除する',
+            danger: true,
+        });
+        if (ok) {
             await localImageDB.clearAll();
             appSettings.localImageOrder = [];
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
@@ -3677,6 +3836,44 @@ function loadSettings() {
         } catch (e) { }
     }
     // updateView(); // Removed to prevent double rendering on init
+}
+
+/**
+ * アプリデザインに合わせたカスタム確認ダイアログを表示し、
+ * ユーザーの選択（true=確認 / false=キャンセル）を Promise で返す。
+ * @param {{ title: string, sub?: string, confirmLabel?: string, cancelLabel?: string, danger?: boolean }} opts
+ * @returns {Promise<boolean>}
+ */
+function showConfirmDialog({ title, sub = '', confirmLabel = 'OK', cancelLabel = 'キャンセル', danger = false } = {}) {
+    return new Promise((resolve) => {
+        const dlg = document.createElement('dialog');
+        dlg.className = 'confirm-dialog';
+        dlg.innerHTML = `
+            <div class="confirm-dialog-inner">
+                <div class="confirm-dialog-body">
+                    <p class="confirm-dialog-title">${escapeHTML(title)}</p>
+                    ${sub ? `<p class="confirm-dialog-sub">${escapeHTML(sub)}</p>` : ''}
+                </div>
+                <div class="confirm-dialog-actions">
+                    <button type="button" class="confirm-dialog-cancel btn-cancel">${escapeHTML(cancelLabel)}</button>
+                    <button type="button" class="confirm-dialog-ok ${danger ? 'btn-danger-solid' : 'btn-primary'}">${escapeHTML(confirmLabel)}</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(dlg);
+
+        const cleanup = (result) => {
+            dlg.close();
+            dlg.remove();
+            resolve(result);
+        };
+
+        dlg.querySelector('.confirm-dialog-cancel').addEventListener('click', () => cleanup(false));
+        dlg.querySelector('.confirm-dialog-ok').addEventListener('click', () => cleanup(true));
+        dlg.addEventListener('cancel', () => cleanup(false));
+
+        dlg.showModal();
+    });
 }
 
 function showToast(message, duration = 3000) {
@@ -3876,13 +4073,20 @@ function init() {
     checkSharedImage();
     setupDragAndDrop();
     setupPreviewModal();
+    setupImportMenu();
     setupLayoutMenu();
     setupMiniCalendarInteractions();
 
     // Mobile UI 初期化
     setupSwipeGestures();
     setupDayDetailSheet();
-    setupMobileCalendarFab(); // カレンダーはCSSデフォルトで非表示。FABとクローズバーを配置するだけ。
+    setupMobileTabBar();
+    if (isMobile()) setupTickerBar();
+
+    // フォアグラウンド復帰時にクリップボードの画像を検知（Android Chrome のみ動作、iOS は無音スキップ）
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') checkClipboardOnFocus();
+    });
 
     const dateDisplay = document.getElementById('currentDateDisplay');
     const resetToToday = () => {
@@ -4239,7 +4443,7 @@ function updateToggleMonthsUI() {
  */
 
 function updateLayoutMenuUI() {
-    const layoutModeBtn = document.querySelector('.layout-mode-btn');
+    const layoutModeBtn = document.getElementById('btnLayoutMode');
     if (!layoutModeBtn) return;
 
     // Update main icon based on setting
@@ -4277,9 +4481,53 @@ function updateLayoutMenuUI() {
     });
 }
 
+function setupImportMenu() {
+    const btn = document.getElementById('btnImportMenu');
+    const dropdown = document.querySelector('.import-menu-wrapper .import-dropdown');
+    if (!btn || !dropdown) return;
+
+    // ドロップダウンを body 直下に移動して z-index を確保
+    document.body.appendChild(dropdown);
+
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = dropdown.classList.contains('is-open');
+        if (!isOpen) {
+            const btnRect = btn.getBoundingClientRect();
+            dropdown.style.top = `${btnRect.bottom + 8}px`;
+            const winW = window.innerWidth;
+            if (btnRect.left > winW / 2) {
+                dropdown.style.left = 'auto';
+                dropdown.style.right = `${winW - btnRect.right}px`;
+            } else {
+                dropdown.style.right = 'auto';
+                dropdown.style.left = `${btnRect.left}px`;
+            }
+            dropdown.classList.add('is-open');
+        } else {
+            dropdown.classList.remove('is-open');
+        }
+    });
+
+    document.getElementById('importMenuFiles')?.addEventListener('click', () => {
+        dropdown.classList.remove('is-open');
+        document.getElementById('inputLocalFiles')?.click();
+    });
+    document.getElementById('importMenuFolder')?.addEventListener('click', () => {
+        dropdown.classList.remove('is-open');
+        document.getElementById('inputLocalFolder')?.click();
+    });
+    document.getElementById('importMenuPaste')?.addEventListener('click', () => {
+        dropdown.classList.remove('is-open');
+        pasteFromClipboard();
+    });
+
+    document.addEventListener('click', () => dropdown.classList.remove('is-open'));
+}
+
 function setupLayoutMenu() {
-    const layoutModeBtn = document.querySelector('.layout-mode-btn');
-    const layoutDropdown = document.querySelector('.layout-dropdown');
+    const layoutModeBtn = document.getElementById('btnLayoutMode');
+    const layoutDropdown = document.querySelector('.layout-mode-control .layout-dropdown');
 
     if (layoutDropdown) {
         document.body.appendChild(layoutDropdown);
@@ -4293,6 +4541,8 @@ function setupLayoutMenu() {
                 if (!isOpen) {
                     const btnRect = e.currentTarget.getBoundingClientRect();
                     layoutDropdown.style.top = `${btnRect.bottom + 8}px`;
+                    layoutDropdown.style.bottom = 'auto';
+                    layoutDropdown.style.transform = '';
                     const winW = window.innerWidth;
                     if (btnRect.left > winW / 2) {
                         layoutDropdown.style.left = 'auto';
@@ -4696,16 +4946,21 @@ function determineTargetMediaKey(keys, mode) {
  */
 function renderDefaultMedia(displayArea) {
     displayArea.innerHTML = '';
-    const defaultImg = document.createElement('img');
-    defaultImg.alt = "Default Image";
-    defaultImg.style.cssText = 'width:100%; height:100%; object-fit:contain;';
 
-    // Apply auto layout even for default image
+    const backdrop = document.createElement('img');
+    backdrop.className = 'media-backdrop';
+    backdrop.src = 'src/assets/default_image.png';
+
+    const defaultImg = document.createElement('img');
+    defaultImg.className = 'media-main-img';
+    defaultImg.alt = "Default Image";
+
     defaultImg.onload = () => {
         applyAutoLayout(defaultImg);
     };
     defaultImg.src = 'src/assets/default_image.png';
 
+    displayArea.appendChild(backdrop);
     displayArea.appendChild(defaultImg);
 }
 
@@ -4976,6 +5231,7 @@ function adjustMediaLayout() {
 // Mobile UI — State Variables
 // =========================================================
 let mobileCalendarExpanded = false;
+let mobileActiveTab = 'home';
 let swipeMediaLocked = false;
 const SWIPE_MIN_PX = 50;
 const SWIPE_MAX_MS = 400;
@@ -4994,52 +5250,945 @@ function isMobile() {
 function toggleMobileCalendar() {
     if (!isMobile()) return;
     const calSection = document.querySelector('.calendar-section');
-    const calBtn = document.querySelector('.mobile-cal-btn');
     if (!calSection) return;
 
     mobileCalendarExpanded = !mobileCalendarExpanded;
     if (mobileCalendarExpanded) {
         calSection.classList.add('is-expanded');
+        document.body.classList.add('is-calendar-expanded');
         calSection.scrollTop = 0;
-        if (calBtn) {
-            calBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>`;
-            calBtn.setAttribute('aria-label', '閉じる');
-        }
     } else {
         calSection.classList.remove('is-expanded');
+        document.body.classList.remove('is-calendar-expanded');
         closeDayDetailSheet();
-        if (calBtn) {
-            calBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
-            calBtn.setAttribute('aria-label', 'カレンダーを開く');
-        }
     }
+    updateCalendarBarButton();
     adjustMediaLayout();
 }
 
-function setupMobileCalendarFab() {
+function updateCalendarBarButton() {
+    const calBtn = document.querySelector('#mobile-bottom-bar [data-action="calendar"]');
+    if (!calBtn) return;
+    if (mobileCalendarExpanded) {
+        calBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg><span>閉じる</span>`;
+        calBtn.setAttribute('aria-label', '閉じる');
+        calBtn.classList.add('is-active', 'mobile-calendar-close');
+    } else {
+        calBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>カレンダー</span>`;
+        calBtn.setAttribute('aria-label', 'カレンダーを開く');
+        calBtn.classList.remove('is-active', 'mobile-calendar-close');
+    }
+}
+
+// --- Clipboard notification on app focus (Android Chrome / desktop) ---
+// iOS Safari は navigator.clipboard.read 非対応のため、何もしない（サイレント失敗）
+async function checkClipboardOnFocus() {
+    if (!navigator.clipboard || !navigator.clipboard.read) return;
+    // 通知が既に表示中なら重複しない
+    if (document.getElementById('clipboard-notification-toast')) return;
+    try {
+        const items = await navigator.clipboard.read();
+        const hasImage = items.some(item => item.types.some(t => t.startsWith('image/')));
+        if (hasImage) showClipboardToast();
+    } catch (e) {
+        // 権限なし・非対応環境は無音で無視
+    }
+}
+
+function showClipboardToast() {
+    const container = document.getElementById('toastContainer');
+    if (!container || document.getElementById('clipboard-notification-toast')) return;
+
+    const toast = document.createElement('div');
+    toast.id = 'clipboard-notification-toast';
+    toast.className = 'toast-message';
+    toast.style.cssText = 'padding:12px 16px;display:flex;flex-direction:column;gap:8px;';
+    toast.innerHTML = `
+        <div style="font-size:0.95rem;font-weight:500;">クリップボードに画像があります</div>
+        <button type="button" class="btn-primary" style="width:100%;">貼り付け</button>
+    `;
+    toast.querySelector('button').addEventListener('click', () => {
+        toast.remove();
+        pasteFromClipboard();
+    });
+    container.appendChild(toast);
+
+    if (container.showPopover) {
+        try {
+            if (!container.matches(':popover-open')) container.showPopover();
+        } catch (e) {}
+    }
+
+    setTimeout(() => toast.remove(), 8000);
+}
+
+// =========================================================
+// Mobile UI — 5タブナビゲーション
+// =========================================================
+
+function updateMobilePanelBackground() {
+    const img = document.querySelector('.media-main-img');
+    const backdrop = document.querySelector('.media-backdrop');
+    let bgSrc = '';
+    if (img && img.src && !img.src.endsWith('/')) {
+        bgSrc = img.src;
+    } else if (backdrop) {
+        const m = backdrop.style.backgroundImage.match(/url\(['"]?([^'"]+)['"]?\)/);
+        if (m) bgSrc = m[1];
+    }
+    document.querySelectorAll('.mobile-panel-bg-blur').forEach(el => {
+        el.style.backgroundImage = bgSrc ? `url('${CSS.escape ? bgSrc : bgSrc}')` : '';
+    });
+}
+
+function switchMobileTab(tabName) {
     if (!isMobile()) return;
 
-    // backdrop-filter を持つ .media-container の内部では position:fixed が機能しないため
-    // body 直下に追加して確実に z-index 2001 で表示する（冪等性確保）
-    if (!document.querySelector('.mobile-cal-btn')) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'mobile-cal-btn';
-        btn.setAttribute('aria-label', 'カレンダーを開く');
-        btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
-        btn.addEventListener('click', toggleMobileCalendar);
-        document.body.appendChild(btn);
+    document.getElementById('mobileAddSubmenu')?.classList.remove('is-open');
+    document.getElementById('mobilePlaybackPopover')?.classList.remove('is-visible');
+    document.getElementById('mobileGridLibrary')?.classList.remove('is-visible');
+
+    const prevTab = mobileActiveTab;
+    mobileActiveTab = tabName;
+
+    // タブボタンのアクティブ状態を更新
+    document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
+        btn.classList.toggle('is-active', btn.dataset.tab === tabName);
+    });
+
+    // body クラスをクリア
+    document.body.classList.remove('mobile-tab-calendar', 'mobile-tab-management', 'mobile-tab-settings');
+
+    // 暦タブから離れた場合はカレンダーを閉じる
+    if (prevTab === 'calendar' && tabName !== 'calendar') {
+        const calSection = document.querySelector('.calendar-section');
+        if (calSection) calSection.classList.remove('is-expanded');
+        document.body.classList.remove('is-calendar-expanded');
+        mobileCalendarExpanded = false;
+        closeDayDetailSheet();
     }
 
-    // .controls ピルは .calendar-section の子要素だが、
-    // display:none の親に入ると position:fixed でも非表示になるため body 直下に移動する
-    if (!document.querySelector('body > .controls[data-mobile-detached]')) {
-        const controls = document.querySelector('.calendar-section .controls');
-        if (controls) {
-            controls.dataset.mobileDetached = '1';
-            document.body.appendChild(controls);
+    if (tabName !== 'home') {
+        document.body.classList.add(`mobile-tab-${tabName}`);
+        updateMobilePanelBackground();
+    }
+
+    if (tabName === 'calendar') {
+        const calSection = document.querySelector('.calendar-section');
+        if (calSection) {
+            calSection.classList.add('is-expanded');
+            calSection.scrollTop = 0;
+        }
+        document.body.classList.add('is-calendar-expanded');
+        mobileCalendarExpanded = true;
+    }
+
+    if (tabName === 'management') {
+        renderMobileOshiPanel();
+    }
+
+    if (tabName === 'settings') {
+        renderMobileSettingsPanel();
+    }
+
+    // 非ホームタブでは常にバー表示（タイマーなし）、ホームでは4秒後に消える
+    showMobileBar(tabName === 'home');
+
+    adjustMediaLayout();
+}
+
+// --- Mobile Tab Bar (5タブナビゲーションバー) ---
+// --- Ticker Bar ---
+
+function renderTickerBar() {
+    const span = document.querySelector('#tickerBar .ticker-text');
+    if (!span) return;
+    const today = new Date();
+    const weekdays = ['日','月','火','水','木','金','土'];
+    const dateStr = `${today.getMonth()+1}月${today.getDate()}日（${weekdays[today.getDay()]}）`;
+    const todayOshis = getTodayMemorialOshis();
+    let eventStr;
+    if (todayOshis.length === 0) {
+        eventStr = '　今日のイベントはありません';
+    } else {
+        const parts = [];
+        todayOshis.forEach(oshi => {
+            (oshi.memorial_dates || []).filter(md => isMatchingToday(md)).forEach(md => {
+                const emoji = getEventEmoji(md.type_id);
+                const label = getLabelForTypeId(md.type_id);
+                parts.push(`${emoji} ${oshi.name}：${label}`);
+            });
+        });
+        eventStr = '　' + parts.join('　');
+    }
+    span.textContent = dateStr + eventStr;
+}
+
+function setupTickerBar() {
+    renderTickerBar();
+    const bar = document.getElementById('tickerBar');
+    const span = document.querySelector('#tickerBar .ticker-text');
+    if (!bar || !span) return;
+    span.classList.remove('is-scrolling');
+    requestAnimationFrame(() => {
+        if (span.scrollWidth > bar.clientWidth) {
+            span.classList.add('is-scrolling');
+        }
+    });
+    bar.onclick = () => {
+        if (mobileActiveTab === 'calendar') {
+            currentRefDate = new Date(); updateView();
+        } else {
+            resetToTodayMedia();
+        }
+    };
+}
+
+function updateTickerBar() {
+    if (!isMobile()) return;
+    setupTickerBar();
+}
+
+function resetToTodayMedia() {
+    appState.lastMediaKey = null;
+    updateMediaArea('advance');
+}
+
+function setupMobileTabBar() {
+    if (!isMobile()) return;
+    if (document.getElementById('mobile-bottom-bar')) return;
+
+    const bar = document.createElement('div');
+    bar.id = 'mobile-bottom-bar';
+    bar.className = 'smart-bottom-bar mobile-tab-bar';
+    bar.innerHTML = `
+        <button type="button" class="mobile-tab-btn is-active" data-tab="home" aria-label="ホーム">
+            <span class="mobile-home-dot" aria-hidden="true"></span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>ホーム</span>
+        </button>
+        <button type="button" class="mobile-tab-btn" data-tab="calendar" aria-label="暦">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span>暦</span>
+        </button>
+        <button type="button" class="mobile-tab-btn mobile-tab-add" data-tab="add" aria-label="追加">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button type="button" class="mobile-tab-btn" data-tab="management" aria-label="管理">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>管理</span>
+        </button>
+        <button type="button" class="mobile-tab-btn" data-tab="settings" aria-label="設定">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+            <span>設定</span>
+        </button>
+        <div id="mobileAddSubmenu" class="mobile-add-submenu">
+            <button type="button" data-action="file">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                ファイルを選択
+            </button>
+            <button type="button" data-action="folder">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                フォルダを選択
+            </button>
+            <button type="button" data-action="paste">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                ペースト
+            </button>
+            <button type="button" data-action="gallery">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                登録済み画像一覧を表示
+            </button>
+        </div>
+    `;
+    document.body.appendChild(bar);
+
+    // ホームタブ: 再タップ or 長押しで再生モードポップオーバーを開く
+    const homeBtn = bar.querySelector('[data-tab="home"]');
+    let homeHoldTimer = null;
+    let homeHoldFired = false;
+    homeBtn.addEventListener('pointerdown', () => {
+        homeHoldFired = false;
+        homeHoldTimer = setTimeout(() => {
+            homeHoldFired = true;
+            const pop = document.getElementById('mobilePlaybackPopover');
+            if (!pop) return;
+            renderMobilePlaybackPopover();
+            pop.classList.add('is-visible');
+        }, 500);
+    });
+    homeBtn.addEventListener('pointerup',     () => clearTimeout(homeHoldTimer));
+    homeBtn.addEventListener('pointercancel', () => { clearTimeout(homeHoldTimer); homeHoldFired = false; });
+    homeBtn.addEventListener('click', () => {
+        if (homeHoldFired) { homeHoldFired = false; return; }
+        if (mobileActiveTab === 'home') {
+            resetToTodayMedia();
+        } else {
+            switchMobileTab('home');
+        }
+    });
+
+    bar.querySelector('[data-tab="calendar"]').addEventListener('click', () => {
+        if (mobileActiveTab === 'calendar') {
+            currentRefDate = new Date(); updateView();
+        } else {
+            switchMobileTab('calendar');
+        }
+    });
+    bar.querySelector('[data-tab="management"]').addEventListener('click', () => switchMobileTab('management'));
+    bar.querySelector('[data-tab="settings"]').addEventListener('click', () => switchMobileTab('settings'));
+
+    bar.querySelector('[data-tab="add"]').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('mobileAddSubmenu')?.classList.toggle('is-open');
+    });
+
+    bar.querySelector('[data-action="file"]').addEventListener('click', () => {
+        document.getElementById('inputLocalFiles')?.click();
+        document.getElementById('mobileAddSubmenu')?.classList.remove('is-open');
+    });
+    bar.querySelector('[data-action="folder"]').addEventListener('click', () => {
+        document.getElementById('inputLocalFolder')?.click();
+        document.getElementById('mobileAddSubmenu')?.classList.remove('is-open');
+    });
+    bar.querySelector('[data-action="paste"]').addEventListener('click', () => {
+        pasteFromClipboard();
+        document.getElementById('mobileAddSubmenu')?.classList.remove('is-open');
+    });
+    bar.querySelector('[data-action="gallery"]').addEventListener('click', () => {
+        document.getElementById('mobileAddSubmenu')?.classList.remove('is-open');
+        const grid = document.getElementById('mobileGridLibrary');
+        if (!grid) return;
+        renderMobileGridLibrary();
+        grid.classList.add('is-visible');
+    });
+
+    document.addEventListener('click', (e) => {
+        const submenu = document.getElementById('mobileAddSubmenu');
+        if (submenu?.classList.contains('is-open')
+            && !e.target.closest('[data-tab="add"]')
+            && !e.target.closest('.mobile-add-submenu')) {
+            submenu.classList.remove('is-open');
+        }
+        const pop = document.getElementById('mobilePlaybackPopover');
+        if (pop?.classList.contains('is-visible')
+            && !e.target.closest('#mobilePlaybackPopover')
+            && !e.target.closest('[data-tab="home"]')) {
+            pop.classList.remove('is-visible');
+        }
+    });
+
+    setupMobileAutoHide();
+    updateMobileHomeTabIndicator();
+    showMobileBar();
+}
+
+function updateMobileHomeTabIndicator() {
+    const dot = document.querySelector('.mobile-home-dot');
+    if (!dot) return;
+    dot.classList.toggle('is-visible', (appSettings.mediaMode || 'single') === 'single');
+}
+
+// --- 管理タブ: 仮想スクロール定数・状態 ---
+const OSHI_ITEM_H   = 52;   // 1行の固定高さ (px)
+const OSHI_VS_BUF   = 6;    // 仮想スクロールの上下バッファ行数
+const OSHI_BOT_PAD  = 80;   // リスト末尾の余白 (px)
+const OSHI_RAIL_MIN = 12;   // インデックスレールを表示する最低件数
+
+const oshiVS = {
+    list: [],           // フィルタ済み・ソート済みの推しリスト（各要素に _origIndex）
+    search: '',
+    sort: 'index',      // 'index' | 'name' | 'memorial'
+    bubbleTimer: null,
+    rafPending: false,
+};
+
+/** 推しの直近記念日（今日以降）を返す。なければ null */
+function getNextMemorialDate(oshi) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayMs = today.getTime();
+    const yr = today.getFullYear();
+    let nearestDays = Infinity;
+    let nearest = null;
+
+    for (const md of (oshi.memorial_dates || [])) {
+        const p = parseDateString(md.date);
+        if (!p) continue;
+        let d;
+        if (!p.year || md.is_annual) {
+            d = new Date(yr, p.month - 1, p.day);
+            if (d.getTime() < todayMs) d = new Date(yr + 1, p.month - 1, p.day);
+        } else {
+            d = new Date(p.year, p.month - 1, p.day);
+            if (d.getTime() < todayMs) continue;
+        }
+        const days = Math.round((d.getTime() - todayMs) / 86400000);
+        if (days < nearestDays) {
+            nearestDays = days;
+            nearest = { month: p.month, day: p.day, days };
         }
     }
+    return nearest;
+}
+
+/** 名前の先頭文字をかな行ラベルに変換 */
+function getKanaGroupLabel(name) {
+    if (!name) return '他';
+    let code = name.charCodeAt(0);
+    if (code >= 0x30A1 && code <= 0x30F6) code -= 0x60; // カタカナ→ひらがな
+    if (code >= 0x3041 && code <= 0x304A) return 'あ';
+    if (code >= 0x304B && code <= 0x3054) return 'か';
+    if (code >= 0x3055 && code <= 0x305E) return 'さ';
+    if (code >= 0x305F && code <= 0x3069) return 'た';
+    if (code >= 0x306A && code <= 0x306E) return 'な';
+    if (code >= 0x306F && code <= 0x307D) return 'は';
+    if (code >= 0x307E && code <= 0x3082) return 'ま';
+    if (code >= 0x3083 && code <= 0x3088) return 'や';
+    if (code >= 0x3089 && code <= 0x308D) return 'ら';
+    if (code >= 0x308F && code <= 0x3093) return 'わ';
+    if (code >= 65  && code <= 90 ) return String.fromCharCode(code);
+    if (code >= 97  && code <= 122) return String.fromCharCode(code - 32);
+    if (code >= 48  && code <= 57 ) return '#';
+    return name.charAt(0);
+}
+
+/** oshiVS.list をフィルタ・ソートして再構築 */
+function buildOshiVSList() {
+    const base = (appSettings.oshiList || []).map((o, i) => ({ ...o, _origIndex: i }));
+    const q = oshiVS.search.trim().toLowerCase();
+    let list = q
+        ? base.filter(o =>
+              (o.name || '').toLowerCase().includes(q) ||
+              (o.tags || []).some(t => t.toLowerCase().includes(q))
+          )
+        : base;
+
+    if (oshiVS.sort === 'name') {
+        list = [...list].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ja'));
+    } else if (oshiVS.sort === 'memorial') {
+        list = [...list].sort((a, b) => {
+            const da = getNextMemorialDate(a);
+            const db = getNextMemorialDate(b);
+            return (da ? da.days : 99999) - (db ? db.days : 99999);
+        });
+    }
+    oshiVS.list = list;
+}
+
+/** 仮想スクロールの表示ウィンドウを描画 */
+function renderOshiVirtualWindow(scrollTop) {
+    const areaEl  = document.getElementById('mobileOshiVScrollArea');
+    const totalEl = document.getElementById('mobileOshiVScrollTotal');
+    const listEl  = document.getElementById('mobileOshiList');
+    if (!areaEl || !totalEl || !listEl) return;
+
+    const list   = oshiVS.list;
+    const totalH = list.length * OSHI_ITEM_H + OSHI_BOT_PAD;
+    totalEl.style.height = totalH + 'px';
+
+    if (scrollTop === undefined) scrollTop = areaEl.scrollTop;
+    const areaH = areaEl.clientHeight || 500;
+
+    const startIdx = Math.max(0, Math.floor(scrollTop / OSHI_ITEM_H) - OSHI_VS_BUF);
+    const endIdx   = Math.min(list.length, Math.ceil((scrollTop + areaH) / OSHI_ITEM_H) + OSHI_VS_BUF);
+
+    listEl.style.transform = `translateY(${startIdx * OSHI_ITEM_H}px)`;
+    listEl.innerHTML = '';
+
+    if (list.length === 0) {
+        const msg = document.createElement('li');
+        msg.className = 'mobile-oshi-no-results';
+        msg.textContent = oshiVS.search ? '検索結果がありません' : '';
+        listEl.style.transform = 'translateY(0)';
+        totalEl.style.height = '0px';
+        listEl.appendChild(msg);
+        return;
+    }
+
+    for (let i = startIdx; i < endIdx; i++) {
+        const oshi = list[i];
+        const li = document.createElement('li');
+        li.className = 'mobile-oshi-item';
+
+        const chip = document.createElement('span');
+        chip.className = 'mobile-oshi-chip';
+        chip.style.backgroundColor = oshi.color || '#ccc';
+        li.appendChild(chip);
+
+        const info = document.createElement('div');
+        info.className = 'mobile-oshi-info';
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'mobile-oshi-name';
+        nameEl.textContent = oshi.name || '-';
+        info.appendChild(nameEl);
+
+        const tags = oshi.tags || [];
+        if (tags.length > 0) {
+            const tagsEl = document.createElement('div');
+            tagsEl.className = 'mobile-oshi-tags';
+            tags.slice(0, 3).forEach(tag => {
+                const pill = document.createElement('span');
+                pill.className = 'mobile-oshi-tag-pill';
+                pill.textContent = '#' + tag;
+                tagsEl.appendChild(pill);
+            });
+            info.appendChild(tagsEl);
+        }
+        li.appendChild(info);
+
+        const nd = getNextMemorialDate(oshi);
+        if (nd) {
+            const dateEl = document.createElement('span');
+            dateEl.className = 'mobile-oshi-next-date';
+            dateEl.textContent = `${nd.month}/${nd.day}`;
+            li.appendChild(dateEl);
+        }
+
+        const chevron = document.createElement('span');
+        chevron.className = 'mobile-oshi-chevron';
+        chevron.setAttribute('aria-hidden', 'true');
+        li.appendChild(chevron);
+
+        li.addEventListener('click', () => openOshiEditForm(oshi._origIndex));
+        listEl.appendChild(li);
+    }
+}
+
+/** 右端インデックスレールを描画 */
+function renderOshiIndexRail() {
+    const railEl = document.getElementById('mobileOshiIndexRail');
+    if (!railEl) return;
+
+    const list = oshiVS.list;
+    const sort = oshiVS.sort;
+
+    if (list.length < OSHI_RAIL_MIN || sort === 'index') {
+        railEl.innerHTML = '';
+        railEl.classList.remove('is-visible');
+        return;
+    }
+    railEl.classList.add('is-visible');
+    railEl.innerHTML = '';
+
+    const groups = [];
+    let lastLabel = null;
+    list.forEach((oshi, i) => {
+        let label;
+        if (sort === 'name') {
+            label = getKanaGroupLabel(oshi.name);
+        } else {
+            const nd = getNextMemorialDate(oshi);
+            label = nd ? String(nd.month) : '—';
+        }
+        if (label !== lastLabel) {
+            groups.push({ label, firstIndex: i });
+            lastLabel = label;
+        }
+    });
+
+    groups.forEach(g => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'mobile-oshi-index-btn';
+        btn.textContent = g.label;
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const areaEl = document.getElementById('mobileOshiVScrollArea');
+            if (areaEl) areaEl.scrollTop = g.firstIndex * OSHI_ITEM_H;
+            showOshiScrollBubble(g.label);
+        });
+        railEl.appendChild(btn);
+    });
+}
+
+/** スクロールバブルを一時表示 */
+function showOshiScrollBubble(label) {
+    const bubble = document.getElementById('mobileOshiScrollBubble');
+    if (!bubble) return;
+    bubble.textContent = label;
+    bubble.classList.add('is-visible');
+    clearTimeout(oshiVS.bubbleTimer);
+    oshiVS.bubbleTimer = setTimeout(() => bubble.classList.remove('is-visible'), 900);
+}
+
+/** スクロール位置に応じてバブルラベルを更新 */
+function updateOshiScrollBubble(scrollTop) {
+    if (oshiVS.sort === 'index') return;
+    const list = oshiVS.list;
+    if (!list.length) return;
+    const idx = Math.min(Math.floor(scrollTop / OSHI_ITEM_H), list.length - 1);
+    const oshi = list[idx];
+    let label;
+    if (oshiVS.sort === 'name') {
+        label = getKanaGroupLabel(oshi.name);
+    } else {
+        const nd = getNextMemorialDate(oshi);
+        label = nd ? `${nd.month}月` : '—';
+    }
+    showOshiScrollBubble(label);
+}
+
+// --- 管理タブ: 推しリスト描画 ---
+function renderMobileOshiPanel(preserveScroll = false) {
+    const emptyEl   = document.getElementById('mobileOshiEmpty');
+    const contentEl = document.getElementById('mobileOshiContentRow');
+    const actionsEl = document.querySelector('.mobile-oshi-actions');
+    const vAreaEl   = document.getElementById('mobileOshiVScrollArea');
+    if (!vAreaEl) return;
+
+    const hasAny = (appSettings.oshiList || []).length > 0;
+
+    if (!hasAny) {
+        // 未登録: アクションエリア・仮想スクロールを隠して空の状態を表示
+        if (actionsEl) actionsEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'none';
+        if (emptyEl)   emptyEl.style.display   = 'flex';
+    } else {
+        if (actionsEl) actionsEl.style.display = 'flex';
+        if (contentEl) contentEl.style.display = 'flex';
+        if (emptyEl)   emptyEl.style.display   = 'none';
+
+        buildOshiVSList();
+        if (!preserveScroll) vAreaEl.scrollTop = 0;
+        renderOshiVirtualWindow(preserveScroll ? vAreaEl.scrollTop : 0);
+        renderOshiIndexRail();
+    }
+
+    // スクロールイベント（一度だけ登録）
+    if (!vAreaEl.dataset.scrollBound) {
+        vAreaEl.dataset.scrollBound = '1';
+        vAreaEl.addEventListener('scroll', () => {
+            if (oshiVS.rafPending) return;
+            oshiVS.rafPending = true;
+            requestAnimationFrame(() => {
+                oshiVS.rafPending = false;
+                const st = vAreaEl.scrollTop;
+                renderOshiVirtualWindow(st);
+                updateOshiScrollBubble(st);
+            });
+        }, { passive: true });
+    }
+
+    // 検索（一度だけ登録）
+    const searchEl = document.getElementById('mobileOshiSearch');
+    if (searchEl && !searchEl.dataset.bound) {
+        searchEl.dataset.bound = '1';
+        searchEl.addEventListener('input', () => {
+            oshiVS.search = searchEl.value;
+            buildOshiVSList();
+            vAreaEl.scrollTop = 0;
+            renderOshiVirtualWindow(0);
+            renderOshiIndexRail();
+        });
+    }
+
+    // ソート（一度だけ登録）
+    const sortEl = document.getElementById('mobileOshiSort');
+    if (sortEl && !sortEl.dataset.bound) {
+        sortEl.dataset.bound = '1';
+        sortEl.addEventListener('change', () => {
+            oshiVS.sort = sortEl.value;
+            buildOshiVSList();
+            vAreaEl.scrollTop = 0;
+            renderOshiVirtualWindow(0);
+            renderOshiIndexRail();
+        });
+    }
+
+    // ＋新規追加ボタン（上部）
+    const addTopBtn = document.getElementById('btnMobileOshiAddTop');
+    if (addTopBtn && !addTopBtn.dataset.bound) {
+        addTopBtn.dataset.bound = '1';
+        addTopBtn.addEventListener('click', () => openOshiEditForm(-1));
+    }
+
+    // 空の状態ボタン
+    const addEmptyBtn = document.getElementById('btnMobileOshiAddEmpty');
+    if (addEmptyBtn && !addEmptyBtn.dataset.bound) {
+        addEmptyBtn.dataset.bound = '1';
+        addEmptyBtn.addEventListener('click', () => openOshiEditForm(-1));
+    }
+    const importEmptyBtn = document.getElementById('btnMobileOshiImportEmpty');
+    if (importEmptyBtn && !importEmptyBtn.dataset.bound) {
+        importEmptyBtn.dataset.bound = '1';
+        importEmptyBtn.addEventListener('click', () => document.getElementById('inputOshiImport').click());
+    }
+    const csvTemplateEmptyBtn = document.getElementById('btnMobileOshiCsvTemplateEmpty');
+    if (csvTemplateEmptyBtn && !csvTemplateEmptyBtn.dataset.bound) {
+        csvTemplateEmptyBtn.dataset.bound = '1';
+        csvTemplateEmptyBtn.addEventListener('click', downloadOshiCsvTemplate);
+    }
+
+    // 三点メニュー（一度だけ登録）
+    const menuBtn = document.getElementById('btnMobileOshiMenu');
+    const menu    = document.getElementById('mobileOshiMenu');
+    if (menuBtn && menu && !menuBtn.dataset.bound) {
+        menuBtn.dataset.bound = '1';
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menu.classList.toggle('is-open');
+        });
+        document.getElementById('mobileOshiMenuImport')?.addEventListener('click', () => {
+            menu.classList.remove('is-open');
+            document.getElementById('inputOshiImport').click();
+        });
+        document.getElementById('mobileOshiMenuExport')?.addEventListener('click', () => {
+            menu.classList.remove('is-open');
+            handleOshiExport();
+        });
+        document.getElementById('mobileOshiMenuTemplate')?.addEventListener('click', () => {
+            menu.classList.remove('is-open');
+            downloadOshiCsvTemplate();
+        });
+    }
+}
+
+// --- 設定タブ: 設定パネル描画 ---
+function renderMobileSettingsPanel() {
+    const inner = document.getElementById('mobileSettingsInner');
+    if (!inner) return;
+    // Phase 6 で完全実装。現時点ではデスクトップ設定ボタンへ誘導
+    if (inner.dataset.rendered) return;
+    inner.dataset.rendered = '1';
+
+    const startVal = appSettings.startOfWeek ?? 0;
+    const memVal = appSettings.memorialDisplayMode ?? 'preferred';
+    const compressVal = appSettings.imageCompressMode ?? 'standard';
+
+    inner.innerHTML = `
+        <div class="mobile-settings-header">
+            <h2 class="mobile-panel-title">設定</h2>
+        </div>
+        <div class="mobile-settings-body">
+            <div class="setting-group">
+                <label class="setting-label">週の開始日</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="ms-startOfWeek" value="0" ${startVal === 0 ? 'checked' : ''}> 日曜日</label>
+                    <label><input type="radio" name="ms-startOfWeek" value="1" ${startVal === 1 ? 'checked' : ''}> 月曜日</label>
+                </div>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-group">
+                <label class="setting-label">推し</label>
+                <button type="button" id="btnMsOshiManager" class="btn-secondary">一覧を管理（管理タブ）</button>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-group">
+                <label class="setting-label">記念日の画像表示モード</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="ms-memorialDisplayMode" value="preferred" ${memVal === 'preferred' ? 'checked' : ''}> 優先（80%で記念日画像）</label>
+                    <label><input type="radio" name="ms-memorialDisplayMode" value="exclusive" ${memVal === 'exclusive' ? 'checked' : ''}> 専有（記念日画像のみ）</label>
+                </div>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-group">
+                <label class="setting-label">自動圧縮</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="ms-imageCompressMode" value="off" ${compressVal === 'off' ? 'checked' : ''}> 圧縮なし</label>
+                    <label><input type="radio" name="ms-imageCompressMode" value="standard" ${compressVal === 'standard' ? 'checked' : ''}> 標準（推奨）</label>
+                    <label><input type="radio" name="ms-imageCompressMode" value="aggressive" ${compressVal === 'aggressive' ? 'checked' : ''}> 積極的</label>
+                </div>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-group">
+                <label class="setting-label">データ・バックアップ</label>
+                <button type="button" id="btnMsOpenDataSettings" class="btn-secondary">バックアップ・復元を開く</button>
+            </div>
+        </div>
+    `;
+
+    inner.querySelectorAll('input[name="ms-startOfWeek"]').forEach(r => {
+        r.addEventListener('change', () => {
+            appSettings.startOfWeek = parseInt(r.value);
+            saveSettings();
+            updateView();
+        });
+    });
+    inner.querySelectorAll('input[name="ms-memorialDisplayMode"]').forEach(r => {
+        r.addEventListener('change', () => {
+            appSettings.memorialDisplayMode = r.value;
+            saveSettings();
+            updateView();
+        });
+    });
+    inner.querySelectorAll('input[name="ms-imageCompressMode"]').forEach(r => {
+        r.addEventListener('change', () => {
+            appSettings.imageCompressMode = r.value;
+            saveSettings();
+        });
+    });
+    inner.querySelector('#btnMsOshiManager')?.addEventListener('click', () => {
+        switchMobileTab('management');
+    });
+    inner.querySelector('#btnMsOpenDataSettings')?.addEventListener('click', () => {
+        document.getElementById('btnSettings')?.click();
+        // データタブへ切替
+        setTimeout(() => {
+            document.querySelector('.settings-tab-btn[data-tab="data"]')?.click();
+        }, 100);
+    });
+}
+
+// --- ホームタブ: グリッドライブラリ ---
+async function renderMobileGridLibrary() {
+    const grid = document.getElementById('mobileGridLibrary');
+    if (!grid) return;
+    grid.innerHTML = '<p class="mobile-grid-loading">読み込み中...</p>';
+
+    try {
+        const keys = await localImageDB.getAllKeys();
+        if (!keys || keys.length === 0) {
+            grid.innerHTML = '<p class="mobile-grid-empty">画像がありません</p>';
+            return;
+        }
+        grid.innerHTML = '';
+        const orderedKeys = (appSettings.localImageOrder || []).filter(k => keys.includes(k));
+        const remaining = keys.filter(k => !orderedKeys.includes(k));
+        const allKeys = [...orderedKeys, ...remaining];
+
+        for (const key of allKeys) {
+            const record = await localImageDB.getImage(key);
+            if (!record || !record.file) continue;
+            const url = URL.createObjectURL(record.file);
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'mobile-grid-thumb';
+            const img = document.createElement('img');
+            img.src = url;
+            img.alt = '';
+            img.loading = 'lazy';
+            btn.appendChild(img);
+            btn.addEventListener('click', () => {
+                if (typeof appState !== 'undefined') appState.lastMediaKey = key;
+                saveSettings();
+                updateMediaArea('restore');
+                revokeMobileGridURLs();
+                grid.classList.remove('is-visible');
+                switchMobileTab('home');
+            });
+            grid.appendChild(btn);
+        }
+    } catch (e) {
+        grid.innerHTML = '<p class="mobile-grid-empty">読み込みに失敗しました</p>';
+    }
+}
+
+function revokeMobileGridURLs() {
+    const grid = document.getElementById('mobileGridLibrary');
+    if (!grid) return;
+    grid.querySelectorAll('img').forEach(img => {
+        if (img.src && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+    });
+}
+
+// --- ホームタブ: 再生設定ポップオーバー ---
+function renderMobilePlaybackPopover() {
+    const pop = document.getElementById('mobilePlaybackPopover');
+    if (!pop) return;
+
+    const mode = appSettings.mediaMode || 'single';
+    const interval = appSettings.mediaIntervalPreset || '10m';
+
+    const modes = [
+        { value: 'single', label: '固定（ピン留め）' },
+        { value: 'random', label: 'ランダム' },
+        { value: 'cycle',  label: 'サイクル' },
+    ];
+    const intervals = [
+        { value: '10s', label: '10秒' }, { value: '30s', label: '30秒' },
+        { value: '1m',  label: '1分' },  { value: '10m', label: '10分' },
+        { value: '1h',  label: '1時間' }, { value: '0:00', label: '毎日 0:00' },
+        { value: '4:00', label: '毎日 4:00' }, { value: 'startup', label: '起動時のみ' },
+    ];
+
+    const isFixed = mode === 'single';
+
+    pop.innerHTML = `
+        <div class="mobile-playback-section">
+            <div class="menu-section-title">表示モード</div>
+            ${modes.map(m => `
+                <button type="button" class="mobile-playback-item ${mode === m.value ? 'is-active' : ''}" data-mode="${m.value}">${m.label}</button>
+            `).join('')}
+        </div>
+        <div class="mobile-playback-divider"></div>
+        <div class="mobile-playback-section ${isFixed ? 'is-disabled' : ''}">
+            <div class="menu-section-title">
+                切り替え間隔
+                ${isFixed ? '<span class="interval-disabled-note">固定モード中は無効</span>' : ''}
+            </div>
+            <div class="mobile-playback-grid">
+                ${intervals.map(iv => `
+                    <button type="button" class="mobile-interval-item ${interval === iv.value ? 'is-active' : ''}" data-value="${iv.value}"${isFixed ? ' disabled' : ''}>${iv.label}</button>
+                `).join('')}
+            </div>
+        </div>
+    `;
+
+    pop.querySelectorAll('[data-mode]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            appSettings.mediaMode = btn.dataset.mode;
+            saveSettings();
+            setupMediaTimer();
+            updateQuickMediaButtons();
+            updateMobileHomeTabIndicator();
+            renderMobilePlaybackPopover();
+        });
+    });
+    pop.querySelectorAll('[data-value]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (btn.disabled) return;
+            appSettings.mediaIntervalPreset = btn.dataset.value;
+            saveSettings();
+            setupMediaTimer();
+            updateQuickMediaButtons();
+            renderMobilePlaybackPopover();
+        });
+    });
+}
+
+// --- モバイル ナビバー オートハイド ---
+let mobileAutoHideTimer = null;
+const MOBILE_AUTOHIDE_DELAY = 4000;
+
+function showMobileBar(resetTimer = true) {
+    if (!isMobile()) return;
+    const bar = document.getElementById('mobile-bottom-bar');
+    if (!bar) return;
+    bar.classList.remove('is-hidden');
+    clearTimeout(mobileAutoHideTimer);
+    if (resetTimer && mobileActiveTab === 'home') {
+        mobileAutoHideTimer = setTimeout(() => {
+            // サブメニュー・ポップオーバーが開いていれば隠さない
+            if (document.getElementById('mobileAddSubmenu')?.classList.contains('is-open')) return;
+            if (document.getElementById('mobilePlaybackPopover')?.classList.contains('is-visible')) return;
+            bar.classList.add('is-hidden');
+        }, MOBILE_AUTOHIDE_DELAY);
+    }
+}
+
+function setupMobileAutoHide() {
+    const container = document.getElementById('mediaContainer');
+    if (!container) return;
+
+    container.addEventListener('click', (e) => {
+        if (!isMobile() || mobileActiveTab !== 'home') return;
+        if (e.target.closest('.media-controls-wrapper')) return;
+        const bar = document.getElementById('mobile-bottom-bar');
+        if (!bar) return;
+        if (bar.classList.contains('is-hidden')) {
+            showMobileBar();
+        } else {
+            clearTimeout(mobileAutoHideTimer);
+            bar.classList.add('is-hidden');
+        }
+    });
+}
+
+// 後方互換: 旧関数 (テスト等から参照される場合のため残置)
+function setupMobileBottomBar() {
+    setupMobileTabBar();
 }
 
 // =========================================================
@@ -5176,22 +6325,22 @@ if (typeof window !== 'undefined') {
         if (!calSection) return;
 
         if (isMobile()) {
-            // モバイル: FABとクローズバーを確認・再セットアップ（冪等性あり）
-            setupMobileCalendarFab();
+            // モバイル: タブバーを確認・再セットアップ（冪等性あり）
+            setupMobileTabBar();
         } else {
             // デスクトップ: モバイルUIを完全削除
-            const calBtn = document.querySelector('.mobile-cal-btn');
-            if (calBtn) calBtn.remove();
+            const bottomBar = document.getElementById('mobile-bottom-bar');
+            if (bottomBar) bottomBar.remove();
             calSection.classList.remove('is-expanded');
+            document.body.classList.remove(
+                'is-calendar-expanded',
+                'mobile-tab-calendar', 'mobile-tab-management', 'mobile-tab-settings'
+            );
             mobileCalendarExpanded = false;
+            mobileActiveTab = 'home';
+            document.getElementById('mobileGridLibrary')?.classList.remove('is-visible');
+            document.getElementById('mobilePlaybackPopover')?.classList.remove('is-visible');
             closeDayDetailSheet();
-
-            // .controls を calendar-section の先頭に戻す
-            const controls = document.querySelector('body > .controls[data-mobile-detached]');
-            if (controls) {
-                calSection.insertBefore(controls, calSection.firstChild);
-                delete controls.dataset.mobileDetached;
-            }
         }
     });
 }
@@ -5218,7 +6367,13 @@ window.isMobile = isMobile;
 /** @export */
 window.toggleMobileCalendar = toggleMobileCalendar;
 /** @export */
-window.setupMobileCalendarFab = setupMobileCalendarFab;
+window.setupMobileBottomBar = setupMobileBottomBar;
+/** @export */
+window.setupMobileTabBar = setupMobileTabBar;
+/** @export */
+window.switchMobileTab = switchMobileTab;
+/** @export */
+window.getMobileActiveTab = () => mobileActiveTab;
 /** @export */
 window.openDayDetailSheet = openDayDetailSheet;
 /** @export */

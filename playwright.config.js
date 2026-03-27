@@ -26,18 +26,22 @@ export default defineConfig({
         {
             name: 'chromium',
             use: { ...devices['Desktop Chrome'] },
+            testIgnore: ['**/mobile_portrait.test.js', '**/mobile_landscape.test.js'],
         },
         {
             name: 'Mobile Chrome',
             use: { ...devices['Galaxy S9+'] },
+            testIgnore: ['**/mobile_portrait.test.js', '**/mobile_landscape.test.js'],
         },
         {
             name: 'Mobile Safari',
             use: { ...devices['iPhone 12'] },
+            testIgnore: ['**/mobile_portrait.test.js', '**/mobile_landscape.test.js'],
         },
         {
             name: 'Tablet',
             use: { ...devices['iPad (gen 7)'] },
+            testIgnore: ['**/mobile_portrait.test.js', '**/mobile_landscape.test.js'],
         },
         // --- モバイル専用プロジェクト（testMatchで専用ファイルに限定）---
         {
