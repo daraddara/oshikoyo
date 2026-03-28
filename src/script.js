@@ -554,6 +554,9 @@ function saveState() {
 // Helper: Get Contrast Color (Black or White)
 function getContrastColor(hex) {
     if (!hex || !hex.startsWith('#')) return '#000000';
+    getContrastColor.cache = getContrastColor.cache || new Map();
+    if (getContrastColor.cache.has(hex)) return getContrastColor.cache.get(hex);
+    let originalHex = hex;
     hex = hex.replace('#', '');
 
     let r, g, b;
@@ -571,7 +574,10 @@ function getContrastColor(hex) {
 
     // YIQ equation
     var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-    return (yiq >= 140) ? '#1a1a1a' : '#ffffff'; // 140 threshold, using dark gray for black for softer look
+    const result = (yiq >= 140) ? '#1a1a1a' : '#ffffff'; // 140 threshold, using dark gray for black for softer look
+    if (getContrastColor.cache.size > 1000) getContrastColor.cache.clear();
+    getContrastColor.cache.set(originalHex, result);
+    return result;
 }
 
 /**
@@ -582,6 +588,10 @@ function getContrastColor(hex) {
  */
 function hexToRgba(hex, alpha) {
     if (!hex || !hex.startsWith('#')) return hex;
+    const cacheKey = `${hex}-${alpha}`;
+    hexToRgba.cache = hexToRgba.cache || new Map();
+    if (hexToRgba.cache.has(cacheKey)) return hexToRgba.cache.get(cacheKey);
+    let originalHex = hex;
     hex = hex.replace('#', '');
     let r, g, b;
     if (hex.length === 3) {
@@ -593,38 +603,56 @@ function hexToRgba(hex, alpha) {
         g = parseInt(hex.substring(2, 4), 16);
         b = parseInt(hex.substring(4, 6), 16);
     }
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    const result = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    if (hexToRgba.cache.size > 1000) hexToRgba.cache.clear();
+    hexToRgba.cache.set(cacheKey, result);
+    return result;
 }
 
 // Helper: Parse Date String to {month, day}
 function parseDateString(str) {
     if (!str) return null;
     str = str.trim();
+    parseDateString.cache = parseDateString.cache || new Map();
+    if (parseDateString.cache.has(str)) {
+        const cached = parseDateString.cache.get(str);
+        return cached ? { ...cached } : null; // defensive copy
+    }
 
-    // Format: "YYYY/MM/DD" or "YYYY-MM-DD"
     let match = str.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
     if (match) {
-        return { year: parseInt(match[1]), month: parseInt(match[2]), day: parseInt(match[3]) };
+        const result = { year: parseInt(match[1]), month: parseInt(match[2]), day: parseInt(match[3]) };
+        if (parseDateString.cache.size > 1000) parseDateString.cache.clear();
+        parseDateString.cache.set(str, { ...result });
+        return result;
     }
 
-    // Format: "M/D" (year-less, e.g., 1/15)
     match = str.match(/^(\d{1,2})\/(\d{1,2})$/);
     if (match) {
-        return { year: null, month: parseInt(match[1]), day: parseInt(match[2]) };
+        const result = { year: null, month: parseInt(match[1]), day: parseInt(match[2]) };
+        if (parseDateString.cache.size > 1000) parseDateString.cache.clear();
+        parseDateString.cache.set(str, { ...result });
+        return result;
     }
 
-    // Format: "M月D日"
     match = str.match(/^(\d{1,2})月(\d{1,2})日$/);
     if (match) {
-        return { year: null, month: parseInt(match[1]), day: parseInt(match[2]) };
+        const result = { year: null, month: parseInt(match[1]), day: parseInt(match[2]) };
+        if (parseDateString.cache.size > 1000) parseDateString.cache.clear();
+        parseDateString.cache.set(str, { ...result });
+        return result;
     }
 
-    // Format: "YYYY-MM-DD" standard date input value
     match = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (match) {
-        return { year: parseInt(match[1]), month: parseInt(match[2]), day: parseInt(match[3]) };
+        const result = { year: parseInt(match[1]), month: parseInt(match[2]), day: parseInt(match[3]) };
+        if (parseDateString.cache.size > 1000) parseDateString.cache.clear();
+        parseDateString.cache.set(str, { ...result });
+        return result;
     }
 
+    if (parseDateString.cache.size > 1000) parseDateString.cache.clear();
+    parseDateString.cache.set(str, null);
     return null;
 }
 
