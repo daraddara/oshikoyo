@@ -1,0 +1,3 @@
+## 2025-03-29 - WAI-ARIA completeness on setting tabs
+**Learning:** In a single page application like Oshikoyo, implementing a basic WAI-ARIA tab pattern isn't enough if you don't continually update ARIA states. In this repo, `.settings-tabs` elements had static `role="tab"` and missing `aria-selected`/`aria-controls` properties initially, which fails to correctly announce dynamic states to screen readers.
+**Action:** When working on similar tabbed interfaces in JS, ensure both markup structure (`aria-controls`, `aria-labelledby`, `id`) and dynamic JS event handlers updating `aria-selected="true/false"` are properly paired.

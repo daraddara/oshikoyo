@@ -3514,9 +3514,15 @@ function initSettings() {
     // Settings tab switching
     document.querySelectorAll('.settings-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('is-active'));
+            document.querySelectorAll('.settings-tab-btn').forEach(b => {
+                b.classList.remove('is-active');
+                b.setAttribute('aria-selected', 'false');
+            });
             document.querySelectorAll('.settings-tab-panel').forEach(p => p.classList.remove('is-active'));
+
             btn.classList.add('is-active');
+            btn.setAttribute('aria-selected', 'true');
+
             document.querySelector(`.settings-tab-panel[data-panel="${btn.dataset.tab}"]`).classList.add('is-active');
             if (btn.dataset.tab === 'media') {
                 renderLocalImageManager();
