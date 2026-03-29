@@ -1663,7 +1663,10 @@ function addMemorialDateRow(md = null) {
     annualCheck.className = 'mdate-annual';
     annualCheck.checked = md ? md.is_annual : true;
     annualLabel.appendChild(annualCheck);
-    annualLabel.appendChild(document.createTextNode('毎年'));
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'mdate-annual-label-text';
+    labelSpan.innerHTML = '<span class="mdate-annual-icon" aria-hidden="true">🔄</span> 毎年';
+    annualLabel.appendChild(labelSpan);
 
     // 日付変更時に毎年のデフォルト値を自動設定
     dateInput.addEventListener('change', () => {
