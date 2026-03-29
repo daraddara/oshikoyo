@@ -15,14 +15,14 @@ npm run serve > /tmp/serve.log 2>&1 &
 SERVE_PID=$!
 
 # 起動確認（最大10秒ポーリング）
-for i in $(seq 1 10); do
-  sleep 1
+for i in $(seq 1 50); do
+  sleep 0.2
   HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/ 2>/dev/null || echo "000")
   if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ]; then
     echo "起動確認 OK (HTTP $HTTP_CODE, PID: $SERVE_PID)"
     break
   fi
-  if [ $i -eq 10 ]; then
+  if [ $i -eq 50 ]; then
     echo "ERROR: サーバーが起動しませんでした"
     cat /tmp/serve.log
     exit 1
@@ -36,8 +36,8 @@ TUNNEL_PID=$!
 
 # URL抽出（最大20秒待機）
 TUNNEL_URL=""
-for i in $(seq 1 20); do
-  sleep 1
+for i in $(seq 1 100); do
+  sleep 0.2
   TUNNEL_URL=$(grep -o 'https://[^ ]*\.trycloudflare\.com' /tmp/tunnel.log 2>/dev/null | head -1 || true)
   if [ -n "$TUNNEL_URL" ]; then
     break
