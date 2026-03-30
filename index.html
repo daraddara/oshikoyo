@@ -362,6 +362,19 @@
                 <div class="setting-divider"></div>
 
                 <div class="setting-group">
+                    <label class="setting-label">イベントタイプ</label>
+                    <div id="settingsEventTypeList"></div>
+                    <div class="et-add-row" id="etAddRow">
+                        <button type="button" id="settingsEtIconBtn" class="mdate-icon-btn et-add-icon" title="アイコンを選択" aria-label="アイコンを選択"></button>
+                        <input type="text" id="settingsEtNameInput" class="et-name-input" placeholder="新しいタイプ名" maxlength="20" autocomplete="off">
+                        <button type="button" id="btnAddEventType" class="btn-secondary btn-sm">＋ 追加</button>
+                    </div>
+                    <p class="help-text">組込みタイプ（誕生日・デビュー記念日）は削除できません。</p>
+                </div>
+
+                <div class="setting-divider"></div>
+
+                <div class="setting-group">
                     <label class="setting-label">レイアウト</label>
                     <button type="button" id="btnResetLayout" class="btn-reset-layout">配置をデフォルトに戻す</button>
                     <p class="help-text" style="margin-top:6px">表示月数・レイアウト方向・画像位置・画像サイズを初期状態に戻します。</p>
@@ -518,11 +531,27 @@
                 <div class="oshi-manager-toolbar">
                     <button type="button" id="btnOshiImport" class="btn-secondary" title="JSON または CSV ファイルから一括インポート">📥 インポート</button>
                     <input type="file" id="inputOshiImport" accept=".json,.csv" multiple style="display:none">
+                    <button type="button" id="btnOshiCsvTemplate" class="btn-secondary" title="CSVテンプレートをダウンロード">テンプレート</button>
                     <button type="button" id="btnOshiExport" class="btn-secondary">📤 エクスポート</button>
+                </div>
+                <div class="oshi-table-search-row">
+                    <input type="search"
+                           id="oshiTableSearch"
+                           class="oshi-table-search"
+                           placeholder="名前・タグで検索"
+                           autocomplete="off" />
+                    <select id="oshiTableSort" class="oshi-table-sort">
+                        <option value="index">登録順</option>
+                        <option value="name">名前順</option>
+                        <option value="memorial">記念日順</option>
+                    </select>
                 </div>
             </div>
             <div class="oshi-manager-content">
                 <div class="oshi-manager-scroll-area">
+                    <div id="oshiTableAddTopRow" class="oshi-table-add-top-row" style="display:none">
+                        <button type="button" id="btnOshiAddTop" class="btn-primary">＋ 新規追加</button>
+                    </div>
                     <table class="oshi-table">
                         <thead>
                             <tr>
@@ -530,7 +559,7 @@
                                 <th></th>
                                 <th>名前</th>
                                 <th>タグ</th>
-                                <th>記念日</th>
+                                <th>直近の予定</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -538,9 +567,6 @@
                             <!-- Rows injected by JS -->
                         </tbody>
                     </table>
-                    <div id="oshiAddRow" class="oshi-add-row" style="display:none">
-                        <button type="button" id="btnOshiAdd" class="btn-secondary">＋ 新規追加</button>
-                    </div>
                     <div id="oshiTableEmpty" class="oshi-empty-state" style="display:none">
                         <p class="oshi-empty-state__title">まだ推しが登録されていません</p>
                         <div class="oshi-empty-state__actions">
@@ -553,10 +579,7 @@
                         </div>
                     </div>
                 </div>
-                <details class="event-type-manager">
-                    <summary>イベントタイプ管理</summary>
-                    <div id="eventTypeManagerList"></div>
-                </details>
+
             </div>
             <div class="form-actions">
                 <button type="button" id="btnCloseOshiManager" class="btn-cancel">閉じる</button>
