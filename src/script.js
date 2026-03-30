@@ -3518,9 +3518,13 @@ function initSettings() {
     // Settings tab switching
     document.querySelectorAll('.settings-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('is-active'));
+            document.querySelectorAll('.settings-tab-btn').forEach(b => {
+                b.classList.remove('is-active');
+                b.setAttribute('aria-selected', 'false');
+            });
             document.querySelectorAll('.settings-tab-panel').forEach(p => p.classList.remove('is-active'));
             btn.classList.add('is-active');
+            btn.setAttribute('aria-selected', 'true');
             document.querySelector(`.settings-tab-panel[data-panel="${btn.dataset.tab}"]`).classList.add('is-active');
             if (btn.dataset.tab === 'media') {
                 renderLocalImageManager();
@@ -4956,6 +4960,8 @@ function renderDefaultMedia(displayArea) {
 
     const backdrop = document.createElement('img');
     backdrop.className = 'media-backdrop';
+    backdrop.alt = '';
+    backdrop.setAttribute('aria-hidden', 'true');
     backdrop.src = 'src/assets/default_image.png';
 
     const defaultImg = document.createElement('img');
@@ -4992,6 +4998,8 @@ function renderMediaRecord(record, displayArea) {
         // Create Background Layer (Blur)
         const backdrop = document.createElement('img');
         backdrop.className = 'media-backdrop';
+        backdrop.alt = '';
+        backdrop.setAttribute('aria-hidden', 'true');
         backdrop.src = currentMediaObjectURL;
 
         // Create Main Image Layer
@@ -6491,7 +6499,7 @@ if (typeof window !== 'undefined') {
             ['UA', info.ua],
         ];
         panel.querySelector('#pwa-debug-body').innerHTML = rows.map(([k, v]) =>
-            `<tr><td style="color:#aaa;padding:2px 8px 2px 0;white-space:nowrap;vertical-align:top">${k}</td><td style="word-break:break-all">${v}</td></tr>`
+            `<tr><td style="color:#aaa;padding:2px 8px 2px 0;white-space:nowrap;vertical-align:top">${escapeHTML(k)}</td><td style="word-break:break-all">${escapeHTML(String(v))}</td></tr>`
         ).join('');
         const installBtn = panel.querySelector('#pwa-debug-install');
         if (installBtn) {
