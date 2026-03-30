@@ -1989,7 +1989,13 @@ function showOshiExportDialog() {
 
 function escapeCsvField(str) {
     if (str == null) return '';
-    const s = String(str);
+    let s = String(str);
+
+    // Formula Injection Mitigation (prepends a single quote)
+    if (/^\s*[=+\-@]/.test(s)) {
+        s = "'" + s;
+    }
+
     if (s.includes(',') || s.includes('"') || s.includes('\n')) {
         return '"' + s.replace(/"/g, '""') + '"';
     }
