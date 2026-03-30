@@ -1547,12 +1547,14 @@ function createTagInputUI(initialTags, onChange) {
         input.setAttribute('list', 'tagDatalist');
         input.placeholder = tags.length ? '' : 'タグを追加...';
         input.addEventListener('focus', () => { input.dataset.prev = input.value; input.value = ''; });
-        input.addEventListener('blur', () => { commitInput(input); });
+        input.addEventListener('blur', () => { if (!input.dataset.composing) commitInput(input); });
+        input.addEventListener('compositionstart', () => { input.dataset.composing = '1'; });
+        input.addEventListener('compositionend', () => { delete input.dataset.composing; });
         input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ',') {
+            if ((e.key === 'Enter' || e.key === ',') && !e.isComposing) {
                 e.preventDefault();
                 commitInput(input);
-            } else if (e.key === 'Backspace' && !input.value && tags.length) {
+            } else if (e.key === 'Backspace' && !input.value && tags.length && !e.isComposing) {
                 tags.pop();
                 onChange([...tags]);
                 render();
@@ -2120,6 +2122,10 @@ function showOshiCsvPreview(newItems, dupeCount, errorRowCount, onConfirm) {
                     <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary)">${escapeHTML(o.name)}</span>
                     ${o.memorial_dates.length > 0 ? `<span style="color:var(--text-secondary);font-size:0.76rem;flex-shrink:0;white-space:nowrap">記念日 ${o.memorial_dates.length}件</span>` : ''}
                 </div>`).join('')}
+            </div>
+            <div style="margin-bottom:16px">
+                <p style="margin:0 0 6px;font-size:0.85rem;color:var(--text-secondary)">インポートする推し全員に追加するタグ（任意）</p>
+                <div id="csvImportTagArea"></div>
             </div>` : `<p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:16px">追加できる推しがありません。</p>`}
             <div style="display:flex;justify-content:flex-end;gap:10px">
                 <button type="button" id="csvPreviewCancel" class="btn-cancel">キャンセル</button>
@@ -2130,10 +2136,27 @@ function showOshiCsvPreview(newItems, dupeCount, errorRowCount, onConfirm) {
     document.body.appendChild(dlg);
     dlg.showModal();
 
+    if (newItems.length > 0) {
+        const tagArea = dlg.querySelector('#csvImportTagArea');
+        tagArea.appendChild(createTagInputUI([], () => {}));
+    }
+
     dlg.querySelector('#csvPreviewCancel').onclick = () => { dlg.close(); dlg.remove(); };
     const confirmBtn = dlg.querySelector('#csvPreviewConfirm');
     if (confirmBtn) {
-        confirmBtn.onclick = () => { dlg.close(); dlg.remove(); onConfirm(); };
+        confirmBtn.onclick = () => {
+            const extraTags = [...dlg.querySelectorAll('#csvImportTagArea .tag-badge')]
+                .map(b => b.childNodes[0].textContent.trim())
+                .filter(Boolean);
+            if (extraTags.length > 0) {
+                newItems.forEach(item => {
+                    extraTags.forEach(t => {
+                        if (!item.tags.includes(t)) item.tags.push(t);
+                    });
+                });
+            }
+            dlg.close(); dlg.remove(); onConfirm();
+        };
     }
 }
 

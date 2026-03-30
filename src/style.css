@@ -18,6 +18,7 @@
     /* Light Theme */
     --bg-color: #f0f2f5;
     --card-bg: rgba(255, 255, 255, 0.85);
+    --bg-input: #fff;
     --text-primary: #1a1a1a;
     --text-secondary: #666;
     --accent-color: #3b82f6;
@@ -62,6 +63,7 @@
     :root {
         --bg-color: #0f172a;
         --card-bg: rgba(30, 41, 59, 0.7);
+        --bg-input: #1e293b;
         --text-primary: #f8fafc;
         --text-secondary: #94a3b8;
         --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.2);
@@ -2445,7 +2447,8 @@ body {
     font-size: 12px;
     min-width: 80px;
     flex: 1;
-    color: inherit;
+    color: var(--text-primary);
+    -webkit-text-fill-color: var(--text-primary);
 }
 
 /* ライトボックス内タグセクション */
