@@ -5506,6 +5506,147 @@ textarea:focus-visible,
         padding: 16px 20px calc(80px + env(safe-area-inset-bottom, 0px));
     }
 
+    /* ===== 設定メニューリスト ===== */
+    .settings-menu-list {
+        display: flex;
+        flex-direction: column;
+        padding: 8px 0;
+    }
+
+    .settings-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 15px 20px;
+        background: rgba(255, 255, 255, 0.55);
+        border: none;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        color: var(--text-primary);
+        font-size: 1rem;
+        font-family: inherit;
+        border-radius: 12px;
+        margin: 2px 0;
+        transition: background 0.12s;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .settings-menu-item:active {
+        background: rgba(236, 72, 153, 0.12);
+    }
+
+    .settings-menu-icon {
+        font-size: 1.25rem;
+        flex-shrink: 0;
+        width: 24px;
+        text-align: center;
+    }
+
+    .settings-menu-label-wrap {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    .settings-menu-label {
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .settings-menu-caption {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .settings-menu-chevron {
+        color: var(--text-secondary);
+        font-size: 1.3rem;
+    }
+
+    /* ===== モバイル設定サブパネル ===== */
+    .mobile-sub-panel {
+        position: fixed;
+        inset: 0;
+        z-index: 1900;
+        display: flex;
+        flex-direction: column;
+        transform: translateX(100%);
+        transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+        pointer-events: none;
+    }
+
+    .mobile-sub-panel.is-open {
+        transform: translateX(0);
+        pointer-events: auto;
+    }
+
+    .mobile-sub-panel-inner {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+
+    .mobile-sub-panel-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 12px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        background: inherit;
+        backdrop-filter: inherit;
+        -webkit-backdrop-filter: inherit;
+        z-index: 1;
+    }
+
+    .mobile-sub-panel-title {
+        font-size: 1.0625rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        flex: 1;
+        margin: 0;
+    }
+
+    .mobile-sub-panel-back {
+        background: none;
+        border: none;
+        padding: 4px 8px;
+        cursor: pointer;
+        color: var(--accent-color, #ec4899);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font-size: 1.6rem;
+        line-height: 1;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .mobile-sub-panel-back:active {
+        background: rgba(236, 72, 153, 0.1);
+    }
+
+    .mobile-sub-panel-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px 20px calc(80px + env(safe-area-inset-bottom, 0px));
+        -webkit-overflow-scrolling: touch;
+    }
+
     /* ===== ホームタブ 固定モードドット ===== */
     .mobile-tab-btn[data-tab="home"] { position: relative; }
     .mobile-home-dot {
@@ -5708,6 +5849,15 @@ textarea:focus-visible,
     .mobile-oshi-item { border-bottom-color: rgba(255, 255, 255, 0.06); }
     .mobile-oshi-table td { border-bottom-color: rgba(255, 255, 255, 0.06); }
     .mobile-settings-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
+    .settings-menu-item {
+        background: rgba(255, 255, 255, 0.06);
+    }
+    .settings-menu-item:active { background: rgba(255, 130, 165, 0.15); }
+    .settings-menu-caption { color: rgba(255, 255, 255, 0.45); }
+    .mobile-sub-panel-inner {
+        background: rgba(15, 23, 42, 0.92);
+    }
+    .mobile-sub-panel-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
     .mobile-event-list-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
     .mobile-playback-popover.is-visible {
         background: rgba(30, 41, 59, 0.96);

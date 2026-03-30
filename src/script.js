@@ -2,7 +2,7 @@
  * おしこよ (Oshikoyo) ロジック & アプリケーション
  */
 
-const APP_VERSION = 'v28';
+const APP_VERSION = 'v0.28.0';
 
 // --- Settings State ---
 const DEFAULT_SETTINGS = {
@@ -3586,6 +3586,23 @@ function handleImmersiveMouseMove() {
     setupImmersiveControlsTimer();
 }
 
+async function checkForUpdate() {
+    if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg) {
+            showToast('更新を確認中...');
+            await reg.update();
+            // update() won't return anything, but onupdatefound will be triggered if something found.
+            // If no update is found, show a message after a short delay.
+            setTimeout(() => {
+                showToast('現在、最新の状態です');
+            }, 2000);
+        }
+    } else {
+        showToast('お使いの環境ではアプリの更新機能が利用できません');
+    }
+}
+
 function initSettings() {
     // Open Modal
     document.getElementById('btnSettings').addEventListener('click', () => {
@@ -3651,26 +3668,13 @@ function initSettings() {
         document.getElementById('settingsModal').close();
     });
 
-    // Check Update
-    const btnCheckUpdate = document.getElementById('btnCheckUpdate');
-    if (btnCheckUpdate) {
-        btnCheckUpdate.addEventListener('click', async () => {
-            if ('serviceWorker' in navigator) {
-                const reg = await navigator.serviceWorker.getRegistration();
-                if (reg) {
-                    showToast('更新を確認中...');
-                    await reg.update();
-                    // update() won't return anything, but onupdatefound will be triggered if something found.
-                    // If no update is found, show a message after a short delay.
-                    setTimeout(() => {
-                        showToast('現在、最新の状態です');
-                    }, 2000);
-                }
-            } else {
-                showToast('お使いの環境ではアプリの更新機能が利用できません');
-            }
-        });
-    }
+    // Check Update (desktop + mobile sub-panel, both use class btn-check-update)
+    document.querySelectorAll('.btn-check-update').forEach(btn => {
+        btn.addEventListener('click', checkForUpdate);
+    });
+
+    // バージョンバッジを動的に設定
+    document.querySelectorAll('.version-badge').forEach(el => { el.textContent = APP_VERSION; });
 
     // 全般タブ: 各コントロールの変更を即時保存・適用
     document.querySelectorAll('input[name="startOfWeek"]').forEach(r => {
@@ -6176,151 +6180,292 @@ function renderMobileOshiPanel(preserveScroll = false) {
 function renderMobileSettingsPanel() {
     const inner = document.getElementById('mobileSettingsInner');
     if (!inner) return;
-    // Phase 6 で完全実装。現時点ではデスクトップ設定ボタンへ誘導
     if (inner.dataset.rendered) return;
     inner.dataset.rendered = '1';
 
-    const startVal = appSettings.startOfWeek ?? 0;
-    const memVal = appSettings.memorialDisplayMode ?? 'preferred';
-    const compressVal = appSettings.imageCompressMode ?? 'standard';
+    const startCaption = (appSettings.startOfWeek ?? 0) === 1 ? '月曜日開始' : '日曜日開始';
+    const memCaption = (appSettings.memorialDisplayMode ?? 'preferred') === 'exclusive' ? '専有' : '優先';
+    const etCount = (appSettings.event_types || []).length;
+    const etCaption = etCount > 0 ? `${etCount} 件` : '未設定';
 
     inner.innerHTML = `
         <div class="mobile-settings-header">
             <h2 class="mobile-panel-title">設定</h2>
         </div>
         <div class="mobile-settings-body">
-            <div class="setting-group">
-                <label class="setting-label">週の開始日</label>
-                <div class="radio-group">
-                    <label><input type="radio" name="ms-startOfWeek" value="0" ${startVal === 0 ? 'checked' : ''}> 日曜日</label>
-                    <label><input type="radio" name="ms-startOfWeek" value="1" ${startVal === 1 ? 'checked' : ''}> 月曜日</label>
-                </div>
-            </div>
-            <div class="setting-divider"></div>
-            <div class="setting-group">
-                <label class="setting-label">推し</label>
-                <button type="button" id="btnMsOshiManager" class="btn-secondary">一覧を管理（管理タブ）</button>
-            </div>
-            <div class="setting-divider"></div>
-            <div class="setting-group">
-                <label class="setting-label">記念日の画像表示モード</label>
-                <div class="radio-group">
-                    <label><input type="radio" name="ms-memorialDisplayMode" value="preferred" ${memVal === 'preferred' ? 'checked' : ''}> 優先（80%で記念日画像）</label>
-                    <label><input type="radio" name="ms-memorialDisplayMode" value="exclusive" ${memVal === 'exclusive' ? 'checked' : ''}> 専有（記念日画像のみ）</label>
-                </div>
-            </div>
-            <div class="setting-divider"></div>
-            <div class="setting-group">
-                <label class="setting-label">自動圧縮</label>
-                <div class="radio-group">
-                    <label><input type="radio" name="ms-imageCompressMode" value="off" ${compressVal === 'off' ? 'checked' : ''}> 圧縮なし</label>
-                    <label><input type="radio" name="ms-imageCompressMode" value="standard" ${compressVal === 'standard' ? 'checked' : ''}> 標準（推奨）</label>
-                    <label><input type="radio" name="ms-imageCompressMode" value="aggressive" ${compressVal === 'aggressive' ? 'checked' : ''}> 積極的</label>
-                </div>
-            </div>
-            <div class="setting-divider"></div>
-            <div class="setting-group">
-                <label class="setting-label">イベントタイプ</label>
-                <div id="mobileEventTypeList"></div>
-                <div class="et-add-row" id="mobileEtAddRow">
-                    <button type="button" id="mobileEtIconBtn" class="mdate-icon-btn et-add-icon" title="アイコンを選択" aria-label="アイコンを選択"></button>
-                    <input type="text" id="mobileEtNameInput" class="et-name-input" placeholder="新しいタイプ名" maxlength="20" autocomplete="off">
-                    <button type="button" id="btnMobileAddEventType" class="btn-secondary btn-sm">＋ 追加</button>
-                </div>
-            </div>
-            <div class="setting-divider"></div>
-            <div class="setting-group">
-                <label class="setting-label">データ・バックアップ</label>
-                <button type="button" id="btnMsOpenDataSettings" class="btn-secondary">バックアップ・復元を開く</button>
-            </div>
+            <nav class="settings-menu-list" aria-label="設定メニュー">
+                <button type="button" class="settings-menu-item" data-panel="general">
+                    <span class="settings-menu-icon">⚙️</span>
+                    <span class="settings-menu-label-wrap">
+                        <span class="settings-menu-label">全般</span>
+                        <span class="settings-menu-caption">${startCaption}</span>
+                    </span>
+                    <span class="settings-menu-chevron">›</span>
+                </button>
+                <button type="button" class="settings-menu-item" data-panel="memorial">
+                    <span class="settings-menu-icon">🎂</span>
+                    <span class="settings-menu-label-wrap">
+                        <span class="settings-menu-label">記念日表示</span>
+                        <span class="settings-menu-caption">${memCaption}</span>
+                    </span>
+                    <span class="settings-menu-chevron">›</span>
+                </button>
+                <button type="button" class="settings-menu-item" data-panel="media">
+                    <span class="settings-menu-icon">🖼️</span>
+                    <span class="settings-menu-label-wrap">
+                        <span class="settings-menu-label">画像とストレージ</span>
+                        <span class="settings-menu-caption" id="msMenuCaption-media">–</span>
+                    </span>
+                    <span class="settings-menu-chevron">›</span>
+                </button>
+                <button type="button" class="settings-menu-item" data-panel="events">
+                    <span class="settings-menu-icon">🗓️</span>
+                    <span class="settings-menu-label-wrap">
+                        <span class="settings-menu-label">イベント管理</span>
+                        <span class="settings-menu-caption">${etCaption}</span>
+                    </span>
+                    <span class="settings-menu-chevron">›</span>
+                </button>
+                <button type="button" class="settings-menu-item" data-panel="data">
+                    <span class="settings-menu-icon">🗄️</span>
+                    <span class="settings-menu-label-wrap">
+                        <span class="settings-menu-label">データ</span>
+                        <span class="settings-menu-caption">バックアップ・復元</span>
+                    </span>
+                    <span class="settings-menu-chevron">›</span>
+                </button>
+                <button type="button" class="settings-menu-item" data-panel="appinfo">
+                    <span class="settings-menu-icon">ℹ️</span>
+                    <span class="settings-menu-label-wrap">
+                        <span class="settings-menu-label">アプリ情報</span>
+                        <span class="settings-menu-caption">${APP_VERSION}</span>
+                    </span>
+                    <span class="settings-menu-chevron">›</span>
+                </button>
+            </nav>
         </div>
     `;
 
-    inner.querySelectorAll('input[name="ms-startOfWeek"]').forEach(r => {
+    initMobileSettingsMenu();
+    updateMobileMenuStorageCaption();
+}
+
+async function updateMobileMenuStorageCaption() {
+    const captionEl = document.getElementById('msMenuCaption-media');
+    if (!captionEl) return;
+    if (!navigator.storage || !navigator.storage.estimate) {
+        captionEl.textContent = '画像・圧縮設定';
+        return;
+    }
+    try {
+        const { usage } = await navigator.storage.estimate();
+        captionEl.textContent = `${(usage / 1024 / 1024).toFixed(1)} MB 使用中`;
+    } catch {
+        captionEl.textContent = '画像・圧縮設定';
+    }
+}
+
+function openMobileSubPanel(panelId) {
+    const panel = document.getElementById(`mobileSubPanel-${panelId}`);
+    if (!panel) return;
+    if (!panel.dataset.initialized) {
+        initMobileSubPanelContent(panelId);
+        panel.dataset.initialized = '1';
+    }
+    panel.classList.add('is-open');
+}
+
+function closeMobileSubPanel(panelId) {
+    const panel = document.getElementById(`mobileSubPanel-${panelId}`);
+    if (!panel) return;
+    panel.classList.remove('is-open');
+}
+
+function initMobileSettingsMenu() {
+    document.querySelectorAll('.settings-menu-item[data-panel]').forEach(btn => {
+        btn.addEventListener('click', () => openMobileSubPanel(btn.dataset.panel));
+    });
+    document.querySelectorAll('.mobile-sub-panel-back').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const panel = btn.closest('.mobile-sub-panel');
+            if (!panel) return;
+            closeMobileSubPanel(panel.id.replace('mobileSubPanel-', ''));
+        });
+    });
+}
+
+function initMobileSubPanelContent(panelId) {
+    if (panelId === 'general') initMobileGeneralSubPanel();
+    else if (panelId === 'memorial') initMobileMemorialSubPanel();
+    else if (panelId === 'media') initMobileMediaSubPanel();
+    else if (panelId === 'events') initMobileEventsSubPanel();
+    else if (panelId === 'data') initMobileDataSubPanel();
+    else if (panelId === 'appinfo') initMobileAppInfoSubPanel();
+}
+
+function initMobileGeneralSubPanel() {
+    const panel = document.getElementById('mobileSubPanel-general');
+    if (!panel) return;
+
+    const startVal = appSettings.startOfWeek ?? 0;
+    panel.querySelectorAll('input[name="ms-startOfWeek"]').forEach(r => {
+        r.checked = parseInt(r.value) === startVal;
         r.addEventListener('change', () => {
             appSettings.startOfWeek = parseInt(r.value);
             saveSettings();
             updateView();
         });
     });
-    inner.querySelectorAll('input[name="ms-memorialDisplayMode"]').forEach(r => {
+
+    panel.querySelector('#btnMsResetLayout')?.addEventListener('click', resetLayoutToDefault);
+}
+
+function initMobileMemorialSubPanel() {
+    const panel = document.getElementById('mobileSubPanel-memorial');
+    if (!panel) return;
+
+    const memVal = appSettings.memorialDisplayMode ?? 'preferred';
+    panel.querySelectorAll('input[name="ms-memorialDisplayMode"]').forEach(r => {
+        r.checked = r.value === memVal;
         r.addEventListener('change', () => {
             appSettings.memorialDisplayMode = r.value;
             saveSettings();
             updateView();
         });
     });
-    inner.querySelectorAll('input[name="ms-imageCompressMode"]').forEach(r => {
+}
+
+function initMobileMediaSubPanel() {
+    const panel = document.getElementById('mobileSubPanel-media');
+    if (!panel) return;
+
+    const compressVal = appSettings.imageCompressMode ?? 'standard';
+    panel.querySelectorAll('input[name="ms-imageCompressMode"]').forEach(r => {
+        r.checked = r.value === compressVal;
         r.addEventListener('change', () => {
             appSettings.imageCompressMode = r.value;
             saveSettings();
         });
     });
-    inner.querySelector('#btnMsOshiManager')?.addEventListener('click', () => {
-        switchMobileTab('management');
+
+    panel.querySelector('#btnMsCompressExisting')?.addEventListener('click', () => {
+        document.getElementById('btnCompressExisting')?.click();
     });
-    inner.querySelector('#btnMsOpenDataSettings')?.addEventListener('click', () => {
-        document.getElementById('btnSettings')?.click();
-        setTimeout(() => {
-            document.querySelector('.settings-tab-btn[data-tab="data"]')?.click();
-        }, 100);
+    panel.querySelector('#btnMsLocalFolder')?.addEventListener('click', () => {
+        document.getElementById('inputLocalFolder')?.click();
     });
+    panel.querySelector('#btnMsLocalFiles')?.addEventListener('click', () => {
+        document.getElementById('inputLocalFiles')?.click();
+    });
+    panel.querySelector('#btnMsClipboardPaste')?.addEventListener('click', pasteFromClipboard);
+    panel.querySelector('#btnMsClearLocal')?.addEventListener('click', () => {
+        document.getElementById('btnClearLocal')?.click();
+    });
+    panel.querySelector('#btnMsImportImageTag')?.addEventListener('click', () => {
+        document.getElementById('inputImageTag')?.click();
+    });
+    panel.querySelector('#btnMsExportImageTag')?.addEventListener('click', handleExportImageTagPackage);
 
-    // モバイルイベントタイプ追加UI初期化
-    const mobileEtIconBtn = inner.querySelector('#mobileEtIconBtn');
-    if (mobileEtIconBtn) {
-        mobileEtIconBtn.innerHTML = iconSVGHtml('star', 'mdate-icon-svg');
-        let mobileEtIconId = 'star';
+    updateMobileStorageIndicator();
+    updateMobileLocalMediaUI();
+}
 
-        const mPicker = document.createElement('div');
-        mPicker.className = 'icon-picker-popup';
-        mPicker.innerHTML = Object.keys(EVENT_ICON_PATHS).map(id =>
-            `<button type="button" class="icon-chip${id === 'star' ? ' is-selected' : ''}" data-icon-id="${id}" aria-label="${id}">${iconSVGHtml(id, 'icon-chip-svg')}</button>`
-        ).join('');
-        inner.querySelector('#mobileEtAddRow').appendChild(mPicker);
-
-        mobileEtIconBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            document.querySelectorAll('.icon-picker-popup.is-open').forEach(p => { if (p !== mPicker) p.classList.remove('is-open'); });
-            const rect = mobileEtIconBtn.getBoundingClientRect();
-            mPicker.style.top  = `${rect.bottom + 4}px`;
-            mPicker.style.left = `${rect.left}px`;
-            mPicker.classList.toggle('is-open');
-        });
-        mPicker.querySelectorAll('.icon-chip').forEach(chip => {
-            chip.addEventListener('click', () => {
-                mobileEtIconId = chip.dataset.iconId;
-                mobileEtIconBtn.innerHTML = iconSVGHtml(mobileEtIconId, 'mdate-icon-svg');
-                mPicker.querySelectorAll('.icon-chip').forEach(c =>
-                    c.classList.toggle('is-selected', c.dataset.iconId === mobileEtIconId)
-                );
-                mPicker.classList.remove('is-open');
-            });
-        });
-
-        inner.querySelector('#btnMobileAddEventType')?.addEventListener('click', () => {
-            const nameInput = inner.querySelector('#mobileEtNameInput');
-            const label = nameInput.value.trim();
-            if (!label) return;
-            if ((appSettings.event_types || []).some(t => t.label === label)) {
-                showToast('同名のタイプがすでに存在します');
-                return;
-            }
-            const newType = { id: 'ev_' + Date.now().toString(36), label, icon: mobileEtIconId };
-            appSettings.event_types = [...(appSettings.event_types || []), newType];
-            saveSettings();
-            updateEventTypeDatalist();
-            renderEventTypeManager();
-            nameInput.value = '';
-            mobileEtIconId = 'star';
-            mobileEtIconBtn.innerHTML = iconSVGHtml('star', 'mdate-icon-svg');
-            mPicker.querySelectorAll('.icon-chip').forEach(c =>
-                c.classList.toggle('is-selected', c.dataset.iconId === 'star')
-            );
-        });
+async function updateMobileStorageIndicator() {
+    const wrap  = document.getElementById('msStorageIndicatorWrap');
+    const bar   = document.getElementById('msStorageIndicatorBar');
+    const label = document.getElementById('msStorageIndicatorLabel');
+    if (!wrap) return;
+    if (!navigator.storage || !navigator.storage.estimate) { wrap.hidden = true; return; }
+    try {
+        const { quota, usage } = await navigator.storage.estimate();
+        if (!quota) { wrap.hidden = true; return; }
+        const pct = Math.min(100, Math.round((usage / quota) * 100));
+        if (label) label.textContent = `使用中: ${(usage / 1024 / 1024).toFixed(1)} MB / 上限: ${(quota / 1024 / 1024).toFixed(0)} MB`;
+        if (bar) bar.style.width = `${pct}%`;
+        wrap.hidden = false;
+    } catch {
+        wrap.hidden = true;
     }
+}
 
-    renderMobileEventTypeSection();
+async function updateMobileLocalMediaUI() {
+    const countEl = document.getElementById('msLocalImageCount');
+    if (countEl) {
+        const keys = await localImageDB.getAllKeys();
+        countEl.textContent = keys.length;
+    }
+}
+
+function initMobileEventsSubPanel() {
+    const panel = document.getElementById('mobileSubPanel-events');
+    if (!panel) return;
+
+    const mobileEtIconBtn = panel.querySelector('#mobileEtIconBtn');
+    if (!mobileEtIconBtn) return;
+
+    mobileEtIconBtn.innerHTML = iconSVGHtml('star', 'mdate-icon-svg');
+    let mobileEtIconId = 'star';
+
+    const mPicker = document.createElement('div');
+    mPicker.className = 'icon-picker-popup';
+    mPicker.innerHTML = Object.keys(EVENT_ICON_PATHS).map(id =>
+        `<button type="button" class="icon-chip${id === 'star' ? ' is-selected' : ''}" data-icon-id="${id}" aria-label="${id}">${iconSVGHtml(id, 'icon-chip-svg')}</button>`
+    ).join('');
+    panel.querySelector('#mobileEtAddRow').appendChild(mPicker);
+
+    mobileEtIconBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.icon-picker-popup.is-open').forEach(p => { if (p !== mPicker) p.classList.remove('is-open'); });
+        const rect = mobileEtIconBtn.getBoundingClientRect();
+        mPicker.style.top  = `${rect.bottom + 4}px`;
+        mPicker.style.left = `${rect.left}px`;
+        mPicker.classList.toggle('is-open');
+    });
+    mPicker.querySelectorAll('.icon-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            mobileEtIconId = chip.dataset.iconId;
+            mobileEtIconBtn.innerHTML = iconSVGHtml(mobileEtIconId, 'mdate-icon-svg');
+            mPicker.querySelectorAll('.icon-chip').forEach(c =>
+                c.classList.toggle('is-selected', c.dataset.iconId === mobileEtIconId)
+            );
+            mPicker.classList.remove('is-open');
+        });
+    });
+
+    panel.querySelector('#btnMobileAddEventType')?.addEventListener('click', () => {
+        const nameInput = panel.querySelector('#mobileEtNameInput');
+        const label = nameInput.value.trim();
+        if (!label) return;
+        if ((appSettings.event_types || []).some(t => t.label === label)) {
+            showToast('同名のタイプがすでに存在します');
+            return;
+        }
+        const newType = { id: 'ev_' + Date.now().toString(36), label, icon: mobileEtIconId };
+        appSettings.event_types = [...(appSettings.event_types || []), newType];
+        saveSettings();
+        updateEventTypeDatalist();
+        renderEventTypeManager();
+        nameInput.value = '';
+        mobileEtIconId = 'star';
+        mobileEtIconBtn.innerHTML = iconSVGHtml('star', 'mdate-icon-svg');
+        mPicker.querySelectorAll('.icon-chip').forEach(c =>
+            c.classList.toggle('is-selected', c.dataset.iconId === 'star')
+        );
+    });
+}
+
+function initMobileDataSubPanel() {
+    const panel = document.getElementById('mobileSubPanel-data');
+    if (!panel) return;
+    panel.querySelector('#btnMsExportFullBackup')?.addEventListener('click', handleExportFullBackup);
+    panel.querySelector('#btnMsImportFullBackup')?.addEventListener('click', () => {
+        document.getElementById('inputFullBackup')?.click();
+    });
+}
+
+function initMobileAppInfoSubPanel() {
+    // バージョンバッジはinitSettings()のquerySelectorAllで既に設定済み
+    // 更新ボタンはinitSettings()のquerySelectorAllで既に登録済み
 }
 
 /** モバイル設定タブのイベントタイプリストを再描画 */

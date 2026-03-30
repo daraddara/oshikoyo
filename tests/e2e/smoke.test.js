@@ -45,9 +45,29 @@ test.describe('Smoke Test & Layout Verification', () => {
             await page.locator('.mobile-tab-btn[data-tab="settings"]').tap();
             await expect(page.locator('#mobileSettingsPanel')).toBeVisible({ timeout: 3000 });
             await page.waitForTimeout(500);
-            await expect(page).toHaveScreenshot('settings_modal_general.png');
-            await expect(page).toHaveScreenshot('settings_modal_media.png');
-            await expect(page).toHaveScreenshot('settings_modal_data.png');
+            await expect(page).toHaveScreenshot('mobile_settings_top.png');
+
+            // 全般パネル
+            await page.locator('.settings-menu-item[data-panel="general"]').tap();
+            await page.waitForTimeout(500);
+            await expect(page).toHaveScreenshot('mobile_settings_general.png');
+            await page.locator('#mobileSubPanel-general .mobile-sub-panel-back').tap();
+            await page.waitForTimeout(400);
+
+            // 画像とストレージパネル
+            await page.locator('.settings-menu-item[data-panel="media"]').tap();
+            await page.waitForTimeout(500);
+            await expect(page).toHaveScreenshot('mobile_settings_media.png');
+            await page.locator('#mobileSubPanel-media .mobile-sub-panel-back').tap();
+            await page.waitForTimeout(400);
+
+            // データパネル
+            await page.locator('.settings-menu-item[data-panel="data"]').tap();
+            await page.waitForTimeout(500);
+            await expect(page).toHaveScreenshot('mobile_settings_data.png');
+            await page.locator('#mobileSubPanel-data .mobile-sub-panel-back').tap();
+            await page.waitForTimeout(400);
+
             // ホームタブに戻る
             await page.locator('.mobile-tab-btn[data-tab="home"]').tap();
         } else {
