@@ -3358,8 +3358,14 @@ details[open]>summary::before {
 .oshi-manager-toolbar {
     display: flex;
     gap: 8px;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.oshi-manager-toolbar .btn-secondary {
+    flex: 1;
+    justify-content: center;
+    white-space: nowrap;
+    text-align: center;
 }
 
 /* 検索・ソートツールバー（デスクトップ管理モーダル） */
@@ -4751,12 +4757,38 @@ body.is-immersive.show-overlay .calendar-month:hover {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 4px 4px;
-    border-radius: 4px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(0,0,0,.06);
 }
 
-.event-type-row:hover {
-    background: rgba(0, 0, 0, 0.03);
+.et-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.et-rename {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 4px;
+    opacity: 0.5;
+    font-size: 0.85rem;
+    line-height: 1;
+}
+
+.et-rename:hover { opacity: 1; }
+
+.et-rename-input {
+    font-size: 0.9rem;
+    border: 1px solid var(--accent-color);
+    border-radius: 4px;
+    padding: 2px 6px;
+    outline: none;
+    background: var(--bg-color);
+    color: var(--text-primary);
+    width: 130px;
 }
 
 .et-icon {
@@ -4807,6 +4839,74 @@ body.is-immersive.show-overlay .calendar-month:hover {
     text-align: center;
     padding: 8px;
     margin: 0;
+}
+
+/* イベントタイプ追加行（設定タブ） */
+.et-add-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.et-add-icon {
+    flex-shrink: 0;
+}
+
+.et-name-input {
+    flex: 1;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    padding: 0 10px;
+    font-size: 0.875rem;
+    background: var(--bg-color);
+    color: var(--text-primary);
+    outline: none;
+}
+
+.et-name-input:focus { border-color: var(--accent-color); }
+
+/* 記念日タイプ select */
+.mdate-type-select {
+    flex: 0 0 130px;
+    min-width: 0;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    padding: 0 6px;
+    font-size: 0.875rem;
+    background: var(--bg-color);
+    color: var(--text-primary);
+    cursor: pointer;
+    outline: none;
+}
+
+.mdate-type-new {
+    flex: 1;
+    min-width: 0;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    padding: 0 10px;
+    font-size: 0.875rem;
+    background: var(--bg-color);
+    color: var(--text-primary);
+    outline: none;
+}
+
+.mdate-type-new:focus,
+.mdate-type-select:focus { border-color: var(--accent-color); }
+
+@media (prefers-color-scheme: dark) {
+    .et-name-input,
+    .mdate-type-select,
+    .mdate-type-new,
+    .et-rename-input {
+        background: rgba(255, 255, 255, 0.07);
+        border-color: rgba(255, 255, 255, 0.12);
+        color-scheme: dark;
+    }
 }
 
 /* --- Keyboard Focus Styles --- */

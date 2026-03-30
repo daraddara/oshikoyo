@@ -1164,7 +1164,6 @@ function openOshiManager() {
     if (searchEl) searchEl.value = '';
     if (sortEl)   sortEl.value   = 'index';
     renderOshiTable();
-    renderEventTypeManager();
     document.getElementById('oshiManagementModal').showModal();
 }
 
@@ -1462,7 +1461,7 @@ function renderOshiTable() {
 
 /** イベントタイプ管理リストを描画 */
 function renderEventTypeManager() {
-    const list = document.getElementById('eventTypeManagerList');
+    const list = document.getElementById('settingsEventTypeList');
     if (!list) return;
     const types = appSettings.event_types || [];
     if (types.length === 0) {
@@ -1472,14 +1471,20 @@ function renderEventTypeManager() {
     list.innerHTML = types.map(t => {
         const isBuiltin = t.id === 'bday' || t.id === 'debut';
         const svg = iconSVGHtml(t.icon || 'star', 'et-icon-svg');
-        const action = isBuiltin
+        const actions = isBuiltin
             ? '<span class="et-builtin">組込み</span>'
-            : `<button type="button" class="et-delete" data-type-id="${escapeHTML(t.id)}" aria-label="イベントタイプを削除">削除</button>`;
-        return `<div class="event-type-row">${svg}<span class="et-label">${escapeHTML(t.label)}</span>${action}</div>`;
+            : `<button type="button" class="et-rename" data-type-id="${escapeHTML(t.id)}" aria-label="名前を変更" title="名前を変更">✏️</button><button type="button" class="et-delete" data-type-id="${escapeHTML(t.id)}" aria-label="削除">削除</button>`;
+        return `<div class="event-type-row" data-type-id="${escapeHTML(t.id)}">${svg}<span class="et-label">${escapeHTML(t.label)}</span><span class="et-actions">${actions}</span></div>`;
     }).join('');
-    list.querySelectorAll('.et-delete').forEach(btn => {
-        btn.addEventListener('click', () => deleteEventType(btn.dataset.typeId));
-    });
+
+    list.querySelectorAll('.et-delete').forEach(btn =>
+        btn.addEventListener('click', () => deleteEventType(btn.dataset.typeId))
+    );
+    list.querySelectorAll('.et-rename').forEach(btn =>
+        btn.addEventListener('click', () => startRenameEventType(btn.dataset.typeId))
+    );
+
+    renderMobileEventTypeSection();
 }
 
 /** カスタムイベントタイプを削除 */
@@ -1487,6 +1492,41 @@ function deleteEventType(typeId) {
     appSettings.event_types = (appSettings.event_types || []).filter(t => t.id !== typeId);
     saveSettings();
     renderEventTypeManager();
+    renderMobileEventTypeSection();
+}
+
+/** カスタムイベントタイプのラベルをインライン編集
+ * @param {string} typeId
+ * @param {Element} [container] - 呼び出し元のリストコンテナ。省略時は #settingsEventTypeList
+ */
+function startRenameEventType(typeId, container) {
+    const scope = container || document.getElementById('settingsEventTypeList');
+    const row = scope?.querySelector(`.event-type-row[data-type-id="${CSS.escape(typeId)}"]`);
+    if (!row) return;
+    const labelEl = row.querySelector('.et-label');
+    const currentLabel = labelEl.textContent;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'et-rename-input';
+    input.value = currentLabel;
+    input.maxLength = 20;
+    labelEl.replaceWith(input);
+    input.focus();
+    input.select();
+
+    const commit = () => {
+        const newLabel = input.value.trim();
+        if (newLabel && newLabel !== currentLabel) {
+            const t = (appSettings.event_types || []).find(x => x.id === typeId);
+            if (t) { t.label = newLabel; saveSettings(); updateEventTypeDatalist(); }
+        }
+        renderEventTypeManager();
+    };
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+        if (e.key === 'Escape') { input.value = currentLabel; input.blur(); }
+    });
 }
 
 // --- Oshi Edit Form Helpers ---
@@ -1664,34 +1704,36 @@ function addMemorialDateRow(md = null) {
         });
     });
 
-    // タイプ入力 (datalist コンボボックス)
-    const typeInput = document.createElement('input');
-    typeInput.type = 'text';
-    typeInput.className = 'mdate-type';
-    typeInput.setAttribute('list', 'eventTypeDatalist');
-    typeInput.placeholder = 'タイプ (例: 誕生日)';
-    if (md) typeInput.value = getLabelForTypeId(md.type_id);
+    // タイプ選択 select
+    const typeSelect = document.createElement('select');
+    typeSelect.className = 'mdate-type mdate-type-select';
 
-    // フォーカス時に値をクリアして全オプションを表示（datalist は現在値でフィルタするため）
-    typeInput.addEventListener('focus', () => {
-        typeInput.dataset.prevValue = typeInput.value;
-        typeInput.value = '';
-    });
+    const buildTypeOptions = (selectedId) => {
+        typeSelect.innerHTML = (appSettings.event_types || []).map(t =>
+            `<option value="${escapeHTML(t.id)}"${t.id === selectedId ? ' selected' : ''}>${escapeHTML(t.label)}</option>`
+        ).join('') + '<option value="__new__">＋ 新規タイプ...</option>';
+    };
+    const initTypeId = md ? md.type_id : ((appSettings.event_types || [])[0]?.id || 'bday');
+    buildTypeOptions(initTypeId);
 
-    // タイプが変わったらアイコンを自動更新
-    typeInput.addEventListener('change', () => {
-        delete typeInput.dataset.prevValue;
-        const typeId = getTypeIdForLabel(typeInput.value.trim());
-        if (typeId) updateIconUI(getIconForTypeId(typeId));
-    });
+    // 新規タイプ名入力（__new__ 選択時のみ表示）
+    const newTypeInput = document.createElement('input');
+    newTypeInput.type = 'text';
+    newTypeInput.className = 'mdate-type-new';
+    newTypeInput.placeholder = '新しいタイプ名';
+    newTypeInput.maxLength = 20;
+    newTypeInput.style.display = 'none';
 
-    // フォーカスアウト時、何も選ばなかった場合は元の値に戻す
-    typeInput.addEventListener('blur', () => {
-        if ('prevValue' in typeInput.dataset && !typeInput.value.trim()) {
-            typeInput.value = typeInput.dataset.prevValue;
-            delete typeInput.dataset.prevValue;
+    typeSelect.addEventListener('change', () => {
+        const isNew = typeSelect.value === '__new__';
+        newTypeInput.style.display = isNew ? '' : 'none';
+        if (!isNew) {
+            updateIconUI(getIconForTypeId(typeSelect.value));
         }
     });
+
+    // 初期アイコン同期
+    if (initTypeId && initTypeId !== '__new__') updateIconUI(getIconForTypeId(initTypeId));
 
     // 日付入力
     const dateInput = document.createElement('input');
@@ -1727,7 +1769,7 @@ function addMemorialDateRow(md = null) {
     deleteBtn.textContent = '×';
     deleteBtn.addEventListener('click', () => row.remove());
 
-    row.append(iconBtn, picker, typeInput, dateInput, annualLabel, deleteBtn);
+    row.append(iconBtn, picker, typeSelect, newTypeInput, dateInput, annualLabel, deleteBtn);
     list.appendChild(row);
 }
 
@@ -1832,21 +1874,25 @@ function saveOshiFromForm() {
     if (!appSettings.event_types) appSettings.event_types = [...DEFAULT_SETTINGS.event_types];
     const memorial_dates = [];
     document.querySelectorAll('#memorialDatesList .memorial-date-row').forEach(row => {
-        const typeLabel = row.querySelector('.mdate-type').value.trim();
+        const typeSelectEl = row.querySelector('.mdate-type-select');
+        const newTypeInputEl = row.querySelector('.mdate-type-new');
+        if (!typeSelectEl) return;
+        let typeId = typeSelectEl.value;
         const date = row.querySelector('.mdate-date').value.trim();
         const is_annual = row.querySelector('.mdate-annual').checked;
-        if (!typeLabel || !date) return; // 空行はスキップ
+        if (!date) return; // 空行はスキップ
 
-        const iconId = row.dataset.iconId || 'star';
-        let typeId = getTypeIdForLabel(typeLabel);
-        if (!typeId) {
-            // 新規タイプ作成
-            typeId = 'ev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-            appSettings.event_types.push({ id: typeId, label: typeLabel, icon: iconId });
+        if (typeId === '__new__') {
+            const newLabel = newTypeInputEl ? newTypeInputEl.value.trim() : '';
+            if (!newLabel) return;
+            typeId = getTypeIdForLabel(newLabel);
+            if (!typeId) {
+                typeId = 'ev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+                appSettings.event_types.push({ id: typeId, label: newLabel, icon: row.dataset.iconId || 'star' });
+            }
         } else {
-            // 既存タイプのアイコンが変更されていれば更新
-            const existing = appSettings.event_types.find(t => t.id === typeId);
-            if (existing && existing.icon !== iconId) existing.icon = iconId;
+            const t = (appSettings.event_types || []).find(x => x.id === typeId);
+            if (t) t.icon = row.dataset.iconId || t.icon;
         }
         memorial_dates.push({ type_id: typeId, date, is_annual });
     });
@@ -3575,6 +3621,7 @@ function initSettings() {
         // Render Oshi List
         renderOshiList();
 
+        renderEventTypeManager();
         document.getElementById('settingsModal').showModal();
     });
 
@@ -3647,6 +3694,63 @@ function initSettings() {
     // --- Oshi Management Toolbar ---
     document.getElementById('btnOshiAddTop').addEventListener('click', () => openOshiEditForm(-1));
     document.getElementById('btnOshiCsvTemplate').addEventListener('click', downloadOshiCsvTemplate);
+
+    // --- Settings Event Type Manager ---
+    renderEventTypeManager();
+    (function initSettingsEventTypeAdder() {
+        const iconBtn = document.getElementById('settingsEtIconBtn');
+        if (!iconBtn) return;
+        iconBtn.innerHTML = iconSVGHtml('star', 'mdate-icon-svg');
+        let etCurrentIconId = 'star';
+
+        const picker = document.createElement('div');
+        picker.className = 'icon-picker-popup';
+        picker.innerHTML = Object.keys(EVENT_ICON_PATHS).map(id =>
+            `<button type="button" class="icon-chip${id === 'star' ? ' is-selected' : ''}" data-icon-id="${id}" aria-label="${id}">${iconSVGHtml(id, 'icon-chip-svg')}</button>`
+        ).join('');
+        document.getElementById('etAddRow').appendChild(picker);
+
+        iconBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.querySelectorAll('.icon-picker-popup.is-open').forEach(p => { if (p !== picker) p.classList.remove('is-open'); });
+            const rect = iconBtn.getBoundingClientRect();
+            picker.style.top  = `${rect.bottom + 4}px`;
+            picker.style.left = `${rect.left}px`;
+            picker.classList.toggle('is-open');
+        });
+        picker.querySelectorAll('.icon-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                etCurrentIconId = chip.dataset.iconId;
+                iconBtn.innerHTML = iconSVGHtml(etCurrentIconId, 'mdate-icon-svg');
+                picker.querySelectorAll('.icon-chip').forEach(c =>
+                    c.classList.toggle('is-selected', c.dataset.iconId === etCurrentIconId)
+                );
+                picker.classList.remove('is-open');
+            });
+        });
+
+        document.getElementById('btnAddEventType').addEventListener('click', () => {
+            const nameInput = document.getElementById('settingsEtNameInput');
+            const label = nameInput.value.trim();
+            if (!label) return;
+            if ((appSettings.event_types || []).some(t => t.label === label)) {
+                showToast('同名のタイプがすでに存在します');
+                return;
+            }
+            const newType = { id: 'ev_' + Date.now().toString(36), label, icon: etCurrentIconId };
+            appSettings.event_types = [...(appSettings.event_types || []), newType];
+            saveSettings();
+            updateEventTypeDatalist();
+            renderEventTypeManager();
+            nameInput.value = '';
+            etCurrentIconId = 'star';
+            iconBtn.innerHTML = iconSVGHtml('star', 'mdate-icon-svg');
+            picker.querySelectorAll('.icon-chip').forEach(c =>
+                c.classList.toggle('is-selected', c.dataset.iconId === 'star')
+            );
+        });
+    })();
+
     document.getElementById('oshiTableSearch').addEventListener('input', (e) => {
         oshiTable.search = e.target.value;
         renderOshiTable();
@@ -5476,6 +5580,7 @@ function switchMobileTab(tabName) {
 
     if (tabName === 'settings') {
         renderMobileSettingsPanel();
+        renderMobileEventTypeSection();
     }
 
     // 非ホームタブでは常にバー表示（タイマーなし）、ホームでは4秒後に消える
@@ -6115,6 +6220,16 @@ function renderMobileSettingsPanel() {
             </div>
             <div class="setting-divider"></div>
             <div class="setting-group">
+                <label class="setting-label">イベントタイプ</label>
+                <div id="mobileEventTypeList"></div>
+                <div class="et-add-row" id="mobileEtAddRow">
+                    <button type="button" id="mobileEtIconBtn" class="mdate-icon-btn et-add-icon" title="アイコンを選択" aria-label="アイコンを選択"></button>
+                    <input type="text" id="mobileEtNameInput" class="et-name-input" placeholder="新しいタイプ名" maxlength="20" autocomplete="off">
+                    <button type="button" id="btnMobileAddEventType" class="btn-secondary btn-sm">＋ 追加</button>
+                </div>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-group">
                 <label class="setting-label">データ・バックアップ</label>
                 <button type="button" id="btnMsOpenDataSettings" class="btn-secondary">バックアップ・復元を開く</button>
             </div>
@@ -6146,11 +6261,92 @@ function renderMobileSettingsPanel() {
     });
     inner.querySelector('#btnMsOpenDataSettings')?.addEventListener('click', () => {
         document.getElementById('btnSettings')?.click();
-        // データタブへ切替
         setTimeout(() => {
             document.querySelector('.settings-tab-btn[data-tab="data"]')?.click();
         }, 100);
     });
+
+    // モバイルイベントタイプ追加UI初期化
+    const mobileEtIconBtn = inner.querySelector('#mobileEtIconBtn');
+    if (mobileEtIconBtn) {
+        mobileEtIconBtn.innerHTML = iconSVGHtml('star', 'mdate-icon-svg');
+        let mobileEtIconId = 'star';
+
+        const mPicker = document.createElement('div');
+        mPicker.className = 'icon-picker-popup';
+        mPicker.innerHTML = Object.keys(EVENT_ICON_PATHS).map(id =>
+            `<button type="button" class="icon-chip${id === 'star' ? ' is-selected' : ''}" data-icon-id="${id}" aria-label="${id}">${iconSVGHtml(id, 'icon-chip-svg')}</button>`
+        ).join('');
+        inner.querySelector('#mobileEtAddRow').appendChild(mPicker);
+
+        mobileEtIconBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.querySelectorAll('.icon-picker-popup.is-open').forEach(p => { if (p !== mPicker) p.classList.remove('is-open'); });
+            const rect = mobileEtIconBtn.getBoundingClientRect();
+            mPicker.style.top  = `${rect.bottom + 4}px`;
+            mPicker.style.left = `${rect.left}px`;
+            mPicker.classList.toggle('is-open');
+        });
+        mPicker.querySelectorAll('.icon-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                mobileEtIconId = chip.dataset.iconId;
+                mobileEtIconBtn.innerHTML = iconSVGHtml(mobileEtIconId, 'mdate-icon-svg');
+                mPicker.querySelectorAll('.icon-chip').forEach(c =>
+                    c.classList.toggle('is-selected', c.dataset.iconId === mobileEtIconId)
+                );
+                mPicker.classList.remove('is-open');
+            });
+        });
+
+        inner.querySelector('#btnMobileAddEventType')?.addEventListener('click', () => {
+            const nameInput = inner.querySelector('#mobileEtNameInput');
+            const label = nameInput.value.trim();
+            if (!label) return;
+            if ((appSettings.event_types || []).some(t => t.label === label)) {
+                showToast('同名のタイプがすでに存在します');
+                return;
+            }
+            const newType = { id: 'ev_' + Date.now().toString(36), label, icon: mobileEtIconId };
+            appSettings.event_types = [...(appSettings.event_types || []), newType];
+            saveSettings();
+            updateEventTypeDatalist();
+            renderEventTypeManager();
+            nameInput.value = '';
+            mobileEtIconId = 'star';
+            mobileEtIconBtn.innerHTML = iconSVGHtml('star', 'mdate-icon-svg');
+            mPicker.querySelectorAll('.icon-chip').forEach(c =>
+                c.classList.toggle('is-selected', c.dataset.iconId === 'star')
+            );
+        });
+    }
+
+    renderMobileEventTypeSection();
+}
+
+/** モバイル設定タブのイベントタイプリストを再描画 */
+function renderMobileEventTypeSection() {
+    const list = document.getElementById('mobileEventTypeList');
+    if (!list) return;
+    const types = appSettings.event_types || [];
+    if (types.length === 0) {
+        list.innerHTML = '<p class="et-empty">タイプが登録されていません</p>';
+        return;
+    }
+    list.innerHTML = types.map(t => {
+        const isBuiltin = t.id === 'bday' || t.id === 'debut';
+        const svg = iconSVGHtml(t.icon || 'star', 'et-icon-svg');
+        const actions = isBuiltin
+            ? '<span class="et-builtin">組込み</span>'
+            : `<button type="button" class="et-rename" data-type-id="${escapeHTML(t.id)}" aria-label="名前を変更" title="名前を変更">✏️</button><button type="button" class="et-delete" data-type-id="${escapeHTML(t.id)}" aria-label="削除">削除</button>`;
+        return `<div class="event-type-row" data-type-id="${escapeHTML(t.id)}">${svg}<span class="et-label">${escapeHTML(t.label)}</span><span class="et-actions">${actions}</span></div>`;
+    }).join('');
+
+    list.querySelectorAll('.et-delete').forEach(btn =>
+        btn.addEventListener('click', () => deleteEventType(btn.dataset.typeId))
+    );
+    list.querySelectorAll('.et-rename').forEach(btn =>
+        btn.addEventListener('click', () => startRenameEventType(btn.dataset.typeId, list))
+    );
 }
 
 // --- ホームタブ: グリッドライブラリ ---
