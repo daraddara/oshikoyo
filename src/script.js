@@ -2235,6 +2235,7 @@ function handleOshiImportFromModal(files) {
             renderOshiTable();
             renderOshiList();
             if (isMobile()) renderMobileOshiPanel(true);
+            updateView();
 
             let message = `インポート完了: ${allNewItems.length}件追加`;
             if (totalDupes > 0) message += `, ${totalDupes}件スキップ（重複）`;
