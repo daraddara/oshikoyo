@@ -1042,7 +1042,9 @@ function renderCalendar(container, year, month) {
         el.addEventListener('mouseleave', hidePopup);
 
         // Attach Mobile Tap Logic (Bottom Sheet)
-        el.dataset.dateLabel = `${month}月${d}日 (${dayLabel})`;
+        el.dataset.dateLabel = holidayName
+            ? `${month}月${d}日 (${dayLabel}) ${escapeHTML(holidayName)}`
+            : `${month}月${d}日 (${dayLabel})`;
         el.dataset.popupHtml = popupHtml;
         el.addEventListener('click', (e) => {
             if (isMobile()) {
@@ -1080,10 +1082,11 @@ function renderCalendar(container, year, month) {
                         <div class="mobile-event-details">`;
                     
                     for (const { oshi, matchedEvents } of eventsByDay[d]) {
-                        const { baseStyle, escapedName } = oshi;
+                        const { baseStyle, escapedName, isDarkIcon } = oshi;
                         const eventLabels = matchedEvents.map(e => e.label).join('・');
+                        const iconsHtml = matchedEvents.map(e => buildEventIcon(e.icon, isDarkIcon, 'popup')).join('');
                         listHtml += `<div class="mobile-event-item" style="${baseStyle}">
-                            <span class="mobile-event-name">${escapedName}</span>
+                            ${iconsHtml}<span class="mobile-event-name">${escapedName}</span>
                             <span class="mobile-event-label">${eventLabels}</span>
                         </div>`;
                     }

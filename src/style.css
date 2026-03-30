@@ -3684,13 +3684,57 @@ body.is-immersive .day-detail-sheet {
         font-size: 0.68rem;
         line-height: 1;
     }
-    .oshi-event {
-        font-size: 7px;
-        min-height: 9px;
-    }
+    /* モバイル: 推しイベントをドット表示に変換（名前テキスト非表示） */
     .oshi-events-container {
-        margin-bottom: 1px;
-        gap: 0;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 2px;
+        justify-content: center;
+        position: absolute;
+        bottom: 2px;
+        left: 0;
+        right: 0;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .oshi-event {
+        min-height: 0;
+        font-size: 0;
+        width: 5px;
+        height: 5px;
+        padding: 0;
+        border-radius: 50%;
+        flex-shrink: 0;
+        opacity: 0.9;
+        display: inline-block;
+    }
+
+    /* ドット内アイコンは非表示（日付数字横の day-icon-badge で代替） */
+    .oshi-event .oshi-event-icon {
+        display: none;
+    }
+
+    /* 5推し目以降は非表示（セル幅オーバーフロー防止） */
+    .oshi-event:nth-child(n+5) {
+        display: none;
+    }
+
+    /* 日付数字横のアイコンバッジは非表示（ドットのみで表現） */
+    .day-icons {
+        display: none;
+    }
+
+    /* 祝日名はセル内に収まらないため非表示（シートヘッダーに表示） */
+    .holiday-name {
+        display: none;
+    }
+
+    /* Day Detail Sheet ではポップアップ用ヘッダーを非表示（シート自体がヘッダーを持つため2重になる） */
+    #dayDetailBody .popup-header {
+        display: none;
     }
 
     /* 旧FABピルを非表示 */
