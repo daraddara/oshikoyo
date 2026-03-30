@@ -5551,7 +5551,21 @@ function setupMobileTabBar() {
         }
     });
     bar.querySelector('[data-tab="management"]').addEventListener('click', () => switchMobileTab('management'));
-    bar.querySelector('[data-tab="settings"]').addEventListener('click', () => switchMobileTab('settings'));
+    // 設定タブ: 7連打でPWAデバッグパネルを表示（モバイルデバッグ用）
+    let settingsDebugTapCount = 0;
+    let settingsDebugTapTimer = null;
+    bar.querySelector('[data-tab="settings"]').addEventListener('click', () => {
+        switchMobileTab('settings');
+        settingsDebugTapCount++;
+        clearTimeout(settingsDebugTapTimer);
+        settingsDebugTapTimer = setTimeout(() => { settingsDebugTapCount = 0; }, 2000);
+        if (settingsDebugTapCount >= 7) {
+            settingsDebugTapCount = 0;
+            if (typeof showPwaDebugPanel === 'function') {
+                showPwaDebugPanel();
+            }
+        }
+    });
 
     bar.querySelector('[data-tab="add"]').addEventListener('click', (e) => {
         e.stopPropagation();
