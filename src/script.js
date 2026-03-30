@@ -1157,6 +1157,12 @@ function renderOshiList() {
 }
 
 function openOshiManager() {
+    oshiTable.search = '';
+    oshiTable.sort = 'index';
+    const searchEl = document.getElementById('oshiTableSearch');
+    const sortEl   = document.getElementById('oshiTableSort');
+    if (searchEl) searchEl.value = '';
+    if (sortEl)   sortEl.value   = 'index';
     renderOshiTable();
     renderEventTypeManager();
     document.getElementById('oshiManagementModal').showModal();
@@ -1265,25 +1271,48 @@ function renderOshiTable() {
 
     tbody.innerHTML = '';
 
-    const oshiAddRow = document.getElementById('oshiAddRow');
-    if (!appSettings.oshiList || appSettings.oshiList.length === 0) {
+    const addTopRow = document.getElementById('oshiTableAddTopRow');
+    const hasAny = (appSettings.oshiList || []).length > 0;
+
+    if (!hasAny) {
         if (emptyMsg) emptyMsg.style.display = 'block';
-        if (oshiAddRow) oshiAddRow.style.display = 'none';
+        if (addTopRow) addTopRow.style.display = 'none';
         return;
     }
 
     if (emptyMsg) emptyMsg.style.display = 'none';
-    if (oshiAddRow) oshiAddRow.style.display = 'block';
+    if (addTopRow) addTopRow.style.display = 'block';
 
-    appSettings.oshiList.forEach((oshi, index) => {
+    const list = getFilteredSortedOshiList(oshiTable.search, oshiTable.sort);
+    const isDragEnabled = (oshiTable.search === '' && oshiTable.sort === 'index');
+
+    if (list.length === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 6;
+        td.className = 'oshi-table-no-results';
+        td.textContent = '検索結果がありません';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+    }
+
+    list.forEach((oshi) => {
+        const index = oshi._origIndex;
         const row = document.createElement('tr');
+        row.style.setProperty('--oshi-color', oshi.color || '#3b82f6');
 
         // D. ドラッグハンドル
         const handleCell = document.createElement('td');
         handleCell.className = 'oshi-handle-cell';
         handleCell.title = 'ドラッグして並び替え';
         handleCell.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>`;
-        handleCell.addEventListener('mousedown', () => { row.draggable = true; });
+        if (isDragEnabled) {
+            handleCell.addEventListener('mousedown', () => { row.draggable = true; });
+        } else {
+            handleCell.style.visibility = 'hidden';
+            handleCell.style.cursor = 'default';
+        }
         handleCell.addEventListener('click', (e) => e.stopPropagation());
         row.appendChild(handleCell);
 
@@ -1323,14 +1352,23 @@ function renderOshiTable() {
         }
         row.appendChild(tagsCell);
 
-        // Memorial dates count (C. バッジ表示)
+        // 記念日: 直近記念日のアイコン+日付+カウントダウン
         const datesCell = document.createElement('td');
-        const datesCount = (oshi.memorial_dates || []).length;
-        if (datesCount > 0) {
-            const badge = document.createElement('span');
-            badge.className = 'memorial-count-badge';
-            badge.textContent = datesCount;
-            datesCell.appendChild(badge);
+        datesCell.className = 'oshi-next-date-cell';
+        const ndInfo = getNextMemorialDate(oshi);
+        if (ndInfo) {
+            const iconId = getIconForTypeId(ndInfo.type_id);
+            const iconHtml = iconSVGHtml(iconId, 'oshi-table-date-icon');
+            const multiCount = (oshi.memorial_dates || []).length;
+            const moreHtml = multiCount > 1 ? `<span class="oshi-date-more">他</span>` : '';
+            let cdText = '';
+            let cdClass = 'oshi-date-cd';
+            if (ndInfo.days === 0)      { cdText = '今日！'; cdClass += ' is-today'; }
+            else if (ndInfo.days === 1) { cdText = '明日';   cdClass += ' is-tomorrow'; }
+            else if (ndInfo.days <= 7)  { cdText = `あと${ndInfo.days}日`; cdClass += ' is-soon'; }
+            else if (ndInfo.days <= 30) { cdText = `あと${ndInfo.days}日`; }
+            const cdHtml = cdText ? `<span class="${cdClass}">${cdText}</span>` : '';
+            datesCell.innerHTML = `<span class="oshi-next-date-inner">${iconHtml}<span class="oshi-next-date-text">${ndInfo.month}/${ndInfo.day}</span>${moreHtml}${cdHtml}</span>`;
         } else {
             datesCell.textContent = '-';
         }
@@ -1377,44 +1415,46 @@ function renderOshiTable() {
         actCell.appendChild(delBtn);
         row.appendChild(actCell);
 
-        // D. ドラッグ&ドロップ並び替え
-        row.addEventListener('dragstart', (e) => {
-            _oshiDragSrcIndex = index;
-            e.dataTransfer.effectAllowed = 'move';
-            setTimeout(() => row.classList.add('is-dragging'), 0);
-        });
-        row.addEventListener('dragend', () => {
-            row.draggable = false;
-            row.classList.remove('is-dragging');
-            tbody.querySelectorAll('.drag-over-top, .drag-over-bottom')
-                .forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom'));
-        });
-        row.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            if (_oshiDragSrcIndex === index) return;
-            tbody.querySelectorAll('.drag-over-top, .drag-over-bottom')
-                .forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom'));
-            const mid = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
-            row.classList.add(e.clientY < mid ? 'drag-over-top' : 'drag-over-bottom');
-        });
-        row.addEventListener('dragleave', (e) => {
-            if (!row.contains(e.relatedTarget)) {
-                row.classList.remove('drag-over-top', 'drag-over-bottom');
-            }
-        });
-        row.addEventListener('drop', (e) => {
-            e.preventDefault();
-            if (_oshiDragSrcIndex === index) return;
-            const mid = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
-            const tgt = e.clientY < mid ? index : index + 1;
-            const copy = [...appSettings.oshiList];
-            const [item] = copy.splice(_oshiDragSrcIndex, 1);
-            copy.splice(_oshiDragSrcIndex < tgt ? tgt - 1 : tgt, 0, item);
-            appSettings.oshiList = copy;
-            saveSettings();
-            renderOshiTable();
-            renderOshiList();
-        });
+        if (isDragEnabled) {
+            // D. ドラッグ&ドロップ並び替え
+            row.addEventListener('dragstart', (e) => {
+                _oshiDragSrcIndex = index;
+                e.dataTransfer.effectAllowed = 'move';
+                setTimeout(() => row.classList.add('is-dragging'), 0);
+            });
+            row.addEventListener('dragend', () => {
+                row.draggable = false;
+                row.classList.remove('is-dragging');
+                tbody.querySelectorAll('.drag-over-top, .drag-over-bottom')
+                    .forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom'));
+            });
+            row.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (_oshiDragSrcIndex === index) return;
+                tbody.querySelectorAll('.drag-over-top, .drag-over-bottom')
+                    .forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom'));
+                const mid = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
+                row.classList.add(e.clientY < mid ? 'drag-over-top' : 'drag-over-bottom');
+            });
+            row.addEventListener('dragleave', (e) => {
+                if (!row.contains(e.relatedTarget)) {
+                    row.classList.remove('drag-over-top', 'drag-over-bottom');
+                }
+            });
+            row.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (_oshiDragSrcIndex === index) return;
+                const mid = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
+                const tgt = e.clientY < mid ? index : index + 1;
+                const copy = [...appSettings.oshiList];
+                const [item] = copy.splice(_oshiDragSrcIndex, 1);
+                copy.splice(_oshiDragSrcIndex < tgt ? tgt - 1 : tgt, 0, item);
+                appSettings.oshiList = copy;
+                saveSettings();
+                renderOshiTable();
+                renderOshiList();
+            });
+        }
 
         tbody.appendChild(row);
     });
@@ -3605,7 +3645,16 @@ function initSettings() {
     });
 
     // --- Oshi Management Toolbar ---
-    document.getElementById('btnOshiAdd').addEventListener('click', () => openOshiEditForm(-1));
+    document.getElementById('btnOshiAddTop').addEventListener('click', () => openOshiEditForm(-1));
+    document.getElementById('btnOshiCsvTemplate').addEventListener('click', downloadOshiCsvTemplate);
+    document.getElementById('oshiTableSearch').addEventListener('input', (e) => {
+        oshiTable.search = e.target.value;
+        renderOshiTable();
+    });
+    document.getElementById('oshiTableSort').addEventListener('change', (e) => {
+        oshiTable.sort = e.target.value;
+        renderOshiTable();
+    });
     document.getElementById('btnOshiExport').addEventListener('click', handleOshiExport);
 
     const inputOshiImport = document.getElementById('inputOshiImport');
@@ -5655,6 +5704,11 @@ const oshiVS = {
     rafPending: false,
 };
 
+const oshiTable = {
+    search: '',
+    sort: 'index',  // 'index' | 'name' | 'memorial'
+};
+
 /** 推しの直近記念日（今日以降）を返す。なければ null */
 function getNextMemorialDate(oshi) {
     const today = new Date();
@@ -5678,7 +5732,7 @@ function getNextMemorialDate(oshi) {
         const days = Math.round((d.getTime() - todayMs) / 86400000);
         if (days < nearestDays) {
             nearestDays = days;
-            nearest = { month: p.month, day: p.day, days };
+            nearest = { month: p.month, day: p.day, days, type_id: md.type_id };
         }
     }
     return nearest;
@@ -5705,27 +5759,34 @@ function getKanaGroupLabel(name) {
     return name.charAt(0);
 }
 
-/** oshiVS.list をフィルタ・ソートして再構築 */
-function buildOshiVSList() {
+/**
+ * appSettings.oshiList をフィルタ・ソートした配列を返す。
+ * 各要素には元のインデックスを示す _origIndex プロパティが付く。
+ */
+function getFilteredSortedOshiList(search, sort) {
     const base = (appSettings.oshiList || []).map((o, i) => ({ ...o, _origIndex: i }));
-    const q = oshiVS.search.trim().toLowerCase();
+    const q = (search || '').trim().toLowerCase();
     let list = q
         ? base.filter(o =>
               (o.name || '').toLowerCase().includes(q) ||
               (o.tags || []).some(t => t.toLowerCase().includes(q))
           )
         : base;
-
-    if (oshiVS.sort === 'name') {
+    if (sort === 'name') {
         list = [...list].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ja'));
-    } else if (oshiVS.sort === 'memorial') {
+    } else if (sort === 'memorial') {
         list = [...list].sort((a, b) => {
             const da = getNextMemorialDate(a);
             const db = getNextMemorialDate(b);
             return (da ? da.days : 99999) - (db ? db.days : 99999);
         });
     }
-    oshiVS.list = list;
+    return list;
+}
+
+/** oshiVS.list をフィルタ・ソートして再構築 */
+function buildOshiVSList() {
+    oshiVS.list = getFilteredSortedOshiList(oshiVS.search, oshiVS.sort);
 }
 
 /** 仮想スクロールの表示ウィンドウを描画 */
@@ -5792,9 +5853,18 @@ function renderOshiVirtualWindow(scrollTop) {
 
         const nd = getNextMemorialDate(oshi);
         if (nd) {
-            const dateEl = document.createElement('span');
+            const dateEl = document.createElement('div');
             dateEl.className = 'mobile-oshi-next-date';
-            dateEl.textContent = `${nd.month}/${nd.day}`;
+            let countdown = '';
+            let cdExtraClass = '';
+            if (nd.days === 0)      { countdown = '今日！'; cdExtraClass = ' is-today'; }
+            else if (nd.days === 1) { countdown = '明日';   cdExtraClass = ' is-tomorrow'; }
+            else if (nd.days <= 7)  { countdown = `あと${nd.days}日`; cdExtraClass = ' is-soon'; }
+            else if (nd.days <= 30) { countdown = `あと${nd.days}日`; }
+            const countdownHtml = countdown
+                ? `<span class="m-date-countdown${cdExtraClass}">${countdown}</span>`
+                : '';
+            dateEl.innerHTML = `<span class="m-date-mmdd">${nd.month}/${nd.day}</span>${countdownHtml}`;
             li.appendChild(dateEl);
         }
 

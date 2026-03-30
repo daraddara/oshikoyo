@@ -1213,6 +1213,12 @@ body {
     backdrop-filter: blur(4px);
 }
 
+.oshi-manager-modal::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
 .settings-scroll-area {
     max-height: 70vh;
     overflow-y: auto;
@@ -3186,14 +3192,35 @@ details[open]>summary::before {
     font-weight: 600;
     font-size: 0.85rem;
     color: var(--text-secondary);
-    background: var(--bg-color);
+    background: transparent;
     position: sticky;
     top: 0;
     z-index: 5;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+}
+
+.oshi-table tbody tr {
+    transition: background 0.15s;
 }
 
 .oshi-table tbody tr:hover {
-    background: rgba(59, 130, 246, 0.05);
+    background: color-mix(in srgb, var(--oshi-color, #3b82f6) 10%, transparent);
+}
+
+.oshi-table tbody tr:hover .oshi-handle-cell {
+    color: #aaa;
+}
+
+.oshi-table tbody tr:hover .btn-icon-delete {
+    opacity: 1;
+}
+
+.oshi-table tbody tr:hover .btn-icon-edit {
+    opacity: 1;
+}
+
+.oshi-table tbody tr:hover td:first-child {
+    box-shadow: inset 3px 0 0 var(--oshi-color, #3b82f6);
 }
 
 /* D. ドラッグハンドル列 */
@@ -3212,10 +3239,6 @@ details[open]>summary::before {
 
 .oshi-handle-cell:active {
     cursor: grabbing;
-}
-
-.oshi-table tbody tr:hover .oshi-handle-cell {
-    color: #aaa;
 }
 
 .oshi-color-cell {
@@ -3260,6 +3283,48 @@ details[open]>summary::before {
     line-height: 1;
 }
 
+/* 次回記念日セル（デスクトップ） */
+.oshi-next-date-cell {
+    white-space: nowrap;
+}
+
+.oshi-next-date-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+
+.oshi-table-date-icon {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.75;
+}
+
+.oshi-date-more {
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+    opacity: 0.35;
+    margin-left: 1px;
+}
+
+.oshi-date-cd {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    opacity: 0.8;
+    margin-left: 3px;
+    white-space: nowrap;
+}
+
+.oshi-date-cd.is-today    { color: #ef4444; opacity: 1; font-weight: 600; }
+.oshi-date-cd.is-tomorrow { color: #f97316; opacity: 1; }
+.oshi-date-cd.is-soon     { color: #eab308; opacity: 1; }
+
 /* アクション列 */
 .oshi-table-actions {
     text-align: right;
@@ -3281,10 +3346,6 @@ details[open]>summary::before {
     transition: opacity 0.15s, background 0.15s;
 }
 
-.oshi-table tbody tr:hover .btn-icon-delete {
-    opacity: 1;
-}
-
 .btn-icon-delete {
     color: #ef4444;
 }
@@ -3299,6 +3360,62 @@ details[open]>summary::before {
     gap: 8px;
     flex-wrap: wrap;
     align-items: center;
+}
+
+/* 検索・ソートツールバー（デスクトップ管理モーダル） */
+.oshi-table-search-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+    padding-top: 6px;
+}
+
+.oshi-table-search {
+    flex: 1;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    padding: 0 10px;
+    font-size: 0.875rem;
+    background: var(--bg-color);
+    color: var(--text-primary);
+    outline: none;
+}
+
+.oshi-table-search::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.55;
+}
+
+.oshi-table-search:focus {
+    border-color: var(--accent-color);
+}
+
+.oshi-table-sort {
+    flex-shrink: 0;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    padding: 0 8px;
+    font-size: 0.875rem;
+    background: var(--bg-color);
+    color: var(--text-primary);
+    cursor: pointer;
+    outline: none;
+}
+
+/* 上部追加ボタン行 */
+.oshi-table-add-top-row {
+    padding: 8px 16px 2px;
+}
+
+/* 検索結果なし行 */
+.oshi-table-no-results {
+    text-align: center;
+    padding: 24px 12px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
 }
 
 .toolbar-text-link {
@@ -3387,6 +3504,18 @@ details[open]>summary::before {
     border-color: rgba(0, 0, 0, 0.1);
 }
 
+@media (prefers-color-scheme: dark) {
+    .oshi-table-search,
+    .oshi-table-sort {
+        background: rgba(255, 255, 255, 0.07);
+        border-color: rgba(255, 255, 255, 0.12);
+        color-scheme: dark;
+    }
+    .oshi-manager-modal .settings-form {
+        background: rgba(15, 23, 42, 0.88);
+    }
+}
+
 /* Edit button in action column */
 .btn-icon-edit {
     display: inline-flex;
@@ -3401,10 +3530,6 @@ details[open]>summary::before {
     color: var(--text-secondary);
     opacity: 0;
     transition: opacity 0.15s, background 0.15s;
-}
-
-.oshi-table tbody tr:hover .btn-icon-edit {
-    opacity: 1;
 }
 
 .btn-icon-edit:hover {
@@ -5093,13 +5218,26 @@ textarea:focus-visible,
         opacity: 0.8;
     }
     .mobile-oshi-next-date {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
         flex-shrink: 0;
+        min-width: 36px;
+    }
+    .m-date-mmdd {
         font-size: 0.72rem;
         color: var(--text-secondary);
-        opacity: 0.7;
-        min-width: 28px;
-        text-align: right;
+        opacity: 0.75;
     }
+    .m-date-countdown {
+        font-size: 0.6rem;
+        color: var(--accent-color);
+        opacity: 0.85;
+        line-height: 1.2;
+    }
+    .m-date-countdown.is-today    { color: #ef4444; opacity: 1; font-weight: 600; }
+    .m-date-countdown.is-tomorrow { color: #f97316; opacity: 1; }
+    .m-date-countdown.is-soon     { color: #eab308; opacity: 1; }
     .mobile-oshi-chevron {
         flex-shrink: 0;
         width: 7px;
