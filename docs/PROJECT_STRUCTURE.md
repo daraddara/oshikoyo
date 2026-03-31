@@ -7,27 +7,42 @@
 ```text
 .
 ├── .agents/                # エージェント用ルール・スクリプト
-│   └── rules/
-│       └── directory-structure.md  # 構造維持ルール
-├── benchmarks/             # ベンチマーク関連
+│   └── rules/              # コーディング・Git・テスト等の規約ファイル
+├── assets/
+│   └── logo/               # README・マニフェスト用ロゴ画像（アプリ外部）
+├── benchmarks/             # IndexedDB パフォーマンス計測ツール
 ├── docs/                   # プロジェクトドキュメント
-│   ├── AGENTS.md
-│   ├── DEVELOPMENT.md
-│   ├── ISSUES.md
+│   ├── AGENTS.md           # 全体開発規約（SSOT）
+│   ├── COMMON_FUNCTIONS.md # 主要関数リファレンス
+│   ├── DEVELOPMENT.md      # 開発環境セットアップ手順
+│   ├── FEATURES.md         # 実装済み機能カタログ
+│   ├── ISSUES.md           # 課題・検討事項管理
 │   ├── PROJECT_STRUCTURE.md (this file)
-│   └── TESTING.md
+│   ├── TESTING.md          # テスト手順・方針
+│   ├── VERSIONING.md       # バージョン管理規定
+│   ├── mobile-layout-constraints.md  # モバイルレイアウト制約メモ
+│   ├── oshikoyo_mobile_spec.md       # モバイルUI仕様メモ
+│   ├── tag-feature-plan.md           # タグ機能設計ドキュメント
+│   └── tag-feature-review.md         # タグ機能レビューメモ
 ├── src/                    # アプリケーションソース
-│   ├── assets/             # 静的アセット
-│   ├── script.js           # メインロジック
+│   ├── assets/             # アプリ実行時に使用する静的アセット
+│   │   ├── default_image.png           # デフォルト画像（プレースホルダー）
+│   │   ├── default_landscape_demo.jpg  # 初回デフォルト登録画像（横長）
+│   │   ├── default_portrait_demo.jpg   # 初回デフォルト登録画像（縦長）
+│   │   ├── icon-192.png    # PWAアイコン
+│   │   └── icon-512.png    # PWAアイコン（大）
+│   ├── script.js           # メインロジック（全機能を含む単一ファイル）
 │   └── style.css           # スタイルシート
 ├── tests/                  # テスト関連
-│   ├── e2e/                # E2Eテスト
-│   └── scripts/            # テスト実行用スクリプト
+│   ├── e2e/                # Playwright E2Eテスト
+│   ├── fixtures/           # テスト用画像フィクスチャ
+│   └── *.test.js           # Vitest ユニットテスト
 ├── index.html              # エントリーポイント
 ├── manifest.json           # PWAマニフェスト
 ├── package.json            # パッケージ設定
 ├── playwright.config.js    # Playwright設定
-├── README.md               # プロジェクト概要
+├── README.md               # プロジェクト概要（ユーザー向け）
+├── CLAUDE.md               # Claude Code 向け入口ガイド
 └── sw.js                   # Service Worker
 ```
 
@@ -39,8 +54,10 @@
 ### src/
 アプリケーションの実効コードを格納します。`index.html` から参照される `script.js` や `style.css`、および画像などの `assets/` が含まれます。
 
+> **Note:** `assets/logo/` はREADMEやマニフェスト用（アプリ外部）、`src/assets/` はアプリ実行時に読み込む静的ファイルと分離されています。
+
 ### docs/
-開発環境の構築手順、既知の課題、プロジェクト構造の解説など、開発者向けの情報を集約しています。
+開発環境の構築手順、既知の課題、プロジェクト構造の解説など、開発者向けの情報を集約しています。コーディング規約・Git運用・テスト手順の SSOT は `.agents/rules/` にあり、`docs/AGENTS.md` から参照しています。
 
 ### benchmarks/
 IndexedDBの動作検証やパフォーマンス計測に使用するツールを格納しています。
