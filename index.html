@@ -518,182 +518,196 @@
                 <h2 class="settings-title">設定</h2>
             </div>
 
-            <nav class="settings-tabs" role="tablist">
-                <button type="button" id="tabBtnGeneral" class="settings-tab-btn is-active" data-tab="general" role="tab" aria-selected="true" aria-controls="tabPanelGeneral">一般</button>
-                <button type="button" id="tabBtnMedia" class="settings-tab-btn" data-tab="media" role="tab" aria-selected="false" aria-controls="tabPanelMedia">画像</button>
-                <button type="button" id="tabBtnData" class="settings-tab-btn" data-tab="data" role="tab" aria-selected="false" aria-controls="tabPanelData">データ</button>
-            </nav>
+            <div class="settings-layout">
+                <!-- 左サイドバー -->
+                <nav class="settings-sidebar" role="tablist">
+                    <button type="button" id="tabBtnGeneral" class="settings-tab-btn is-active" data-tab="general" role="tab" aria-selected="true" aria-controls="tabPanelGeneral">全般</button>
+                    <button type="button" id="tabBtnCalendar" class="settings-tab-btn" data-tab="calendar" role="tab" aria-selected="false" aria-controls="tabPanelCalendar">カレンダー</button>
+                    <button type="button" id="tabBtnEvent" class="settings-tab-btn" data-tab="event" role="tab" aria-selected="false" aria-controls="tabPanelEvent">イベント</button>
+                    <button type="button" id="tabBtnMedia" class="settings-tab-btn" data-tab="media" role="tab" aria-selected="false" aria-controls="tabPanelMedia">画像</button>
+                    <button type="button" id="tabBtnBackup" class="settings-tab-btn" data-tab="backup" role="tab" aria-selected="false" aria-controls="tabPanelBackup">バックアップ</button>
+                    <button type="button" id="tabBtnAppInfo" class="settings-tab-btn" data-tab="appinfo" role="tab" aria-selected="false" aria-controls="tabPanelAppInfo">アプリ情報</button>
+                </nav>
 
-            <!-- 一般タブ -->
-            <div id="tabPanelGeneral" class="settings-tab-panel is-active" data-panel="general" role="tabpanel" aria-labelledby="tabBtnGeneral">
-                <div class="setting-group">
-                    <label class="setting-label">週の開始日</label>
-                    <div class="radio-group">
-                        <label><input type="radio" name="startOfWeek" value="0" checked> 日曜日</label>
-                        <label><input type="radio" name="startOfWeek" value="1"> 月曜日</label>
-                    </div>
-                </div>
+                <!-- 右コンテンツ -->
+                <div class="settings-content">
 
-                <div class="setting-divider"></div>
-
-                <div class="setting-group">
-                    <label class="setting-label">推し</label>
-                    <div class="oshi-summary-bar">
-                        <span class="oshi-summary-count">登録数: <strong id="oshiCount">0</strong> 人</span>
-                        <button type="button" id="btnOpenOshiManager" class="btn-secondary">一覧を管理</button>
-                    </div>
-                    <p class="help-text">追加・編集・インポート・エクスポートは「一覧を管理」から行えます。</p>
-                </div>
-
-                <div class="setting-divider"></div>
-
-                <div class="setting-group">
-                    <label class="setting-label">イベントタイプ</label>
-                    <div id="settingsEventTypeList"></div>
-                    <div class="et-add-row" id="etAddRow">
-                        <button type="button" id="settingsEtIconBtn" class="mdate-icon-btn et-add-icon" title="アイコンを選択" aria-label="アイコンを選択"></button>
-                        <input type="text" id="settingsEtNameInput" class="et-name-input" placeholder="新しいタイプ名" maxlength="20" autocomplete="off">
-                        <button type="button" id="btnAddEventType" class="btn-secondary btn-sm">＋ 追加</button>
-                    </div>
-                    <p class="help-text">組込みタイプ（誕生日・デビュー記念日）は削除できません。</p>
-                </div>
-
-                <div class="setting-divider"></div>
-
-                <div class="setting-group">
-                    <label class="setting-label">レイアウト</label>
-                    <button type="button" id="btnResetLayout" class="btn-reset-layout">配置をデフォルトに戻す</button>
-                    <p class="help-text" style="margin-top:6px">表示月数・レイアウト方向・画像位置・画像サイズを初期状態に戻します。</p>
-                </div>
-
-                <div class="setting-divider"></div>
-
-                <div class="setting-group">
-                    <label class="setting-label">記念日の画像表示モード</label>
-                    <div class="radio-group">
-                        <label><input type="radio" name="memorialDisplayMode" value="preferred" checked> 優先（80%で記念日画像）</label>
-                        <label><input type="radio" name="memorialDisplayMode" value="exclusive"> 専有（記念日画像のみ）</label>
-                    </div>
-                    <p class="help-text">記念日のとき、関連タグの画像を優先または専有で表示します。タグが設定されていない場合は通常表示になります。</p>
-                </div>
-
-                <div class="setting-divider"></div>
-
-                <div class="setting-group">
-                    <label class="setting-label">祝日設定</label>
-                    <div class="holiday-sync-row">
-                        <span class="last-sync-label" id="holidayLastSync">最終同期: 未取得</span>
-                        <button type="button" id="btnSyncHolidays" class="btn-secondary btn-sm">祝日を同期</button>
-                    </div>
-                    <p class="help-text">法改正などによる、祝日の移動や新設に対応できます。最新データは外部API（<a href="https://holidays-jp.github.io/" target="_blank" rel="noopener">Holidays JP API</a>）から取得します。一度同期すればオフラインでも表示可能です。</p>
-                </div>
-
-                <div class="setting-divider"></div>
-
-                <div class="setting-group version-info">
-                    <label class="setting-label">アプリ情報</label>
-                    <div class="version-row">
-                        <span class="version-badge"></span>
-                        <button type="button" id="btnCheckUpdate" class="btn-check-update btn-secondary btn-sm">更新を確認</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 画像タブ -->
-            <div id="tabPanelMedia" class="settings-tab-panel" data-panel="media" role="tabpanel" aria-labelledby="tabBtnMedia">
-                <div id="localMediaSettings" class="setting-group">
-                    <!-- ストレージ使用量インジケーター -->
-                    <div id="storageIndicatorWrap" class="storage-indicator" hidden>
-                        <div class="storage-indicator__track">
-                            <div id="storageIndicatorBar" class="storage-indicator__bar"></div>
-                        </div>
-                        <div class="storage-indicator__footer">
-                            <p id="storageIndicatorLabel" class="storage-indicator__label">計算中...</p>
-                            <span class="storage-indicator__count"><strong id="localImageCount">0</strong> 枚</span>
-                            <button type="button" id="btnClearLocal" class="btn-danger-outline btn-sm">全削除</button>
-                        </div>
-                    </div>
-
-                    <!-- 登録時自動圧縮 -->
-                    <div class="compress-setting">
-                        <div class="compress-setting__row">
-                            <label class="setting-label-sm">自動圧縮</label>
-                            <div class="radio-group radio-group--inline">
-                                <label title="圧縮せずそのまま保存します"><input type="radio" name="imageCompressMode" value="off"> 圧縮なし</label>
-                                <label title="長辺を最大2560pxにリサイズしJPEG品質88%で保存します（推奨）"><input type="radio" name="imageCompressMode" value="standard" checked> 標準</label>
-                                <label title="長辺を最大1920pxにリサイズしJPEG品質78%で保存します（より容量を削減）"><input type="radio" name="imageCompressMode" value="aggressive"> 積極的</label>
+                    <!-- 全般パネル -->
+                    <div id="tabPanelGeneral" class="settings-tab-panel is-active" data-panel="general" role="tabpanel" aria-labelledby="tabBtnGeneral">
+                        <div class="setting-group">
+                            <h3 class="settings-section-heading">週の開始日</h3>
+                            <div class="radio-group">
+                                <label><input type="radio" name="startOfWeek" value="0" checked> 日曜日</label>
+                                <label><input type="radio" name="startOfWeek" value="1"> 月曜日</label>
                             </div>
-                            <button type="button" id="btnCompressExisting" class="btn-secondary btn-sm">登録済みを一括圧縮</button>
                         </div>
-                        <p class="help-text">※ GIF は対象外。透過 PNG は白背景に変換されます。</p>
-                    </div>
 
-                    <div class="setting-section-divider"></div>
+                        <div class="setting-divider"></div>
 
-                    <div class="media-action-group">
-                        <label class="setting-label-sm">画像を追加</label>
-                        <div class="media-btn-row">
-                            <button type="button" id="btnLocalFolder" class="btn-media" title="フォルダを選択してまとめて一括登録">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                                フォルダ登録
-                            </button>
-                            <input type="file" id="inputLocalFolder" webkitdirectory style="display:none">
-                            <button type="button" id="btnLocalFiles" class="btn-media" title="画像ファイルを個別に選択して追加">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
-                                ファイル登録
-                            </button>
-                            <input type="file" id="inputLocalFiles" multiple accept="image/*" style="display:none">
-                            <button type="button" id="btnClipboardPaste" class="btn-media" title="クリップボードの画像を貼り付けて追加">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
-                                貼り付け
-                            </button>
+                        <div class="setting-group">
+                            <h3 class="settings-section-heading">記念日の画像表示モード</h3>
+                            <div class="radio-group">
+                                <label><input type="radio" name="memorialDisplayMode" value="preferred" checked> 優先（80%で記念日画像）</label>
+                                <label><input type="radio" name="memorialDisplayMode" value="exclusive"> 専有（記念日画像のみ）</label>
+                            </div>
+                            <p class="help-text">記念日のとき、関連タグの画像を優先または専有で表示します。タグが設定されていない場合は通常表示になります。</p>
+                        </div>
+
+                        <div class="setting-divider"></div>
+
+                        <div class="setting-group">
+                            <h3 class="settings-section-heading">レイアウト</h3>
+                            <button type="button" id="btnResetLayout" class="btn-reset-layout">配置をデフォルトに戻す</button>
+                            <p class="help-text" style="margin-top:6px">表示月数・レイアウト方向・画像位置・画像サイズを初期状態に戻します。</p>
+                        </div>
+
+                        <div class="setting-divider"></div>
+
+                        <div class="setting-group">
+                            <h3 class="settings-section-heading">推し</h3>
+                            <div class="oshi-summary-bar">
+                                <span class="oshi-summary-count">登録数: <strong id="oshiCount">0</strong> 人</span>
+                                <button type="button" id="btnOpenOshiManager" class="btn-secondary">一覧を管理</button>
+                            </div>
+                            <p class="help-text">追加・編集・インポート・エクスポートは「一覧を管理」から行えます。</p>
                         </div>
                     </div>
 
-                    <div id="localImageList" class="local-image-grid local-image-manager">
-                        <!-- Images injected here -->
+                    <!-- カレンダーパネル -->
+                    <div id="tabPanelCalendar" class="settings-tab-panel" data-panel="calendar" role="tabpanel" aria-labelledby="tabBtnCalendar">
+                        <div class="setting-group">
+                            <h3 class="settings-section-heading">祝日設定（API同期）</h3>
+                            <div class="holiday-sync-row">
+                                <span class="last-sync-label" id="holidayLastSync">最終同期: 未取得</span>
+                                <button type="button" id="btnSyncHolidays" class="btn-secondary btn-sm">祝日を同期</button>
+                            </div>
+                            <p class="help-text">法改正などによる、祝日の移動や新設に対応できます。最新データは外部API（<a href="https://holidays-jp.github.io/" target="_blank" rel="noopener">Holidays JP API</a>）から取得します。一度同期すればオフラインでも表示可能です。</p>
+                        </div>
                     </div>
 
-                    <p class="help-text">画像はブラウザ内に保存されます。バックアップ・移行は「データ」タブから行えます。</p>
-                </div>
-            </div>
-
-            <!-- データタブ -->
-            <div id="tabPanelData" class="settings-tab-panel" data-panel="data" role="tabpanel" aria-labelledby="tabBtnData">
-                <div class="setting-group">
-                    <label class="setting-label">全データのバックアップと復元</label>
-                    <p class="help-text" style="margin-bottom:10px">推しリスト・画像・タグをすべて含みます。復元時は現在のデータが削除されます。</p>
-                    <div class="data-btn-row">
-                        <button type="button" id="btnExportFullBackup" class="btn-data-action">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                            <div class="btn-data-text"><span>全データをバックアップ</span><small>設定・画像・タグを1ファイルで保存</small></div>
-                        </button>
-                        <button type="button" id="btnImportFullBackup" class="btn-data-action">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            <div class="btn-data-text"><span>バックアップから復元</span><small>完全置換・元の環境を再現</small></div>
-                        </button>
+                    <!-- イベントパネル -->
+                    <div id="tabPanelEvent" class="settings-tab-panel" data-panel="event" role="tabpanel" aria-labelledby="tabBtnEvent">
+                        <div class="setting-group">
+                            <h3 class="settings-section-heading">イベントタイプ</h3>
+                            <div id="settingsEventTypeList"></div>
+                            <div class="et-add-row" id="etAddRow">
+                                <button type="button" id="settingsEtIconBtn" class="mdate-icon-btn et-add-icon" title="アイコンを選択" aria-label="アイコンを選択"></button>
+                                <input type="text" id="settingsEtNameInput" class="et-name-input" placeholder="新しいタイプ名" maxlength="20" autocomplete="off">
+                                <button type="button" id="btnAddEventType" class="btn-secondary btn-sm">＋ 追加</button>
+                            </div>
+                            <p class="help-text">組込みタイプ（誕生日・デビュー記念日）は削除できません。</p>
+                        </div>
                     </div>
-                    <input type="file" id="inputFullBackup" accept=".json.gz" style="display:none">
-                </div>
 
-                <div class="setting-divider"></div>
+                    <!-- 画像パネル -->
+                    <div id="tabPanelMedia" class="settings-tab-panel" data-panel="media" role="tabpanel" aria-labelledby="tabBtnMedia">
+                        <div id="localMediaSettings" class="setting-group">
+                            <!-- ストレージ使用量インジケーター -->
+                            <div id="storageIndicatorWrap" class="storage-indicator" hidden>
+                                <div class="storage-indicator__track">
+                                    <div id="storageIndicatorBar" class="storage-indicator__bar"></div>
+                                </div>
+                                <div class="storage-indicator__footer">
+                                    <p id="storageIndicatorLabel" class="storage-indicator__label">計算中...</p>
+                                    <span class="storage-indicator__count"><strong id="localImageCount">0</strong> 枚</span>
+                                    <button type="button" id="btnClearLocal" class="btn-danger-outline btn-sm">全削除</button>
+                                </div>
+                            </div>
 
-                <div class="setting-group">
-                    <label class="setting-label">画像＋タグの書き出し・取り込み</label>
-                    <p class="help-text" style="margin-bottom:10px">既存データを残したまま画像とタグを追加します。タグは文字列で照合してマージされます。</p>
-                    <div class="data-btn-row">
-                        <button type="button" id="btnExportImageTag" class="btn-data-action">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                            <div class="btn-data-text"><span>画像＋タグを書き出し</span><small>画像とタグ情報をパッケージで保存</small></div>
-                        </button>
-                        <button type="button" id="btnImportImageTag" class="btn-data-action">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            <div class="btn-data-text"><span>画像＋タグを取り込み</span><small>既存データにマージして追加</small></div>
-                        </button>
+                            <!-- 登録時自動圧縮 -->
+                            <div class="compress-setting">
+                                <div class="compress-setting__row">
+                                    <label class="setting-label-sm">自動圧縮</label>
+                                    <div class="radio-group radio-group--inline">
+                                        <label title="圧縮せずそのまま保存します"><input type="radio" name="imageCompressMode" value="off"> 圧縮なし</label>
+                                        <label title="長辺を最大2560pxにリサイズしJPEG品質88%で保存します（推奨）"><input type="radio" name="imageCompressMode" value="standard" checked> 標準</label>
+                                        <label title="長辺を最大1920pxにリサイズしJPEG品質78%で保存します（より容量を削減）"><input type="radio" name="imageCompressMode" value="aggressive"> 積極的</label>
+                                    </div>
+                                    <button type="button" id="btnCompressExisting" class="btn-secondary btn-sm">登録済みを一括圧縮</button>
+                                </div>
+                                <p class="help-text">※ GIF は対象外。透過 PNG は白背景に変換されます。</p>
+                            </div>
+
+                            <div class="setting-section-divider"></div>
+
+                            <div class="media-action-group">
+                                <label class="setting-label-sm">画像を追加</label>
+                                <div class="media-btn-row">
+                                    <button type="button" id="btnLocalFolder" class="btn-media" title="フォルダを選択してまとめて一括登録">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                                        フォルダ登録
+                                    </button>
+                                    <input type="file" id="inputLocalFolder" webkitdirectory style="display:none">
+                                    <button type="button" id="btnLocalFiles" class="btn-media" title="画像ファイルを個別に選択して追加">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                                        ファイル登録
+                                    </button>
+                                    <input type="file" id="inputLocalFiles" multiple accept="image/*" style="display:none">
+                                    <button type="button" id="btnClipboardPaste" class="btn-media" title="クリップボードの画像を貼り付けて追加">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                                        貼り付け
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="localImageList" class="local-image-grid local-image-manager">
+                                <!-- Images injected here -->
+                            </div>
+
+                            <p class="help-text">画像はブラウザ内に保存されます。バックアップ・移行は「バックアップ」から行えます。</p>
+                        </div>
                     </div>
-                    <input type="file" id="inputImageTag" accept=".json.gz" style="display:none">
-                </div>
-            </div>
+
+                    <!-- バックアップパネル -->
+                    <div id="tabPanelBackup" class="settings-tab-panel" data-panel="backup" role="tabpanel" aria-labelledby="tabBtnBackup">
+                        <div class="setting-group">
+                            <h3 class="settings-section-heading">全データのバックアップと復元</h3>
+                            <p class="help-text" style="margin-bottom:10px">推しリスト・画像・タグをすべて含みます。復元時は現在のデータが削除されます。</p>
+                            <div class="data-btn-row">
+                                <button type="button" id="btnExportFullBackup" class="btn-data-action">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    <div class="btn-data-text"><span>全データをバックアップ</span><small>設定・画像・タグを1ファイルで保存</small></div>
+                                </button>
+                                <button type="button" id="btnImportFullBackup" class="btn-data-action">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    <div class="btn-data-text"><span>バックアップから復元</span><small>完全置換・元の環境を再現</small></div>
+                                </button>
+                            </div>
+                            <input type="file" id="inputFullBackup" accept=".json.gz" style="display:none">
+                        </div>
+
+                        <div class="setting-divider"></div>
+
+                        <div class="setting-group">
+                            <h3 class="settings-section-heading">画像＋タグの書き出し・取り込み</h3>
+                            <p class="help-text" style="margin-bottom:10px">既存データを残したまま画像とタグを追加します。タグは文字列で照合してマージされます。</p>
+                            <div class="data-btn-row">
+                                <button type="button" id="btnExportImageTag" class="btn-data-action">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    <div class="btn-data-text"><span>画像＋タグを書き出し</span><small>画像とタグ情報をパッケージで保存</small></div>
+                                </button>
+                                <button type="button" id="btnImportImageTag" class="btn-data-action">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    <div class="btn-data-text"><span>画像＋タグを取り込み</span><small>既存データにマージして追加</small></div>
+                                </button>
+                            </div>
+                            <input type="file" id="inputImageTag" accept=".json.gz" style="display:none">
+                        </div>
+                    </div>
+
+                    <!-- アプリ情報パネル -->
+                    <div id="tabPanelAppInfo" class="settings-tab-panel" data-panel="appinfo" role="tabpanel" aria-labelledby="tabBtnAppInfo">
+                        <div class="setting-group version-info">
+                            <h3 class="settings-section-heading">バージョン情報</h3>
+                            <div class="version-row">
+                                <span class="version-badge"></span>
+                                <button type="button" id="btnCheckUpdate" class="btn-check-update btn-secondary btn-sm">更新を確認</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /.settings-content -->
+            </div><!-- /.settings-layout -->
 
             <div class="form-actions">
                 <button type="button" id="btnClose" class="btn-cancel">閉じる</button>
