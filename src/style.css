@@ -4564,24 +4564,37 @@ body.is-immersive.show-overlay .calendar-month:hover {
 }
 
 /* ── 記念日設定行 ─────────────────────────────────── */
+/*
+ * モバイル・デスクトップ共通の2段グリッドレイアウト。
+ * モーダルが常に狭い（max-width: 400px）ため1段では収まらない。
+ * 行1: [icon][type select / type input][del]
+ * 行2: [date input (icon+type列 span)][annual]
+ */
 .memorial-date-row {
-    display: flex;
-    align-items: center;
+    display: grid;
+    grid-template-areas:
+        "icon type del"
+        "date date annual";
+    grid-template-columns: auto 1fr auto;
     gap: 6px;
     margin-bottom: 6px;
+    align-items: center;
 }
 
 .mdate-type {
-    flex: 0 0 120px;
+    grid-area: type;
     min-width: 0;
+    width: 100%;
 }
 
 .mdate-date {
-    flex: 1;
-    min-width: 80px;
+    grid-area: date;
+    min-width: 0;
+    width: 100%;
 }
 
 .mdate-annual-label {
+    grid-area: annual;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -4592,7 +4605,7 @@ body.is-immersive.show-overlay .calendar-month:hover {
 }
 
 .mdate-delete {
-    flex-shrink: 0;
+    grid-area: del;
     background: none;
     border: none;
     cursor: pointer;
@@ -4629,7 +4642,7 @@ body.is-immersive.show-overlay .calendar-month:hover {
 
 /* ── アイコン選択ボタン ────────────────────────────── */
 .mdate-icon-btn {
-    flex-shrink: 0;
+    grid-area: icon;
     width: 30px;
     height: 30px;
     padding: 0;
@@ -4728,54 +4741,40 @@ body.is-immersive.show-overlay .calendar-month:hover {
     user-select: none;
 }
 
-/* ── モバイル向け記念日行レイアウト ──────────────── */
+/* ── モバイル向け記念日行 追加スタイル ──────────────── */
 @media (max-width: 768px) {
     .oshi-edit-content {
         padding: 16px 16px 4px;
     }
 
     .memorial-date-row {
-        display: grid;
-        grid-template-areas:
-            "icon type del"
-            "date date annual";
-        grid-template-columns: auto 1fr auto;
         gap: 8px 6px;
         background: rgba(0, 0, 0, 0.03);
         padding: 12px;
         border-radius: 12px;
         margin-bottom: 12px;
-        align-items: center;
-    }
-
-    .mdate-icon-btn { grid-area: icon; }
-    .mdate-type {
-        grid-area: type;
-        flex: none;
-        width: 100%;
-    }
-    .mdate-delete { 
-        grid-area: del; 
-        padding: 8px;
-        margin-left: 4px;
-    }
-    .mdate-date { 
-        grid-area: date; 
-        font-size: 16px; /* モバイルでのズーム防止 */
-    }
-    .mdate-annual-label { 
-        grid-area: annual; 
-        justify-content: flex-end;
-        padding-left: 8px;
-    }
-
-    .mdate-annual-icon {
-        font-size: 1.1em;
     }
 
     .mdate-icon-btn {
         width: 36px;
         height: 36px;
+    }
+    .mdate-delete {
+        padding: 8px;
+        margin-left: 4px;
+    }
+    .mdate-date {
+        font-size: 16px; /* モバイルでのズーム防止 */
+    }
+    .mdate-annual-label {
+        justify-content: flex-end;
+        padding-left: 8px;
+    }
+    .mdate-annual-icon {
+        font-size: 1.1em;
+    }
+    .mdate-type-select {
+        font-size: 16px; /* モバイルでのズーム防止 */
     }
 }
 
@@ -4911,7 +4910,7 @@ body.is-immersive.show-overlay .calendar-month:hover {
 
 /* 記念日タイプ select */
 .mdate-type-select {
-    flex: 0 0 120px;
+    width: 100%;
     min-width: 0;
     height: 32px;
     border-radius: 8px;
@@ -4943,7 +4942,8 @@ body.is-immersive.show-overlay .calendar-month:hover {
 }
 
 .mdate-type-new {
-    flex: 1;
+    grid-area: type;
+    width: 100%;
     min-width: 0;
     height: 32px;
     border-radius: 8px;
