@@ -36,10 +36,11 @@ const blobToBase64Code = extractCode(
 // --- ファクトリ関数（依存注入） ---
 function makeHandleExportFullBackup(mockLocalImageDB, mockAppSettings, mockShowToast) {
     const getOrderedImageKeys = (keys) => keys;
+    const BACKUP_KEY = 'oshikoyo_last_backup';
     return new Function(
-        'localImageDB', 'appSettings', 'showToast', 'getOrderedImageKeys', 'blobToBase64',
+        'localImageDB', 'appSettings', 'showToast', 'getOrderedImageKeys', 'blobToBase64', 'BACKUP_KEY', 'localStorage',
         `${blobToBase64Code}; ${exportFullBackupCode}; return handleExportFullBackup;`
-    )(mockLocalImageDB, mockAppSettings, mockShowToast, getOrderedImageKeys, null /* extracted */);
+    )(mockLocalImageDB, mockAppSettings, mockShowToast, getOrderedImageKeys, null /* extracted */, BACKUP_KEY, globalThis.localStorage);
 }
 
 function makeHandleExportImageTagPackage(mockLocalImageDB, mockAppSettings, mockShowToast) {
