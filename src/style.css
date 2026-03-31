@@ -4960,6 +4960,7 @@ textarea:focus-visible,
 
 /* ===== モバイルオーバーレイ要素 (デフォルト: 非表示) ===== */
 .mobile-tab-panel,
+.mobile-sub-panel,
 /* ===== テロップバー ===== */
 .ticker-bar {
     display: none; /* デスクトップは非表示、モバイルのみ有効 */
