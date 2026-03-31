@@ -40,6 +40,8 @@ function makeLoadSettings(savedData) {
     };
     const code = `
         const STORAGE_KEY = '${STORAGE_KEY}';
+        const INIT_KEY = 'oshikoyo_initialized';
+        let storageWasCleared = false;
         const DEFAULT_SETTINGS = ${JSON.stringify(DEFAULT_SETTINGS)};
         let appSettings = { ...DEFAULT_SETTINGS };
         const localStorage = mockLS;
