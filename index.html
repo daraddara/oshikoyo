@@ -377,6 +377,29 @@
             </div>
             <div class="mobile-sub-panel-body">
                 <div class="setting-group">
+                    <label class="setting-label">表示モード</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="ms-mediaMode" value="single"> 固定（ピン留め）</label>
+                        <label><input type="radio" name="ms-mediaMode" value="random"> ランダム</label>
+                        <label><input type="radio" name="ms-mediaMode" value="cycle"> サイクル</label>
+                    </div>
+                </div>
+                <div class="setting-group ms-interval-group">
+                    <label class="setting-label">切り替え間隔</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="ms-mediaIntervalPreset" value="10s"> 10秒</label>
+                        <label><input type="radio" name="ms-mediaIntervalPreset" value="30s"> 30秒</label>
+                        <label><input type="radio" name="ms-mediaIntervalPreset" value="1m"> 1分</label>
+                        <label><input type="radio" name="ms-mediaIntervalPreset" value="10m"> 10分</label>
+                        <label><input type="radio" name="ms-mediaIntervalPreset" value="1h"> 1時間</label>
+                        <label><input type="radio" name="ms-mediaIntervalPreset" value="0:00"> 毎日 0:00</label>
+                        <label><input type="radio" name="ms-mediaIntervalPreset" value="4:00"> 毎日 4:00</label>
+                        <label><input type="radio" name="ms-mediaIntervalPreset" value="startup"> 起動時のみ</label>
+                    </div>
+                    <p class="help-text">固定モードでは無効です。</p>
+                </div>
+                <div class="setting-divider"></div>
+                <div class="setting-group">
                     <label class="setting-label">自動圧縮</label>
                     <div class="radio-group">
                         <label title="圧縮せずそのまま保存します"><input type="radio" name="ms-imageCompressMode" value="off"> 圧縮なし</label>

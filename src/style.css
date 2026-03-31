@@ -5647,6 +5647,11 @@ textarea:focus-visible,
         -webkit-overflow-scrolling: touch;
     }
 
+    .ms-interval-group.is-disabled {
+        pointer-events: none;
+        opacity: 0.35;
+    }
+
     /* ===== ホームタブ 固定モードドット ===== */
     .mobile-tab-btn[data-tab="home"] { position: relative; }
     .mobile-home-dot {
