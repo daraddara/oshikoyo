@@ -1204,7 +1204,7 @@ body {
     padding: 0;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     background: transparent;
-    max-width: 500px;
+    max-width: 720px;
     width: 95%;
 }
 
@@ -1809,7 +1809,7 @@ body {
     padding: 0;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     background: transparent;
-    max-width: 500px;
+    max-width: 720px;
     width: 95%;
 }
 
@@ -2620,44 +2620,74 @@ body {
     font-weight: 600;
 }
 
-.settings-tabs {
+/* 2カラムレイアウト */
+.settings-layout {
     display: flex;
-    gap: 0;
-    padding: 0 16px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* 左サイドバー */
+.settings-sidebar {
+    width: 148px;
+    flex-shrink: 0;
+    padding: 10px 8px;
+    border-right: 1px solid rgba(0, 0, 0, 0.06);
     background: rgba(0, 0, 0, 0.02);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+}
+
+.settings-sidebar::-webkit-scrollbar { width: 4px; }
+.settings-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
 }
 
 .settings-tab-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
     background: none;
     border: none;
-    padding: 11px 18px;
-    font-size: 0.875rem;
+    padding: 9px 12px;
+    font-size: 0.85rem;
     font-weight: 500;
     color: var(--text-secondary);
     cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    border-radius: 0;
-    transition: color 0.15s, border-color 0.15s;
+    border-radius: 8px;
+    transition: background 0.15s, color 0.15s;
 }
 
 .settings-tab-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
     color: var(--text-primary);
 }
 
 .settings-tab-btn.is-active {
+    background: rgba(59, 130, 246, 0.1);
     color: var(--accent-color);
-    border-bottom-color: var(--accent-color);
     font-weight: 600;
+}
+
+/* 右コンテンツエリア */
+.settings-content {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .settings-tab-panel {
     display: none;
-    padding: 20px 24px;
-    min-height: 260px;
-    max-height: 65vh;
+    padding: 16px 20px;
+    max-height: 68vh;
     overflow-y: auto;
+    flex: 1;
 }
 
 .settings-tab-panel.is-active {
@@ -2668,6 +2698,18 @@ body {
 .settings-tab-panel::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.1);
     border-radius: 3px;
+}
+
+/* セクション見出し */
+.settings-section-heading {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin: 0 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .setting-label {
