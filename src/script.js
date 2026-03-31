@@ -702,7 +702,7 @@ function getJPHoliday(date) {
     const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
     // 外部APIデータを優先（データがある場合）
-    if (appSettings.externalHolidays && appSettings.externalHolidays[dateStr]) {
+    if (appSettings.externalHolidays[dateStr]) {
         return appSettings.externalHolidays[dateStr];
     }
 
@@ -779,6 +779,11 @@ async function syncHolidays(silent = false) {
         const response = await fetch('https://holidays-jp.github.io/api/v1/date.json');
         if (!response.ok) throw new Error('API request failed');
         const data = await response.json();
+
+        // 期待するキーバリューのオブジェクト形式かを検証
+        if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+            throw new Error('Unexpected API response format');
+        }
 
         appSettings.externalHolidays = data;
         appSettings.lastHolidayUpdate = Date.now();
@@ -4451,11 +4456,6 @@ function init() {
         updateView();
     });
 
-    // 初回起動時の祝日取得（未取得の場合のみサイレントで実行）
-    if (!appSettings.lastHolidayUpdate) {
-        syncHolidays(true);
-    }
-
     // Unified Display Mode Control logic
     const displayModeBtn = document.querySelector('.display-mode-btn');
     const dropdown = document.querySelector('.interval-dropdown');
@@ -6463,6 +6463,7 @@ function initMobileGeneralSubPanel() {
         syncHolidays();
     });
 
+    // モバイル側のUIが開かれた際にも最新の同期状態を反映させる
     updateHolidaySyncUI();
 }
 
