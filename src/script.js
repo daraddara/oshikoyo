@@ -330,6 +330,9 @@ const localImageDB = new LocalImageDB();
 
 let appSettings = { ...DEFAULT_SETTINGS };
 const STORAGE_KEY = 'oshikoyo_settings';
+const INIT_KEY = 'oshikoyo_initialized';   // センチネルキー（データ存在確認用）
+const BACKUP_KEY = 'oshikoyo_last_backup'; // 最終バックアップ日時（Unix ms）
+let storageWasCleared = false; // 起動時にlocalStorage消失を検知したらtrue
 
 // Helper: Blob to Base64
 /**
@@ -2876,6 +2879,7 @@ async function handleExportFullBackup() {
     a.download = `oshikoyo_backup_${date}.json.gz`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
+    localStorage.setItem(BACKUP_KEY, Date.now().toString());
     showToast('バックアップを保存しました');
 }
 
@@ -4031,6 +4035,10 @@ function initSettings() {
 
 function loadSettings() {
     const saved = localStorage.getItem(STORAGE_KEY);
+    // センチネルキーが存在するのにデータがない → localStorageが外部からクリアされた
+    if (!saved && localStorage.getItem(INIT_KEY) !== null) {
+        storageWasCleared = true;
+    }
     if (saved) {
         try {
             const parsed = JSON.parse(saved);
@@ -4615,6 +4623,19 @@ function init() {
 
     // 初回起動時: 登録画像がなければデフォルト画像を追加
     seedDefaultImages();
+
+    // センチネルキー書き込み（初回起動日時も記録）
+    if (!localStorage.getItem(INIT_KEY)) {
+        localStorage.setItem('oshikoyo_first_use', Date.now().toString());
+    }
+    localStorage.setItem(INIT_KEY, '1');
+
+    // localStorage消失通知 or バックアップリマインダー
+    if (storageWasCleared) {
+        showDataClearedToast();
+    } else {
+        maybeShowBackupReminder();
+    }
 }
 
 /**
@@ -5624,6 +5645,80 @@ async function checkClipboardOnFocus() {
     } catch (e) {
         // 権限なし・非対応環境は無音で無視
     }
+}
+
+function openSettingsBackupTab() {
+    document.getElementById('btnSettings').click();
+    document.getElementById('tabBtnBackup').click();
+}
+
+function showDataClearedToast() {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.id = 'data-cleared-toast';
+    toast.className = 'toast-message';
+    toast.style.cssText = 'padding:12px 16px;display:flex;flex-direction:column;gap:8px;';
+    toast.innerHTML = `
+        <div style="font-size:0.95rem;font-weight:500;">設定データが初期化されました</div>
+        <button type="button" class="btn-primary" style="width:100%;">バックアップから復元する</button>
+    `;
+    toast.querySelector('button').addEventListener('click', () => {
+        toast.remove();
+        openSettingsBackupTab();
+    });
+    container.appendChild(toast);
+
+    if (container.showPopover) {
+        try {
+            if (!container.matches(':popover-open')) container.showPopover();
+        } catch (e) {}
+    }
+    // 自動消去なし（ユーザーが明示的に閉じるまで表示）
+}
+
+function showBackupReminderToast() {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.id = 'backup-reminder-toast';
+    toast.className = 'toast-message';
+    toast.style.cssText = 'padding:12px 16px;display:flex;flex-direction:column;gap:8px;';
+    toast.innerHTML = `
+        <div style="font-size:0.95rem;font-weight:500;">データを保護するため、バックアップをおすすめします</div>
+        <button type="button" class="btn-primary" style="width:100%;">バックアップする</button>
+    `;
+    toast.querySelector('button').addEventListener('click', () => {
+        toast.remove();
+        openSettingsBackupTab();
+    });
+    container.appendChild(toast);
+
+    if (container.showPopover) {
+        try {
+            if (!container.matches(':popover-open')) container.showPopover();
+        } catch (e) {}
+    }
+
+    setTimeout(() => toast.remove(), 10000);
+}
+
+function maybeShowBackupReminder() {
+    const firstUse = parseInt(localStorage.getItem('oshikoyo_first_use') || '0');
+    const lastBackup = localStorage.getItem(BACKUP_KEY);
+    const reminded = localStorage.getItem('oshikoyo_backup_reminded');
+
+    if (reminded) return;
+    if (!firstUse) return;
+
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    if (Date.now() - firstUse < sevenDays) return;
+    if (lastBackup) return;
+
+    localStorage.setItem('oshikoyo_backup_reminded', '1');
+    showBackupReminderToast();
 }
 
 function showClipboardToast() {
