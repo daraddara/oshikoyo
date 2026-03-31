@@ -346,6 +346,35 @@ describe('exportOshiAsCsv', () => {
         global.Blob = origBlob;
     });
 
+    it('CSVインジェクション対策として、= + - @で始まるフィールドにシングルクォートを付与する', () => {
+        const createdBlobs = [];
+        const origBlob = global.Blob;
+        global.Blob = class extends origBlob {
+            constructor(parts, opts) { super(parts, opts); createdBlobs.push(parts.join('')); }
+        };
+
+        const mockSettings = {
+            oshiList: [{
+                name: '=SUM(1+1)',
+                color: '  +1234',
+                memorial_dates: [
+                    { type_id: 'bday',  date: ' -1/1', is_annual: true },
+                    { type_id: 'debut', date: '@test', is_annual: true },
+                ],
+                tags: ['=Tag', '+Tag']
+            }],
+            event_types: []
+        };
+        const fn = makeExportOshiAsCsv(mockSettings, mockShowToast);
+        fn();
+
+        const csvText = createdBlobs[0].replace('\uFEFF', ''); // remove BOM
+        const lines = csvText.split('\r\n');
+        expect(lines[2]).toBe(`'=SUM(1+1),'  +1234,' -1/1,'@test,,,,,,,'=Tag;+Tag`);
+
+        global.Blob = origBlob;
+    });
+
     it('カスタムイベントが4件以上の場合は警告トーストを表示する', () => {
         const mockSettings = {
             oshiList: [{
