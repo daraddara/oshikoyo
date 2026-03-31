@@ -1991,6 +1991,7 @@ function saveOshiFromForm() {
         color,
         memorial_dates,
         tags,
+        avatar: index >= 0 ? (appSettings.oshiList[index].avatar ?? null) : null,
     };
 
     if (index >= 0) {
