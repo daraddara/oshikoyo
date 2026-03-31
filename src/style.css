@@ -4754,11 +4754,6 @@ body.is-immersive.show-overlay .calendar-month:hover {
         flex: none;
         width: 100%;
     }
-    .mdate-type-select {
-        flex: none;
-        width: 100%;
-        font-size: 16px; /* モバイルでのズーム防止 */
-    }
     .mdate-delete { 
         grid-area: del; 
         padding: 8px;
@@ -4927,6 +4922,14 @@ body.is-immersive.show-overlay .calendar-month:hover {
     color: var(--text-primary);
     cursor: pointer;
     outline: none;
+}
+
+@media (max-width: 768px) {
+    .mdate-type-select {
+        flex: none;
+        width: 100%;
+        font-size: 16px; /* モバイルでのズーム防止 */
+    }
 }
 
 .mdate-type-new {
