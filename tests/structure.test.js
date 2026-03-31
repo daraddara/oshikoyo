@@ -27,8 +27,8 @@ describe('DOM Structure', () => {
         expect(htmlContent).toContain('data-mode="cycle"');
     });
 
-    it('should have settings tabs and reset button', () => {
-        expect(htmlContent).toContain('class="settings-tabs"');
+    it('should have settings sidebar and reset button', () => {
+        expect(htmlContent).toContain('class="settings-sidebar"');
         expect(htmlContent).toContain('id="btnResetLayout"');
     });
 });
