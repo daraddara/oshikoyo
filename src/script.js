@@ -29,6 +29,9 @@ const DEFAULT_SETTINGS = {
     localImageMeta: {},  // { [id: number]: { tags: string[] } }
     memorialDisplayMode: 'preferred',  // 'preferred' (80/20) | 'exclusive' (100%)
     imageCompressMode: 'standard',     // 'off' | 'standard' | 'aggressive'
+    // Holiday API Settings
+    externalHolidays: {},              // { "YYYY-MM-DD": "祝日名" }
+    lastHolidayUpdate: null            // Timestamp
 };
 
 // --- IndexedDB Management ---
@@ -698,6 +701,11 @@ function getJPHoliday(date) {
     // フォーマット: YYYY-MM-DD
     const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
+    // 外部APIデータを優先（データがある場合）
+    if (appSettings.externalHolidays[dateStr]) {
+        return appSettings.externalHolidays[dateStr];
+    }
+
     // 例外リストに存在する場合はそれを優先（特例や移動、新設など）
     if (HOLIDAY_EXCEPTIONS[dateStr] !== undefined) {
         return HOLIDAY_EXCEPTIONS[dateStr];
@@ -759,6 +767,46 @@ function getJPHoliday(date) {
     }
 
     return null;
+}
+
+/**
+ * 日本の祝日データを外部APIから同期する
+ * @param {boolean} silent - 成功時にトーストを表示しないかどうか
+ * @returns {Promise<boolean>} 成功したかどうか
+ */
+async function syncHolidays(silent = false) {
+    try {
+        const response = await fetch('https://holidays-jp.github.io/api/v1/date.json');
+        if (!response.ok) throw new Error('API request failed');
+        const data = await response.json();
+
+        // 期待するキーバリューのオブジェクト形式かを検証
+        if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+            throw new Error('Unexpected API response format');
+        }
+
+        appSettings.externalHolidays = data;
+        appSettings.lastHolidayUpdate = Date.now();
+        
+        saveSettings();
+
+        if (!silent) {
+            if (typeof showToast === 'function') {
+                showToast('祝日データを同期しました');
+            }
+        }
+        updateHolidaySyncUI(); // UI更新
+        updateView(); // カレンダー再描画
+        return true;
+    } catch (e) {
+        console.error('Failed to sync holidays:', e);
+        if (!silent) {
+            if (typeof showToast === 'function') {
+                showToast('祝日データの同期に失敗しました', 'error');
+            }
+        }
+        return false;
+    }
 }
 
 // --- Calendar Generation ---
@@ -3665,6 +3713,9 @@ function initSettings() {
         // Initialize Local UI visibility
         updateLocalMediaUI();
 
+        // Holiday API Settings
+        updateHolidaySyncUI();
+
         // 画像タブが現在アクティブな場合、または新規追加があった場合に一覧を再描画
         const activePanel = document.querySelector('.settings-tab-panel.is-active');
         if (hasNewLocalImages || (activePanel && activePanel.dataset.panel === 'media')) {
@@ -3723,6 +3774,11 @@ function initSettings() {
     const checkAutoLayout = document.getElementById('checkAutoLayout');
     if (checkAutoLayout) checkAutoLayout.addEventListener('change', saveSettings);
 
+    const btnSyncHolidays = document.getElementById('btnSyncHolidays');
+    if (btnSyncHolidays) {
+        btnSyncHolidays.addEventListener('click', () => syncHolidays());
+    }
+
     // Reset Layout
     document.getElementById('btnResetLayout').addEventListener('click', resetLayoutToDefault);
 
@@ -3759,6 +3815,7 @@ function initSettings() {
             picker.style.left = `${rect.left}px`;
             picker.classList.toggle('is-open');
         });
+
         picker.querySelectorAll('.icon-chip').forEach(chip => {
             chip.addEventListener('click', () => {
                 etCurrentIconId = chip.dataset.iconId;
@@ -4187,6 +4244,23 @@ function saveSettings() {
     setupMediaTimer(true);
     updateToggleMonthsUI();
     updateView();
+}
+
+/**
+ * 祝日同期UIの状態（最終更新日時）を更新する
+ */
+function updateHolidaySyncUI() {
+    const lastSyncEl = document.getElementById('holidayLastSync');
+    const mobileLastSyncEl = document.getElementById('msHolidayLastSync');
+
+    let textStr = '最終同期: 未取得 (内蔵ロジックで計算中)';
+    if (appSettings.lastHolidayUpdate) {
+        const date = new Date(appSettings.lastHolidayUpdate);
+        textStr = `最終更新: ${date.toLocaleString()} (Holidays JP APIを使用中)`;
+    }
+
+    if (lastSyncEl) lastSyncEl.textContent = textStr;
+    if (mobileLastSyncEl) mobileLastSyncEl.textContent = textStr;
 }
 
 /**
@@ -6383,6 +6457,14 @@ function initMobileGeneralSubPanel() {
     });
 
     panel.querySelector('#btnMsResetLayout')?.addEventListener('click', resetLayoutToDefault);
+
+    // Holiday Sync
+    panel.querySelector('#msBtnSyncHolidays')?.addEventListener('click', () => {
+        syncHolidays();
+    });
+
+    // モバイル側のUIが開かれた際にも最新の同期状態を反映させる
+    updateHolidaySyncUI();
 }
 
 function initMobileMemorialSubPanel() {
