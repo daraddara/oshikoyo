@@ -4227,6 +4227,7 @@ function updateQuickMediaButtons() {
     }
 
     updateIntervalMenu();
+    updateMobileMediaModeUI();
 }
 
 /**
@@ -6396,9 +6397,59 @@ function initMobileMemorialSubPanel() {
     });
 }
 
+function updateMobileMediaModeUI() {
+    const panel = document.getElementById('mobileSubPanel-media');
+    if (!panel) return;
+
+    const mode = appSettings.mediaMode ?? 'single';
+    panel.querySelectorAll('input[name="ms-mediaMode"]').forEach(r => { r.checked = r.value === mode; });
+
+    const intervalGroup = panel.querySelector('.ms-interval-group');
+    if (intervalGroup) {
+        if (mode === 'single') {
+            intervalGroup.classList.add('is-disabled');
+        } else {
+            intervalGroup.classList.remove('is-disabled');
+        }
+    }
+
+    const activeInterval = appSettings.lastActiveInterval ?? appSettings.mediaIntervalPreset ?? '1m';
+    panel.querySelectorAll('input[name="ms-mediaIntervalPreset"]').forEach(r => {
+        r.checked = r.value === activeInterval;
+    });
+}
+
 function initMobileMediaSubPanel() {
     const panel = document.getElementById('mobileSubPanel-media');
     if (!panel) return;
+
+    updateMobileMediaModeUI();
+
+    panel.querySelectorAll('input[name="ms-mediaMode"]').forEach(r => {
+        r.addEventListener('change', () => {
+            const newMode = r.value;
+            if (appSettings.mediaMode === 'single' && (newMode === 'random' || newMode === 'cycle')) {
+                appSettings.mediaIntervalPreset = appSettings.lastActiveInterval || '1m';
+            }
+            appSettings.mediaMode = newMode;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+            updateMobileMediaModeUI();
+            updateQuickMediaButtons();
+            setupMediaTimer(true);
+            updateView();
+        });
+    });
+
+    panel.querySelectorAll('input[name="ms-mediaIntervalPreset"]').forEach(r => {
+        r.addEventListener('change', () => {
+            if (appSettings.mediaMode === 'single') return;
+            appSettings.mediaIntervalPreset = r.value;
+            appSettings.lastActiveInterval = r.value;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+            updateQuickMediaButtons();
+            setupMediaTimer(false);
+        });
+    });
 
     const compressVal = appSettings.imageCompressMode ?? 'standard';
     panel.querySelectorAll('input[name="ms-imageCompressMode"]').forEach(r => {
