@@ -4294,6 +4294,27 @@ async function checkSharedImage() {
     }
 }
 
+async function seedDefaultImages() {
+    const keys = await localImageDB.getAllKeys();
+    if (keys.length > 0) return;
+
+    const DEFAULT_IMAGES = [
+        { path: 'src/assets/default_landscape_demo.jpg', name: 'default_landscape_demo.jpg', type: 'image/jpeg' },
+        { path: 'src/assets/default_portrait_demo.jpg',  name: 'default_portrait_demo.jpg',  type: 'image/jpeg' },
+    ];
+
+    const files = await Promise.all(DEFAULT_IMAGES.map(async ({ path, name, type }) => {
+        const res = await fetch(path);
+        const blob = await res.blob();
+        return new File([blob], name, { type });
+    }));
+
+    const newKeys = await localImageDB.addImages(files);
+    appSettings.localImageOrder = [...newKeys, ...appSettings.localImageOrder];
+    saveSettingsSilently();
+    setupMediaTimer(true);
+}
+
 function init() {
     loadSettings();
     loadState(); // Restore last state
@@ -4516,6 +4537,9 @@ function init() {
 
     // Cycle check (Refactored to dynamic timer)
     setupMediaTimer(true);
+
+    // 初回起動時: 登録画像がなければデフォルト画像を追加
+    seedDefaultImages();
 }
 
 /**
@@ -5169,7 +5193,7 @@ function determineTargetMediaKey(keys, mode) {
 }
 
 /**
- * デフォルトの画像を描画する
+ * デフォルトの画像を描画する（縦横交互デモ）
  * @param {HTMLElement} displayArea ディスプレイエリア
  */
 function renderDefaultMedia(displayArea) {
