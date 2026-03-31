@@ -4916,12 +4916,22 @@ body.is-immersive.show-overlay .calendar-month:hover {
     height: 32px;
     border-radius: 8px;
     border: 1px solid rgba(0, 0, 0, 0.12);
-    padding: 0 6px;
     font-size: 0.875rem;
     background: var(--bg-color);
     color: var(--text-primary);
     cursor: pointer;
     outline: none;
+}
+
+/*
+ * .setting-group select { padding: 10px 14px } が詳細度 (0,1,1) で
+ * .mdate-type-select { padding: 0 6px } (0,1,0) を上書きする。
+ * box-sizing: border-box + height: 32px の状態で縦 padding 10px が効くと
+ * 文字描画エリアが 12px になり、フォント (14px超) が縦クリップされる。
+ * → 詳細度 (0,2,0) で縦 padding を 0 に戻す。
+ */
+.memorial-date-row .mdate-type-select {
+    padding: 0 10px;
 }
 
 @media (max-width: 768px) {
