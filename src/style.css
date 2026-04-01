@@ -6495,6 +6495,60 @@ body.is-touch-device .mobile-sub-panel-body {
     -webkit-overflow-scrolling: touch;
 }
 
+/* ===== 管理パネル メニュードロップダウン ===== */
+body.is-touch-device .mobile-oshi-menu-wrapper { position: relative; }
+body.is-touch-device .mobile-oshi-menu-btn {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    font-size: 1.3rem;
+    letter-spacing: 0.08em;
+    padding: 4px 8px;
+    color: var(--text-primary);
+    opacity: 0.7;
+    transition: opacity 0.15s;
+}
+body.is-touch-device .mobile-oshi-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: rgba(30, 30, 40, 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    min-width: 200px;
+    z-index: 200;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+body.is-touch-device .mobile-oshi-menu.is-open { display: block; }
+body.is-touch-device .mobile-oshi-menu-item {
+    display: block;
+    width: 100%;
+    padding: 15px 18px;
+    text-align: left;
+    border: none;
+    background: none;
+    font-size: 0.92rem;
+    color: rgba(255, 255, 255, 0.92);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+body.is-touch-device .mobile-oshi-menu-item:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ===== 空の状態 縦中央寄せ ===== */
+body.is-touch-device .oshi-empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
 /* ===== 管理パネル 推しリスト ===== */
 body.is-touch-device .mobile-oshi-actions {
     flex-shrink: 0;
