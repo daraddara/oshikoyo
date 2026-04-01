@@ -6203,6 +6203,9 @@ body.is-touch-device #mobile-bottom-bar.is-hidden {
     pointer-events: none;
 }
 
+/* ===== ナビゲーション矢印を非表示 ===== */
+body.is-touch-device .media-nav-btn { display: none !important; }
+
 /* ===== テロップバー ===== */
 body.is-touch-device .ticker-bar {
     display: block;
@@ -6225,6 +6228,79 @@ body.is-touch-device.mobile-tab-settings   .ticker-bar {
     opacity: 0;
     pointer-events: none;
 }
+body.is-touch-device .ticker-inner {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 12px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+body.is-touch-device .ticker-text {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    display: inline-block;
+}
+body.is-touch-device .ticker-text.is-scrolling {
+    animation: ticker-scroll 22s linear infinite;
+    padding-left: 100%;
+}
+
+/* ===== タブボタン ===== */
+body.is-touch-device .mobile-tab-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border: none;
+    background: none;
+    color: var(--text-secondary, #888);
+    cursor: pointer;
+    font-size: 10px;
+    touch-action: manipulation;
+    padding: 8px 4px;
+    border-radius: 0;
+    transition: color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    height: 64px;
+}
+body.is-touch-device .mobile-tab-btn svg { flex-shrink: 0; }
+body.is-touch-device .mobile-tab-btn:active { opacity: 0.7; }
+body.is-touch-device .mobile-tab-btn.is-active { color: var(--accent-color, #ec4899); }
+body.is-touch-device .mobile-tab-btn[data-tab="home"] { position: relative; }
+body.is-touch-device .mobile-home-dot {
+    display: none;
+    position: absolute;
+    top: 9px;
+    right: calc(50% - 17px);
+    width: 7px;
+    height: 7px;
+    background: #ec4899;
+    border-radius: 50%;
+    border: 1.5px solid var(--card-bg, #fff);
+}
+body.is-touch-device .mobile-home-dot.is-visible { display: block; }
+body.is-touch-device .mobile-tab-btn.mobile-tab-add {
+    position: relative;
+    background: var(--accent-color, #ec4899);
+    color: #fff;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    box-shadow: 0 4px 16px rgba(236, 72, 153, 0.4);
+    justify-self: center;
+    align-self: center;
+    margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 7px);
+    flex-direction: row;
+    top: -7px;
+}
+body.is-touch-device .mobile-tab-btn.mobile-tab-add span { display: none; }
+body.is-touch-device .mobile-tab-btn.mobile-tab-add:active { opacity: 0.85; }
 
 /* ===== モバイルタブパネル ===== */
 body.is-touch-device .mobile-tab-panel {
