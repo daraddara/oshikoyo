@@ -4129,7 +4129,9 @@ function loadSettings() {
                 !['off', 'standard', 'aggressive'].includes(appSettings.imageCompressMode)) {
                 appSettings.imageCompressMode = 'standard';
             }
-        } catch (e) { }
+        } catch (e) {
+            console.error('Failed to load or migrate settings:', e);
+        }
     }
     // updateView(); // Removed to prevent double rendering on init
 }
@@ -5112,7 +5114,9 @@ function showUpdateNotification() {
                 container.hidePopover();
             }
             container.showPopover();
-        } catch (e) {}
+        } catch (e) {
+            console.warn('Popover API error in showUpdateNotification:', e);
+        }
     }
 }
 
