@@ -29,6 +29,15 @@ function makeGetOrderedImageKeys(mockAppSettings) {
     return new Function('appSettings', `${orderedImageKeysCode}; return getOrderedImageKeys;`)(mockAppSettings);
 }
 
+// Extract getTypeIdForLabel from script.js (depends on appSettings)
+const getTypeIdForLabelCode = extractCode(
+    'function getTypeIdForLabel(label) {',
+    '\n/** typeId に対応するアイコンIDを取得 */'
+);
+function makeGetTypeIdForLabel(mockAppSettings) {
+    return new Function('appSettings', `${getTypeIdForLabelCode}; return getTypeIdForLabel;`)(mockAppSettings);
+}
+
 describe('escapeHTML', () => {
     it('should escape special characters', () => {
         expect(escapeHTML('&')).toBe('&amp;');
@@ -325,5 +334,52 @@ describe('getOrderedImageKeys', () => {
     it('localImageOrder に DB に存在しないキーは除外される', () => {
         const fn = makeGetOrderedImageKeys({ localImageOrder: [5, 2, 1] });
         expect(fn([1, 2, 3])).toEqual([2, 1, 3]);
+    });
+});
+
+describe('getTypeIdForLabel', () => {
+    it('should return the corresponding id when a matching label is found', () => {
+        const fn = makeGetTypeIdForLabel({
+            event_types: [
+                { id: 'bday', label: '誕生日' },
+                { id: 'debut', label: 'デビュー記念日' },
+                { id: 'ev_1', label: '3Dお披露目' }
+            ]
+        });
+        expect(fn('誕生日')).toBe('bday');
+        expect(fn('デビュー記念日')).toBe('debut');
+        expect(fn('3Dお披露目')).toBe('ev_1');
+    });
+
+    it('should return null when the label is not found', () => {
+        const fn = makeGetTypeIdForLabel({
+            event_types: [
+                { id: 'bday', label: '誕生日' },
+                { id: 'debut', label: 'デビュー記念日' }
+            ]
+        });
+        expect(fn('存在しないラベル')).toBeNull();
+        expect(fn('bday')).toBeNull(); // ID should not be found by label
+    });
+
+    it('should return null when appSettings.event_types is empty or undefined', () => {
+        const fn1 = makeGetTypeIdForLabel({ event_types: [] });
+        expect(fn1('誕生日')).toBeNull();
+
+        const fn2 = makeGetTypeIdForLabel({});
+        expect(fn2('誕生日')).toBeNull();
+
+        const fn3 = makeGetTypeIdForLabel({ event_types: undefined });
+        expect(fn3('誕生日')).toBeNull();
+    });
+
+    it('should return the first matching id if there are duplicate labels', () => {
+        const fn = makeGetTypeIdForLabel({
+            event_types: [
+                { id: 'event_A', label: '重複ラベル' },
+                { id: 'event_B', label: '重複ラベル' }
+            ]
+        });
+        expect(fn('重複ラベル')).toBe('event_A');
     });
 });
