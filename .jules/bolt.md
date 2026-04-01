@@ -1,3 +1,0 @@
-## 2024-05-18 - Optimized Array Sort Evaluation
-**Learning:** `Array.prototype.sort()` calls its comparator function O(N log N) times. When sorting involves expensive DOM operations, Date parsing, or calculations like `getNextMemorialDate`, putting the logic directly in the comparator causes significant performance hits and GC pressure on large data sets.
-**Action:** Use a map-sort-map pattern (Schwartzian Transform) for expensive calculations in lists. Compute the value once, map it to an array of object wrappings, sort the objects by the pre-computed value, and then map back to the original objects.

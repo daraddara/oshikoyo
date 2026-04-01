@@ -519,8 +519,6 @@ const HTML_ESCAPE_MAP = {
  */
 function escapeHTML(str) {
     if (!str) return '';
-    // ⚡ Bolt: Use a constant escape map to avoid reallocating the object
-    // on every function call, reducing GC pressure during heavy DOM rendering loops.
     return str.replace(/[&<>"']/g, m => HTML_ESCAPE_MAP[m]);
 }
 
@@ -6122,9 +6120,6 @@ function getFilteredSortedOshiList(search, sort) {
     if (sort === 'name') {
         list = [...list].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ja'));
     } else if (sort === 'memorial') {
-        // ⚡ Bolt: Optimize sorting performance with Schwartzian Transform
-        // Impact: Reduces O(N log N) `getNextMemorialDate` recalculations down to O(N),
-        // significantly speeding up management tab load and sort actions for large lists.
         const mappedList = list.map(oshi => {
             const nd = getNextMemorialDate(oshi);
             return { oshi, days: nd ? nd.days : 99999 };
