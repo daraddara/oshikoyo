@@ -1380,6 +1380,11 @@ function renderOshiTable() {
         return;
     }
 
+    // ⚡ Bolt: Batch DOM insertions using DocumentFragment
+    // Impact: Prevents layout thrashing by updating the DOM once
+    // instead of N times during list rendering.
+    const fragment = document.createDocumentFragment();
+
     list.forEach((oshi) => {
         const index = oshi._origIndex;
         const row = document.createElement('tr');
@@ -1539,8 +1544,10 @@ function renderOshiTable() {
             });
         }
 
-        tbody.appendChild(row);
+        fragment.appendChild(row);
     });
+
+    tbody.appendChild(fragment);
 }
 
 /** イベントタイプ管理リストを描画 */
@@ -6193,6 +6200,11 @@ function renderOshiVirtualWindow(scrollTop) {
         return;
     }
 
+    // ⚡ Bolt: Batch DOM insertions using DocumentFragment
+    // Impact: Prevents layout thrashing by updating the DOM once
+    // instead of N times during virtual window rendering.
+    const fragment = document.createDocumentFragment();
+
     for (let i = startIdx; i < endIdx; i++) {
         const oshi = list[i];
         const li = document.createElement('li');
@@ -6248,8 +6260,9 @@ function renderOshiVirtualWindow(scrollTop) {
         li.appendChild(chevron);
 
         li.addEventListener('click', () => openOshiEditForm(oshi._origIndex));
-        listEl.appendChild(li);
+        fragment.appendChild(li);
     }
+    listEl.appendChild(fragment);
 }
 
 /** 右端インデックスレールを描画 */
