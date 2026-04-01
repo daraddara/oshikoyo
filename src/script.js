@@ -3539,6 +3539,7 @@ function renderPreview() {
         item.className = 'preview-item';
         const img = document.createElement('img');
         img.src = URL.createObjectURL(file);
+        img.alt = file.name || 'Image preview';
         // clean up object url later? for preview it's short lived
         item.appendChild(img);
         grid.appendChild(item);
@@ -6765,7 +6766,7 @@ async function renderMobileGridLibrary() {
             btn.className = 'mobile-grid-thumb';
             const img = document.createElement('img');
             img.src = url;
-            img.alt = '';
+            img.alt = record.file.name || 'Image preview';
             img.loading = 'lazy';
             btn.appendChild(img);
             btn.addEventListener('click', () => {
