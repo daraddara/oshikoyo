@@ -18,12 +18,11 @@ describe('getImageTags', () => {
         expect(getImageTags(42)).toEqual(['誕生日', '衣装A']);
     });
 
-    it('返り値は元配列のコピーである', () => {
+    it('返り値は元配列の参照である', () => {
         const meta = { 42: { tags: ['誕生日'] } };
         const { getImageTags } = makeTagLogic({ localImageMeta: meta });
         const result = getImageTags(42);
-        result.push('追加');
-        expect(meta[42].tags).toEqual(['誕生日']); // 元配列は変更されない
+        expect(result).toBe(meta[42].tags); // 同じ参照であることを確認
     });
 
     it('存在しない imgId は [] を返す', () => {
@@ -39,6 +38,14 @@ describe('getImageTags', () => {
     it('tags プロパティがない場合も [] を返す', () => {
         const { getImageTags } = makeTagLogic({ localImageMeta: { 5: {} } });
         expect(getImageTags(5)).toEqual([]);
+    });
+
+    it('空配列を返す際は凍結された単一の EMPTY_TAGS を返し無駄なアロケーションを防ぐ', () => {
+        const { getImageTags } = makeTagLogic({ localImageMeta: {} });
+        const empty1 = getImageTags(99);
+        const empty2 = getImageTags(100);
+        expect(Object.isFrozen(empty1)).toBe(true);
+        expect(empty1).toBe(empty2); // 同じ参照であることを確認
     });
 });
 
