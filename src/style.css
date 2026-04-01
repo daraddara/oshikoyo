@@ -5032,7 +5032,8 @@ textarea:focus-visible,
 }
 
 .mobile-grid-library,
-.mobile-playback-popover {
+.mobile-playback-popover,
+.mobile-add-submenu {
     display: none;
 }
 
@@ -6355,6 +6356,89 @@ body.is-touch-device .settings-menu-caption {
     text-overflow: ellipsis;
 }
 
+/* ===== 追加サブメニュー ===== */
+body.is-touch-device .mobile-add-submenu {
+    position: fixed;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--card-bg, rgba(255, 255, 255, 0.96));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    padding: 8px;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 200px;
+    z-index: 2100;
+}
+body.is-touch-device .mobile-add-submenu.is-open { display: flex; }
+body.is-touch-device .mobile-add-submenu button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-size: 14px;
+    color: var(--text-primary);
+    border-radius: 10px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ===== 再生設定ポップオーバー ===== */
+body.is-touch-device .mobile-playback-popover.is-visible {
+    display: block;
+    position: fixed;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    left: 12px;
+    background: var(--card-bg, rgba(255, 255, 255, 0.96));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    padding: 12px;
+    min-width: 180px;
+    max-width: 240px;
+    z-index: 1900;
+}
+body.is-touch-device .mobile-playback-section { margin-bottom: 4px; }
+body.is-touch-device .mobile-playback-item {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 13px;
+    color: var(--text-primary);
+    border-radius: 8px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+body.is-touch-device .mobile-playback-item.is-active { color: var(--accent-color, #ec4899); font-weight: 600; }
+body.is-touch-device .mobile-playback-divider { height: 1px; background: rgba(0,0,0,0.08); margin: 8px 0; }
+body.is-touch-device .mobile-playback-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+body.is-touch-device .mobile-interval-item {
+    padding: 6px 8px;
+    border: none;
+    background: rgba(0,0,0,0.04);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+}
+body.is-touch-device .mobile-interval-item.is-active { background: var(--accent-color, #ec4899); color: #fff; }
+body.is-touch-device .mobile-interval-item:disabled { opacity: 0.32; pointer-events: none; }
+
 /* ===== ダークモード ===== */
 @media (prefers-color-scheme: dark) {
     body.is-touch-device #mobile-bottom-bar.smart-bottom-bar {
@@ -6362,10 +6446,14 @@ body.is-touch-device .settings-menu-caption {
         border-top: 1px solid rgba(255, 255, 255, 0.08);
         box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.3);
     }
-    body.is-touch-device .mobile-add-submenu {
+    body.is-touch-device .mobile-add-submenu,
+    body.is-touch-device .mobile-playback-popover {
         background: rgba(30, 41, 59, 0.96);
         border-color: rgba(255, 255, 255, 0.1);
     }
+    body.is-touch-device .mobile-playback-divider { background: rgba(255,255,255,0.1); }
+    body.is-touch-device .mobile-interval-item { background: rgba(255,255,255,0.06); }
+    body.is-touch-device .mobile-interval-item.is-active { background: var(--accent-color, #ec4899); }
     body.is-touch-device .mobile-management-inner,
     body.is-touch-device .mobile-settings-inner {
         background: rgba(15, 23, 42, 0.88);
