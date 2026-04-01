@@ -1937,6 +1937,10 @@ function convertCsvRowsToOshiItems(rows, fileName) {
     const items = [];
     let skippedRows = 0;
 
+    // カスタムイベント（最大3組）の種別引き当てを高速化するため Map を構築
+    if (!appSettings.event_types) appSettings.event_types = [...DEFAULT_SETTINGS.event_types];
+    const eventTypeLabelMap = new Map(appSettings.event_types.map(t => [t.label, t.id]));
+
     rows.forEach((row, idx) => {
         const name = row['名前'] || row['name'] || '';
         if (!name) { skippedRows++; return; }    // 名前なし → 不正行
@@ -1952,16 +1956,16 @@ function convertCsvRowsToOshiItems(rows, fileName) {
         if (debut)    memorial_dates.push({ type_id: 'debut', date: debut, is_annual: true });
 
         // カスタムイベント（最大3組）
-        if (!appSettings.event_types) appSettings.event_types = [...DEFAULT_SETTINGS.event_types];
         for (let n = 1; n <= 3; n++) {
             const label = (row[`イベント${n}_種別`] || '').trim();
             const date  = (row[`イベント${n}_日付`] || '').trim();
             if (!label || !date) continue;
 
-            let typeId = getTypeIdForLabel(label);
+            let typeId = eventTypeLabelMap.get(label);
             if (!typeId) {
                 typeId = 'ev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
                 appSettings.event_types.push({ id: typeId, label, icon: 'star' });
+                eventTypeLabelMap.set(label, typeId); // 以降の行で再利用できるよう Map にも追加
             }
             memorial_dates.push({ type_id: typeId, date, is_annual: true });
         }
