@@ -3646,7 +3646,7 @@ body.is-immersive .day-detail-sheet {
     display: none !important;
 }
 
-/* Mobile Specific Overrides */
+/* Mobile Specific Overrides — 768px 以下またはタッチデバイス（body.is-touch-device） */
 @media (max-width: 768px) {
     body {
         padding: 0 !important;
@@ -5032,7 +5032,8 @@ textarea:focus-visible,
 }
 
 .mobile-grid-library,
-.mobile-playback-popover {
+.mobile-playback-popover,
+.mobile-add-submenu {
     display: none;
 }
 
@@ -6060,3 +6061,697 @@ textarea:focus-visible,
 .btn-danger-solid:hover {
     background: #b91c1c;
 }
+
+/* =========================================================
+ * body.is-touch-device — タッチデバイス（768px 超）向けモバイルUI
+ *
+ * @media (max-width: 768px) で拾えない幅広タッチデバイス（iPad 等）に
+ * モバイルUIを提供するため、JS が body.is-touch-device クラスを付与する。
+ * navigator.maxTouchPoints > 0 のときのみ付与されるため、
+ * デスクトップブラウザでは一切適用されない。
+ *
+ * スマートフォン横向き（max-height: 500px & orientation: landscape）は
+ * 既存の landscape 専用 CSS がレイアウトを管理するため除外する。
+ * ========================================================= */
+@media not ((max-height: 500px) and (orientation: landscape)) {
+
+/* ===== レイアウト ===== */
+body.is-touch-device {
+    padding: 0 !important;
+}
+body.is-touch-device .main-layout {
+    flex-direction: column !important;
+    height: auto !important;
+    overflow-y: visible !important;
+}
+body.is-touch-device .media-area {
+    width: 100% !important;
+    max-width: 100% !important;
+    position: static !important;
+    order: 1 !important;
+}
+body.is-touch-device .layout-splitter {
+    order: 2 !important;
+}
+body.is-touch-device .calendar-section {
+    order: 3 !important;
+}
+body.is-touch-device .media-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 100dvh !important;
+    min-height: unset !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #000 !important;
+    justify-content: center !important;
+}
+body.is-touch-device .media-container img {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 100dvh !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    object-fit: contain !important;
+}
+body.is-touch-device .media-container .media-backdrop {
+    object-fit: cover !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+body.is-touch-device .calendar-section {
+    display: none;
+    width: 100% !important;
+}
+body.is-touch-device .calendar-section.is-expanded {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--bg-color);
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+}
+body.is-touch-device .toggle-months-btn,
+body.is-touch-device #btnToggleLayout,
+body.is-touch-device .layout-splitter {
+    display: none !important;
+}
+body.is-touch-device .quick-media-controls {
+    display: none !important;
+}
+body.is-touch-device .controls {
+    display: none !important;
+}
+body.is-touch-device .day-detail-sheet {
+    display: block;
+    z-index: calc(var(--z-modal) + 2);
+}
+body.is-touch-device .media-controls-wrapper {
+    position: absolute !important;
+    top: auto !important;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    left: 12px !important;
+    right: auto !important;
+    opacity: 0.9 !important;
+    pointer-events: auto !important;
+    gap: 4px !important;
+    justify-content: flex-start !important;
+}
+body.is-touch-device .calendar-section {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+}
+body.is-touch-device .layout-item[data-layout="top"],
+body.is-touch-device .layout-item[data-layout="bottom"],
+body.is-touch-device .layout-item[data-layout="left"],
+body.is-touch-device .layout-item[data-layout="right"],
+body.is-touch-device .layout-item[data-layout="immersive"] {
+    display: none !important;
+}
+body.is-touch-device #btnMobileLayout {
+    display: none !important;
+}
+
+/* ===== ボトムバー本体 ===== */
+body.is-touch-device #mobile-bottom-bar.smart-bottom-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 0.75fr 1fr 1fr;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    z-index: 2000;
+    background: var(--card-bg, rgba(255, 255, 255, 0.88));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+    align-items: flex-end;
+    overflow: visible;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+body.is-touch-device #mobile-bottom-bar.is-hidden {
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+}
+
+/* ===== テロップバー ===== */
+body.is-touch-device .ticker-bar {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    z-index: 3000;
+    background: rgba(0, 0, 0, 0.38);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    overflow: hidden;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 200ms ease;
+}
+body.is-touch-device.mobile-tab-management .ticker-bar,
+body.is-touch-device.mobile-tab-settings   .ticker-bar {
+    opacity: 0;
+    pointer-events: none;
+}
+body.is-touch-device .ticker-inner {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 12px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+body.is-touch-device .ticker-text {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    display: inline-block;
+}
+body.is-touch-device .ticker-text.is-scrolling {
+    animation: ticker-scroll 22s linear infinite;
+    padding-left: 100%;
+}
+
+/* ===== タブボタン ===== */
+body.is-touch-device .mobile-tab-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border: none;
+    background: none;
+    color: var(--text-secondary, #888);
+    cursor: pointer;
+    font-size: 10px;
+    touch-action: manipulation;
+    padding: 8px 4px;
+    border-radius: 0;
+    transition: color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    height: 64px;
+}
+body.is-touch-device .mobile-tab-btn svg { flex-shrink: 0; }
+body.is-touch-device .mobile-tab-btn:active { opacity: 0.7; }
+body.is-touch-device .mobile-tab-btn.is-active { color: var(--accent-color, #ec4899); }
+body.is-touch-device .mobile-tab-btn[data-tab="home"] { position: relative; }
+body.is-touch-device .mobile-home-dot {
+    display: none;
+    position: absolute;
+    top: 9px;
+    right: calc(50% - 17px);
+    width: 7px;
+    height: 7px;
+    background: #ec4899;
+    border-radius: 50%;
+    border: 1.5px solid var(--card-bg, #fff);
+}
+body.is-touch-device .mobile-home-dot.is-visible { display: block; }
+body.is-touch-device .mobile-tab-btn.mobile-tab-add {
+    position: relative;
+    background: var(--accent-color, #ec4899);
+    color: #fff;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    box-shadow: 0 4px 16px rgba(236, 72, 153, 0.4);
+    justify-self: center;
+    align-self: center;
+    margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 7px);
+    flex-direction: row;
+    top: -7px;
+}
+body.is-touch-device .mobile-tab-btn.mobile-tab-add span { display: none; }
+body.is-touch-device .mobile-tab-btn.mobile-tab-add:active { opacity: 0.85; }
+
+/* ===== モバイルタブパネル ===== */
+body.is-touch-device .mobile-tab-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 1800;
+    overflow: hidden;
+    flex-direction: column;
+}
+body.is-touch-device.mobile-tab-management #mobileManagementPanel { display: flex; }
+body.is-touch-device.mobile-tab-settings   #mobileSettingsPanel    { display: flex; }
+
+/* パネル背景ブラー（panel 全体を覆う必須要素） */
+body.is-touch-device .mobile-panel-bg-blur {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--bg-color, #f0f4f8);
+    filter: blur(25px) brightness(0.8);
+    transform: scale(1.1);
+    z-index: 0;
+}
+/* コンテンツをブラー層の上に配置 */
+body.is-touch-device .mobile-tab-panel > *:not(.mobile-panel-bg-blur) {
+    position: relative;
+    z-index: 1;
+}
+
+/* ===== 管理パネル内側 ===== */
+body.is-touch-device .mobile-management-inner {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+body.is-touch-device .mobile-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+}
+body.is-touch-device .mobile-panel-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* ===== 設定パネル内側 ===== */
+body.is-touch-device .mobile-settings-inner {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+body.is-touch-device .mobile-settings-header {
+    padding: calc(env(safe-area-inset-top, 0px) + 16px) 20px 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 0;
+    background: inherit;
+    backdrop-filter: inherit;
+    -webkit-backdrop-filter: inherit;
+    z-index: 1;
+}
+body.is-touch-device .mobile-settings-body {
+    padding: 16px 20px calc(80px + env(safe-area-inset-bottom, 0px));
+}
+body.is-touch-device .settings-menu-list {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0;
+}
+body.is-touch-device .settings-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.55);
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+    border-radius: 12px;
+    margin: 2px 0;
+    transition: background 0.12s;
+    -webkit-tap-highlight-color: transparent;
+}
+body.is-touch-device .settings-menu-item:active {
+    background: rgba(236, 72, 153, 0.12);
+}
+body.is-touch-device .settings-menu-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    width: 24px;
+    text-align: center;
+}
+body.is-touch-device .settings-menu-label-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+body.is-touch-device .settings-menu-label {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+body.is-touch-device .settings-menu-caption {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ===== 設定サブパネル ===== */
+body.is-touch-device .mobile-sub-panel {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 1900;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+    pointer-events: none;
+}
+body.is-touch-device .mobile-sub-panel.is-open {
+    transform: translateX(0);
+    pointer-events: auto;
+}
+body.is-touch-device .mobile-sub-panel-inner {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+body.is-touch-device .mobile-sub-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    background: inherit;
+    backdrop-filter: inherit;
+    -webkit-backdrop-filter: inherit;
+    z-index: 1;
+}
+body.is-touch-device .mobile-sub-panel-title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    flex: 1;
+    margin: 0;
+}
+body.is-touch-device .mobile-sub-panel-back {
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    color: var(--accent-color, #ec4899);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 1.6rem;
+    line-height: 1;
+    -webkit-tap-highlight-color: transparent;
+}
+body.is-touch-device .mobile-sub-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px calc(80px + env(safe-area-inset-bottom, 0px));
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ===== 管理パネル メニュードロップダウン ===== */
+body.is-touch-device .mobile-oshi-menu-wrapper { position: relative; }
+body.is-touch-device .mobile-oshi-menu-btn {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    font-size: 1.3rem;
+    letter-spacing: 0.08em;
+    padding: 4px 8px;
+    color: var(--text-primary);
+    opacity: 0.7;
+    transition: opacity 0.15s;
+}
+body.is-touch-device .mobile-oshi-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: rgba(30, 30, 40, 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    min-width: 200px;
+    z-index: 200;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+body.is-touch-device .mobile-oshi-menu.is-open { display: block; }
+body.is-touch-device .mobile-oshi-menu-item {
+    display: block;
+    width: 100%;
+    padding: 15px 18px;
+    text-align: left;
+    border: none;
+    background: none;
+    font-size: 0.92rem;
+    color: rgba(255, 255, 255, 0.92);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+body.is-touch-device .mobile-oshi-menu-item:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ===== 空の状態 縦中央寄せ ===== */
+body.is-touch-device .oshi-empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ===== 管理パネル 推しリスト ===== */
+body.is-touch-device .mobile-oshi-actions {
+    flex-shrink: 0;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 16px 12px;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+}
+body.is-touch-device .mobile-oshi-content-row {
+    flex: 1;
+    display: none;
+    overflow: hidden;
+    min-height: 0;
+}
+body.is-touch-device .mobile-oshi-vscroll-area {
+    flex: 1;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    position: relative;
+    min-width: 0;
+}
+body.is-touch-device .mobile-oshi-vscroll-total {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    pointer-events: none;
+}
+body.is-touch-device .mobile-oshi-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+body.is-touch-device .mobile-oshi-list--virt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    will-change: transform;
+}
+body.is-touch-device .mobile-oshi-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 6px 0 16px;
+    height: 52px;
+    box-sizing: border-box;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+body.is-touch-device .mobile-oshi-chip {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+body.is-touch-device .mobile-oshi-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+body.is-touch-device .mobile-oshi-name {
+    font-size: 0.93rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+body.is-touch-device .mobile-oshi-chevron {
+    flex-shrink: 0;
+    width: 7px;
+    height: 7px;
+    border-top: 1.5px solid var(--text-secondary);
+    border-right: 1.5px solid var(--text-secondary);
+    transform: rotate(45deg);
+    opacity: 0.35;
+    margin-right: 4px;
+}
+body.is-touch-device .mobile-oshi-index-rail {
+    width: 24px;
+    flex-shrink: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    padding: 6px 0;
+}
+body.is-touch-device .mobile-oshi-index-rail.is-visible { display: flex; }
+
+/* ===== 追加サブメニュー ===== */
+body.is-touch-device .mobile-add-submenu {
+    position: fixed;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--card-bg, rgba(255, 255, 255, 0.96));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    padding: 8px;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 200px;
+    z-index: 2100;
+}
+body.is-touch-device .mobile-add-submenu.is-open { display: flex; }
+body.is-touch-device .mobile-add-submenu button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-size: 14px;
+    color: var(--text-primary);
+    border-radius: 10px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ===== 再生設定ポップオーバー ===== */
+body.is-touch-device .mobile-playback-popover.is-visible {
+    display: block;
+    position: fixed;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    left: 12px;
+    background: var(--card-bg, rgba(255, 255, 255, 0.96));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    padding: 12px;
+    min-width: 180px;
+    max-width: 240px;
+    z-index: 1900;
+}
+body.is-touch-device .mobile-playback-section { margin-bottom: 4px; }
+body.is-touch-device .mobile-playback-item {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 13px;
+    color: var(--text-primary);
+    border-radius: 8px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+body.is-touch-device .mobile-playback-item.is-active { color: var(--accent-color, #ec4899); font-weight: 600; }
+body.is-touch-device .mobile-playback-divider { height: 1px; background: rgba(0,0,0,0.08); margin: 8px 0; }
+body.is-touch-device .mobile-playback-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+body.is-touch-device .mobile-interval-item {
+    padding: 6px 8px;
+    border: none;
+    background: rgba(0,0,0,0.04);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+}
+body.is-touch-device .mobile-interval-item.is-active { background: var(--accent-color, #ec4899); color: #fff; }
+body.is-touch-device .mobile-interval-item:disabled { opacity: 0.32; pointer-events: none; }
+
+/* ===== ダークモード ===== */
+@media (prefers-color-scheme: dark) {
+    body.is-touch-device #mobile-bottom-bar.smart-bottom-bar {
+        background: rgba(15, 23, 42, 0.92);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.3);
+    }
+    body.is-touch-device .mobile-add-submenu,
+    body.is-touch-device .mobile-playback-popover {
+        background: rgba(30, 41, 59, 0.96);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    body.is-touch-device .mobile-playback-divider { background: rgba(255,255,255,0.1); }
+    body.is-touch-device .mobile-interval-item { background: rgba(255,255,255,0.06); }
+    body.is-touch-device .mobile-interval-item.is-active { background: var(--accent-color, #ec4899); }
+    body.is-touch-device .mobile-management-inner,
+    body.is-touch-device .mobile-settings-inner {
+        background: rgba(15, 23, 42, 0.88);
+    }
+    body.is-touch-device .mobile-panel-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
+    body.is-touch-device .mobile-settings-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
+    body.is-touch-device .mobile-sub-panel-inner { background: rgba(15, 23, 42, 0.88); }
+    body.is-touch-device .mobile-sub-panel-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
+    body.is-touch-device .mobile-oshi-item { border-bottom-color: rgba(255, 255, 255, 0.06); }
+    body.is-touch-device .mobile-oshi-actions { border-bottom-color: rgba(255, 255, 255, 0.08); }
+}
+} /* @media not ((max-height: 500px) and (orientation: landscape)) */
