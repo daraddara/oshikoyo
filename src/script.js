@@ -1784,7 +1784,11 @@ function showOshiExportDialog() {
 
 function escapeCsvField(str) {
     if (str == null) return '';
-    const s = String(str);
+    let s = String(str);
+    // Formula Injection Prevention
+    if (s.startsWith('=') || s.startsWith('+') || s.startsWith('-') || s.startsWith('@')) {
+        s = "'" + s;
+    }
     if (s.includes(',') || s.includes('"') || s.includes('\n')) {
         return '"' + s.replace(/"/g, '""') + '"';
     }
