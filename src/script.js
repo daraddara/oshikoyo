@@ -1194,8 +1194,8 @@ function updateView() {
     wrapper.innerHTML = ''; // Clear current views
 
     // Apply Layout Class
-    // モバイル（768px以下）では設定値に関わらず1ヶ月表示に制限（設定値は保持）
-    const effectiveMonthCount = window.innerWidth <= 768 ? 1 : appSettings.monthCount;
+    // モバイル（タッチデバイスまたは768px以下）では設定値に関わらず1ヶ月表示に制限（設定値は保持）
+    const effectiveMonthCount = isMobile() ? 1 : appSettings.monthCount;
     // 1ヶ月表示時は方向設定を無視してcolumnで統一（設定値は保持）
     const effectiveDirection = effectiveMonthCount === 1 ? 'column' : appSettings.layoutDirection;
     wrapper.className = `calendar-wrapper direction-${effectiveDirection}`;
@@ -4420,6 +4420,7 @@ function init() {
     setupMiniCalendarInteractions();
 
     // Mobile UI 初期化
+    applyTouchDeviceClass();
     setupSwipeGestures();
     setupDayDetailSheet();
     setupMobileTabBar();
@@ -5523,7 +5524,7 @@ function adjustMediaLayout() {
     }
 
     // Mobile Override — 高さはCSSの calc(100dvh - 70px) に委ねる
-    if (window.innerWidth <= 768) {
+    if (isMobile()) {
         area.style.width = '100%';
         area.style.maxWidth = '100%';
         container.style.height = '';
@@ -5605,7 +5606,18 @@ const SWIPE_MAX_VERT_RATIO = 0.7;
 // Mobile UI — Helper
 // =========================================================
 function isMobile() {
-    return window.innerWidth <= 768;
+    // navigator.maxTouchPoints > 0: タッチデバイス（スマホ・タブレット）
+    // Playwright の hasTouch: true でも maxTouchPoints が設定されるため信頼性高い
+    return (navigator.maxTouchPoints > 0) || window.innerWidth <= 768;
+}
+
+/**
+ * タッチデバイス判定に基づき body.is-touch-device クラスを付与する。
+ * 768px 超のタブレット等でもモバイルUIが正しくスタイリングされるよう
+ * CSS セレクタ side で制御するためのフック。
+ */
+function applyTouchDeviceClass() {
+    document.body.classList.toggle('is-touch-device', navigator.maxTouchPoints > 0);
 }
 
 // =========================================================
