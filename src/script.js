@@ -504,6 +504,14 @@ async function isDuplicateBlob(blob, sigMap) {
 }
 
 // Helper: Escape HTML
+const HTML_ESCAPE_MAP = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+};
+
 /**
  * Escapes special characters in a string to prevent XSS.
  * @param {string} str - The string to escape.
@@ -511,14 +519,7 @@ async function isDuplicateBlob(blob, sigMap) {
  */
 function escapeHTML(str) {
     if (!str) return '';
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return str.replace(/[&<>"']/g, m => map[m]);
+    return str.replace(/[&<>"']/g, m => HTML_ESCAPE_MAP[m]);
 }
 
 // --- State Persistence (Separate from Settings) ---
@@ -6119,11 +6120,12 @@ function getFilteredSortedOshiList(search, sort) {
     if (sort === 'name') {
         list = [...list].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ja'));
     } else if (sort === 'memorial') {
-        list = [...list].sort((a, b) => {
-            const da = getNextMemorialDate(a);
-            const db = getNextMemorialDate(b);
-            return (da ? da.days : 99999) - (db ? db.days : 99999);
+        const mappedList = list.map(oshi => {
+            const nd = getNextMemorialDate(oshi);
+            return { oshi, days: nd ? nd.days : 99999 };
         });
+        mappedList.sort((a, b) => a.days - b.days);
+        list = mappedList.map(item => item.oshi);
     }
     return list;
 }
