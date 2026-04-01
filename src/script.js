@@ -1330,9 +1330,10 @@ function highlightMemorialOshisForImage(imgId) {
 }
 
 // --- Tag Logic ---
+const EMPTY_TAGS = Object.freeze([]);
 function getImageTags(imgId) {
     const meta = appSettings.localImageMeta || {};
-    return meta[imgId]?.tags ? [...meta[imgId].tags] : [];
+    return meta[imgId]?.tags || EMPTY_TAGS;
 }
 
 function setImageTags(imgId, tags) {
