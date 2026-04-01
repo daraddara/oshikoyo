@@ -6203,9 +6203,6 @@ body.is-touch-device #mobile-bottom-bar.is-hidden {
     pointer-events: none;
 }
 
-/* ===== ナビゲーション矢印を非表示 ===== */
-body.is-touch-device .media-nav-btn { display: none !important; }
-
 /* ===== テロップバー ===== */
 body.is-touch-device .ticker-bar {
     display: block;
