@@ -64,29 +64,30 @@ test.describe('ポートレートモバイルUI検証 (Galaxy S25: 360×780)', (
     // -------------------------------------------------------------------------
     // TC-P-1: FABボタンの表示確認
     // -------------------------------------------------------------------------
-    test('TC-P-1: .mobile-cal-btn (FAB) がポートレートで表示されること', async ({ page }) => {
-        const fab = page.locator('.mobile-cal-btn');
-        await expect(fab).toBeVisible({ timeout: 5000 });
+    test('TC-P-1: .smart-bottom-bar がポートレートで表示されること', async ({ page }) => {
+        const bar = page.locator('.smart-bottom-bar');
+        await expect(bar).toBeVisible({ timeout: 5000 });
     });
 
     // -------------------------------------------------------------------------
-    // TC-P-2: FABタップでカレンダートグル
+    // TC-P-2: 暦タブタップでカレンダートグル
     // -------------------------------------------------------------------------
-    test('TC-P-2: FABタップで .calendar-section の is-expanded が切り替わること', async ({ page }) => {
-        const fab        = page.locator('.mobile-cal-btn');
+    test('TC-P-2: カレンダーボタンタップで .calendar-section の is-expanded が切り替わること', async ({ page }) => {
+        const calTab  = page.locator('.mobile-tab-btn[data-tab="calendar"]');
+        const homeTab = page.locator('.mobile-tab-btn[data-tab="home"]');
         const calSection = page.locator('.calendar-section');
 
-        await expect(fab).toBeVisible();
+        await expect(calTab).toBeVisible();
 
         // 初期状態: カレンダーは非表示（is-expanded なし）
         await expect(calSection).not.toHaveClass(/is-expanded/);
 
-        // FABタップ → カレンダー展開
-        await fab.tap();
+        // 暦タブタップ → カレンダー展開
+        await calTab.tap();
         await expect(calSection).toHaveClass(/is-expanded/, { timeout: 3000 });
 
-        // 再度タップ → カレンダー収納
-        await fab.tap();
+        // ホームタブタップ → カレンダー収納
+        await homeTab.tap();
         await expect(calSection).not.toHaveClass(/is-expanded/, { timeout: 3000 });
     });
 
@@ -95,7 +96,7 @@ test.describe('ポートレートモバイルUI検証 (Galaxy S25: 360×780)', (
     // -------------------------------------------------------------------------
     test('TC-P-3: カレンダーを左スワイプすると翌月に移動すること', async ({ page }) => {
         // カレンダーを展開してからスワイプ
-        await page.locator('.mobile-cal-btn').tap();
+        await page.locator('.mobile-tab-btn[data-tab="calendar"]').tap();
         await expect(page.locator('.calendar-section')).toHaveClass(/is-expanded/);
 
         // 初期: 2024年1月
@@ -111,7 +112,7 @@ test.describe('ポートレートモバイルUI検証 (Galaxy S25: 360×780)', (
     // TC-P-3b: カレンダーの右スワイプで前月へ移動
     // -------------------------------------------------------------------------
     test('TC-P-3b: カレンダーを右スワイプすると前月に移動すること', async ({ page }) => {
-        await page.locator('.mobile-cal-btn').tap();
+        await page.locator('.mobile-tab-btn[data-tab="calendar"]').tap();
         await expect(page.locator('.calendar-section')).toHaveClass(/is-expanded/);
 
         // 初期: 2024年1月
@@ -128,7 +129,7 @@ test.describe('ポートレートモバイルUI検証 (Galaxy S25: 360×780)', (
     // -------------------------------------------------------------------------
     test('TC-P-4: 日付セルタップで #dayDetailSheet が開くこと', async ({ page }) => {
         // カレンダーを展開
-        await page.locator('.mobile-cal-btn').tap();
+        await page.locator('.mobile-tab-btn[data-tab="calendar"]').tap();
         await expect(page.locator('.calendar-section')).toHaveClass(/is-expanded/);
         await expect(page.locator('.calendar-month')).toBeVisible();
 
@@ -153,7 +154,7 @@ test.describe('ポートレートモバイルUI検証 (Galaxy S25: 360×780)', (
     // -------------------------------------------------------------------------
     test('TC-P-5: シート外タップで #dayDetailSheet が閉じること', async ({ page }) => {
         // カレンダー展開 → 日付タップ → シート表示
-        await page.locator('.mobile-cal-btn').tap();
+        await page.locator('.mobile-tab-btn[data-tab="calendar"]').tap();
         await expect(page.locator('.calendar-section')).toHaveClass(/is-expanded/);
 
         const firstDay = page.locator('.day-cell:not(.is-other-month)').first();
@@ -185,6 +186,36 @@ test.describe('ポートレートモバイルUI検証 (Galaxy S25: 360×780)', (
     });
 
     // -------------------------------------------------------------------------
+    // TC-P-8: テロップバー表示確認
+    // -------------------------------------------------------------------------
+    test('TC-P-8: #tickerBar がポートレートで表示されること', async ({ page }) => {
+        const ticker = page.locator('#tickerBar');
+        await expect(ticker).toBeVisible({ timeout: 3000 });
+        // テキストに今日の日付が含まれること
+        const span = page.locator('#tickerBar .ticker-text');
+        await expect(span).not.toBeEmpty();
+        const text = await span.textContent();
+        expect(text).toMatch(/月\d+日/);
+    });
+
+    // -------------------------------------------------------------------------
+    // TC-P-9: 暦タブ再タップで今日に戻ること
+    // -------------------------------------------------------------------------
+    test('TC-P-9: 暦タブ再タップで currentRefDate が今日に戻ること', async ({ page }) => {
+        const calTab = page.locator('.mobile-tab-btn[data-tab="calendar"]');
+
+        // カレンダーを開いて翌月に移動
+        await calTab.tap();
+        await expect(page.locator('.calendar-section')).toHaveClass(/is-expanded/);
+        await page.locator('.month-nav-next').tap();
+        await expect(page.locator('.month-title').first()).toContainText('2月');
+
+        // 暦タブを再タップ → 今日（1月）に戻る
+        await calTab.tap();
+        await expect(page.locator('.month-title').first()).toContainText('1月', { timeout: 3000 });
+    });
+
+    // -------------------------------------------------------------------------
     // TC-P-7: スクリーンショット回帰テスト（初期状態）
     // -------------------------------------------------------------------------
     test('TC-P-7: ポートレート初期状態の視覚的回帰テスト', async ({ page }) => {
@@ -195,8 +226,8 @@ test.describe('ポートレートモバイルUI検証 (Galaxy S25: 360×780)', (
     // -------------------------------------------------------------------------
     // TC-P-7b: スクリーンショット回帰テスト（カレンダー展開後）
     // -------------------------------------------------------------------------
-    test('TC-P-7b: FAB展開後の視覚的回帰テスト', async ({ page }) => {
-        await page.locator('.mobile-cal-btn').tap();
+    test('TC-P-7b: カレンダー展開後の視覚的回帰テスト', async ({ page }) => {
+        await page.locator('.mobile-tab-btn[data-tab="calendar"]').tap();
         await expect(page.locator('.calendar-section')).toHaveClass(/is-expanded/);
         await page.waitForTimeout(200);
         await expect(page).toHaveScreenshot('portrait-calendar-expanded.png');

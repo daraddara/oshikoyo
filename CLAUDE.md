@@ -50,6 +50,8 @@ npm run tunnel    # cloudflaredで外部公開（PWA実機確認用）
 | PWAトンネル運用方針 | [.agents/rules/pwa-tunnel-policy.md](./.agents/rules/pwa-tunnel-policy.md) |
 | ドキュメント保守指針 | [.agents/rules/documentation-maintenance.md](./.agents/rules/documentation-maintenance.md) |
 | 既知課題・機能要望 | [docs/ISSUES.md](./docs/ISSUES.md) |
+| バージョン管理規定 | [docs/VERSIONING.md](./docs/VERSIONING.md) |
+| 実装済み機能カタログ | [docs/FEATURES.md](./docs/FEATURES.md) |
 
 ---
 

@@ -13,7 +13,7 @@ const BASE_SETTINGS = {
 
 // イマーシブモードへ移行するヘルパー
 async function enterImmersiveMode(page) {
-    await page.locator('.layout-mode-btn').click();
+    await page.locator('#btnLayoutMode').click();
     await page.locator('.layout-item[data-layout="immersive"]').click();
     await expect(page.locator('body')).toHaveClass(/is-immersive/, { timeout: 5000 });
 }

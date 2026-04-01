@@ -36,10 +36,11 @@ const blobToBase64Code = extractCode(
 // --- ファクトリ関数（依存注入） ---
 function makeHandleExportFullBackup(mockLocalImageDB, mockAppSettings, mockShowToast) {
     const getOrderedImageKeys = (keys) => keys;
+    const BACKUP_KEY = 'oshikoyo_last_backup';
     return new Function(
-        'localImageDB', 'appSettings', 'showToast', 'getOrderedImageKeys', 'blobToBase64',
+        'localImageDB', 'appSettings', 'showToast', 'getOrderedImageKeys', 'blobToBase64', 'BACKUP_KEY', 'localStorage',
         `${blobToBase64Code}; ${exportFullBackupCode}; return handleExportFullBackup;`
-    )(mockLocalImageDB, mockAppSettings, mockShowToast, getOrderedImageKeys, null /* extracted */);
+    )(mockLocalImageDB, mockAppSettings, mockShowToast, getOrderedImageKeys, null /* extracted */, BACKUP_KEY, globalThis.localStorage);
 }
 
 function makeHandleExportImageTagPackage(mockLocalImageDB, mockAppSettings, mockShowToast) {
@@ -342,6 +343,35 @@ describe('exportOshiAsCsv', () => {
         expect(lines[0]).toBe('名前,カラー,誕生日,デビュー記念日,イベント1_種別,イベント1_日付,イベント2_種別,イベント2_日付,イベント3_種別,イベント3_日付,タグ');
         expect(lines[1]).toMatch(/^# 書式:/); // 書式説明コメント行
         expect(lines[2]).toBe('推しA,#ff69b4,3/21,2019/9/1,3Dお披露目,2022/4/1,,,,, VTuber;歌手'.replace(' ', ''));
+
+        global.Blob = origBlob;
+    });
+
+    it('CSVインジェクション対策として、= + - @で始まるフィールドにシングルクォートを付与する', () => {
+        const createdBlobs = [];
+        const origBlob = global.Blob;
+        global.Blob = class extends origBlob {
+            constructor(parts, opts) { super(parts, opts); createdBlobs.push(parts.join('')); }
+        };
+
+        const mockSettings = {
+            oshiList: [{
+                name: '=SUM(1+1)',
+                color: '  +1234',
+                memorial_dates: [
+                    { type_id: 'bday',  date: ' -1/1', is_annual: true },
+                    { type_id: 'debut', date: '@test', is_annual: true },
+                ],
+                tags: ['=Tag', '+Tag']
+            }],
+            event_types: []
+        };
+        const fn = makeExportOshiAsCsv(mockSettings, mockShowToast);
+        fn();
+
+        const csvText = createdBlobs[0].replace('\uFEFF', ''); // remove BOM
+        const lines = csvText.split('\r\n');
+        expect(lines[2]).toBe(`'=SUM(1+1),'  +1234,' -1/1,'@test,,,,,,,'=Tag;+Tag`);
 
         global.Blob = origBlob;
     });

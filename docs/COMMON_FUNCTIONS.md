@@ -34,9 +34,22 @@
 | `showToast(msg, type)` | 画面下部にトースト通知を表示。 |
 | `showPopup(e, html)` | デスクトップ表示時のホバーポップアップ制御。 |
 
-## 5. モバイル対応
+## 5. 画像表示・レイアウト制御
+| 関数名 | 内容 |
+|:---|:---|
+| `applyAutoLayout(img)` | 画像のアスペクト比を判定し、スマートモード時にレイアウトを自動調整（縦長→左配置、横長→上配置）。 |
+| `renderDefaultMedia(displayArea)` | 画像未登録時のデフォルト画像をメディアエリアに描画。 |
+| `renderMediaRecord(record, displayArea)` | IndexedDB から取得した画像/動画レコードをメディアエリアに描画。 |
+| `setupMediaTimer(isInit)` | 画像切り替えタイマーを設定・再起動。間隔プリセット（10s〜毎日指定時刻）に応じて `setInterval` または `setTimeout` を使い分ける。 |
+| `seedDefaultImages()` | 初回起動時（DBが空のとき）にデフォルト画像2枚（横長・縦長）をIndexedDBへ自動登録。 |
+
+## 6. モバイル対応
 | 関数名 | 内容 |
 |:---|:---|
 | `isMobile()` | 画面幅によるモバイル端末判定（768px以下）。 |
 | `openDayDetailSheet(label, html)` | モバイル専用のボトムシート（日付詳細）を表示。 |
 | `setupSwipeGestures()` | モバイルでのスワイプによる月移動などのジェスチャー制御。 |
+| `setupMobileTabBar()` | ボトムタブナビゲーションバーを生成・初期化。ホーム/カレンダー/推し管理/設定の4タブ。 |
+| `renderMobilePlaybackPopover()` | ホームタブタップ時に表示する再生モード選択ポップオーバーを描画（表示モード・切り替え間隔）。 |
+| `updateMobileHomeTabIndicator()` | 固定モード時にホームタブへピンインジケーター（`.mobile-home-dot`）を表示/非表示。 |
+| `switchMobileTab(tabName)` | モバイルタブを切り替え、対応するパネルを表示。 |
