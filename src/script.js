@@ -5674,11 +5674,17 @@ function showDataClearedToast() {
     toast.style.cssText = 'padding:12px 16px;display:flex;flex-direction:column;gap:8px;';
     toast.innerHTML = `
         <div style="font-size:0.95rem;font-weight:500;">設定データが初期化されました</div>
-        <button type="button" class="btn-primary" style="width:100%;">バックアップから復元する</button>
+        <div style="display:flex;gap:8px;">
+            <button type="button" class="btn-primary" style="flex:1;" id="toast-restore-btn">バックアップから復元する</button>
+            <button type="button" class="btn-secondary" style="flex:1;" id="toast-close-btn">閉じる</button>
+        </div>
     `;
-    toast.querySelector('button').addEventListener('click', () => {
+    toast.querySelector('#toast-restore-btn').addEventListener('click', () => {
         toast.remove();
         openSettingsBackupTab();
+    });
+    toast.querySelector('#toast-close-btn').addEventListener('click', () => {
+        toast.remove();
     });
     container.appendChild(toast);
 
