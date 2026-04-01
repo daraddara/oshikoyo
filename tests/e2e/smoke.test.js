@@ -27,7 +27,7 @@ test.describe('Smoke Test & Layout Verification', () => {
         await page.goto('http://localhost:8081/index.html');
 
         // メインUI確認
-        const isMobile = await page.evaluate(() => window.innerWidth <= 768);
+        const isMobile = await page.evaluate(() => window.isMobile());
         if (isMobile) {
             // モバイルではカレンダーは初期非表示。ボトムバーが表示されていることを確認
             await expect(page.locator('.smart-bottom-bar')).toBeVisible();
@@ -110,7 +110,7 @@ test.describe('Smoke Test & Layout Verification', () => {
         await page.goto('http://localhost:8081/index.html');
 
         // 設定モーダルを開く → 一覧を管理
-        const isMobile = await page.evaluate(() => window.innerWidth <= 768);
+        const isMobile = await page.evaluate(() => window.isMobile());
 
         if (isMobile) {
             // モバイルでは管理タブで推し一覧を確認

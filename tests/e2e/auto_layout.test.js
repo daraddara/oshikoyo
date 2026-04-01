@@ -6,7 +6,7 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
         await page.goto('/index.html');
         await page.waitForLoadState('networkidle');
 
-        const isMobile = await page.evaluate(() => window.innerWidth <= 768);
+        const isMobile = await page.evaluate(() => window.isMobile());
         if (!isMobile) {
             // モバイルではレイアウトボタンは非表示（選択肢が自動のみのため）
             await expect(page.locator('#btnLayoutMode')).toBeVisible();
@@ -56,7 +56,7 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
         await expect(mainLayout).toHaveClass(/pos-top/);
 
         const calendarWrapper = page.locator('#calendarWrapper');
-        const isMobile = await page.evaluate(() => window.innerWidth <= 768);
+        const isMobile = await page.evaluate(() => window.isMobile());
         if (isMobile) {
             await expect(calendarWrapper).toHaveCSS('flex-direction', 'column');
         } else {
@@ -104,7 +104,7 @@ test.describe('Layout Auto-Optimization & Glassmorphism', () => {
         });
 
         const mainLayout = page.locator('#mainLayout');
-        const isMobile = await page.evaluate(() => window.innerWidth <= 768);
+        const isMobile = await page.evaluate(() => window.isMobile());
         if (!isMobile) {
             await expect(mainLayout).toHaveClass(/pos-left/);
         }
