@@ -19,6 +19,8 @@ node_modules/
 # Agent data
 .agents/browser_data/
 .agents/browser_test/
+.jules/
+.google-jules/
 
 # Playwright
 /test-results/
