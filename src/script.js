@@ -4420,7 +4420,7 @@ function init() {
     setupMiniCalendarInteractions();
 
     // Mobile UI 初期化
-    applyTouchDeviceClass();
+    applyMobileUIClass();
     setupSwipeGestures();
     setupDayDetailSheet();
     setupMobileTabBar();
@@ -5612,12 +5612,12 @@ function isMobile() {
 }
 
 /**
- * タッチデバイス判定に基づき body.is-touch-device クラスを付与する。
- * 768px 超のタブレット等でもモバイルUIが正しくスタイリングされるよう
- * CSS セレクタ side で制御するためのフック。
+ * isMobile() の結果に基づき body.is-mobile-ui クラスを付与する。
+ * @media (max-width: 768px) と body.is-touch-device を統合した単一クラスで
+ * モバイルUI CSS を制御するためのフック。
  */
-function applyTouchDeviceClass() {
-    document.body.classList.toggle('is-touch-device', navigator.maxTouchPoints > 0);
+function applyMobileUIClass() {
+    document.body.classList.toggle('is-mobile-ui', isMobile());
 }
 
 // =========================================================
@@ -7055,6 +7055,7 @@ function setupDayDetailSheet() {
 
 if (typeof window !== 'undefined') {
     window.addEventListener('resize', () => {
+        applyMobileUIClass();
         adjustMediaLayout();
 
         const calSection = document.querySelector('.calendar-section');
