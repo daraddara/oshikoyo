@@ -518,8 +518,8 @@ const HTML_ESCAPE_MAP = {
  * @returns {string} The escaped string.
  */
 function escapeHTML(str) {
-    if (!str) return '';
-    return str.replace(/[&<>"']/g, m => HTML_ESCAPE_MAP[m]);
+    if (str == null) return '';
+    return String(str).replace(/[&<>"']/g, m => HTML_ESCAPE_MAP[m]);
 }
 
 // --- State Persistence (Separate from Settings) ---
@@ -5152,8 +5152,13 @@ function showUpdateNotification() {
         <div class="update-toast-content" style="font-size: 0.95rem; font-weight: 500;">
             新しいバージョンが利用可能です。
         </div>
-        <button type="button" class="btn-primary" style="width: 100%;" onclick="window.location.reload()">更新を反映する</button>
+        <button type="button" class="btn-primary update-reload-btn" style="width: 100%;">更新を反映する</button>
     `;
+
+    toast.querySelector('.update-reload-btn').addEventListener('click', () => {
+        window.location.reload();
+    });
+
     container.appendChild(toast);
     
     if (container.showPopover) {
