@@ -940,9 +940,9 @@ function renderCalendar(container, year, month) {
         if (isMobile()) {
             container.innerHTML = `
                 <div class="month-header">
-                    <button type="button" class="month-nav-inline month-nav-prev">‹</button>
+                    <button type="button" class="month-nav-inline month-nav-prev" aria-label="前の月">‹</button>
                     <h2 class="month-title"></h2>
-                    <button type="button" class="month-nav-inline month-nav-next">›</button>
+                    <button type="button" class="month-nav-inline month-nav-next" aria-label="次の月">›</button>
                 </div>
                 <div class="weekday-header">${getWeekdayHeaderHTML(appSettings.startOfWeek)}</div>
                 <div class="days-grid"></div>
