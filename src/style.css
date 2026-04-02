@@ -2719,6 +2719,19 @@ body {
     margin-bottom: 6px;
 }
 
+.setting-description {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 4px 0;
+    padding: 0 4px;
+}
+
+.preview-disclaimer {
+    padding: 6px 12px;
+    margin: 0;
+}
+
 .setting-label-sm {
     display: block;
     font-size: 0.78rem;
