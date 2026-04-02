@@ -3963,12 +3963,12 @@ function initSettings() {
     // Local Import (Folder)
     const inputFolder = document.getElementById('inputLocalFolder');
     document.getElementById('btnLocalFolder').addEventListener('click', () => inputFolder.click());
-    inputFolder.addEventListener('change', (e) => handleFiles(e.target.files));
+    inputFolder.addEventListener('change', (e) => { handleFiles(e.target.files); e.target.value = ''; });
 
     // Local Import (Files)
     const inputFiles = document.getElementById('inputLocalFiles');
     document.getElementById('btnLocalFiles').addEventListener('click', () => inputFiles.click());
-    inputFiles.addEventListener('change', (e) => handleFiles(e.target.files));
+    inputFiles.addEventListener('change', (e) => { handleFiles(e.target.files); e.target.value = ''; });
 
     // Clipboard Paste Helper
     const handleClipboardPaste = pasteFromClipboard;
