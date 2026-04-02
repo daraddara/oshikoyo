@@ -94,7 +94,7 @@ describe('handleExportFullBackup', () => {
         expect(URL.createObjectURL).toHaveBeenCalledOnce();
         expect(URL.revokeObjectURL).toHaveBeenCalledOnce();
         expect(clickSpy).toHaveBeenCalledOnce();
-        expect(mockShowToast).toHaveBeenLastCalledWith('バックアップを保存しました');
+        expect(mockShowToast).toHaveBeenLastCalledWith('バックアップを保存しました（ファイルには登録画像が含まれます。取り扱いにご注意ください）');
     });
 
     it('画像が0件でもバックアップは実行される', async () => {

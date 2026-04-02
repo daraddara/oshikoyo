@@ -2893,7 +2893,7 @@ async function handleExportFullBackup() {
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
     localStorage.setItem(BACKUP_KEY, Date.now().toString());
-    showToast('バックアップを保存しました');
+    showToast('バックアップを保存しました（ファイルには登録画像が含まれます。取り扱いにご注意ください）');
 }
 
 async function handleImportFullBackup(file) {
