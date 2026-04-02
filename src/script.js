@@ -1380,9 +1380,8 @@ function renderOshiTable() {
         return;
     }
 
-    // ⚡ Bolt: Batch DOM insertions using DocumentFragment
-    // Impact: Prevents layout thrashing by updating the DOM once
-    // instead of N times during list rendering.
+    // DocumentFragmentを使用してDOMへの挿入をバッチ処理
+    // リスト描画時にN回DOMを更新する代わりに、1回の更新でレイアウトスラッシングを防ぐ
     const fragment = document.createDocumentFragment();
 
     list.forEach((oshi) => {
@@ -6200,9 +6199,8 @@ function renderOshiVirtualWindow(scrollTop) {
         return;
     }
 
-    // ⚡ Bolt: Batch DOM insertions using DocumentFragment
-    // Impact: Prevents layout thrashing by updating the DOM once
-    // instead of N times during virtual window rendering.
+    // DocumentFragmentを使用してDOMへの挿入をバッチ処理
+    // 仮想ウィンドウの描画時にN回DOMを更新する代わりに、1回の更新でレイアウトスラッシングを防ぐ
     const fragment = document.createDocumentFragment();
 
     for (let i = startIdx; i < endIdx; i++) {
