@@ -80,3 +80,74 @@ describe('updateMediaArea ロジック (メディア表示更新)', () => {
         expect(contentLayer.innerHTML).toContain('assets/default_image.png');
     });
 });
+
+describe('single モード（手動切り替え）の prev/next ナビゲーション', () => {
+    let mockArea, mockContainer, mockMainLayout;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+
+        mockArea = { style: {} };
+        mockContainer = {
+            style: {},
+            innerHTML: '',
+            querySelector: vi.fn().mockReturnValue(null),
+            appendChild: vi.fn()
+        };
+        mockMainLayout = { classList: { add: vi.fn(), remove: vi.fn() } };
+
+        vi.spyOn(document, 'getElementById').mockImplementation((id) => {
+            if (id === 'mediaArea') return mockArea;
+            if (id === 'mediaContainer') return mockContainer;
+            if (id === 'mainLayout') return mockMainLayout;
+            return null;
+        });
+
+        global.appSettings = { mediaMode: 'single', mediaPosition: 'right', localImageOrder: [] };
+        global.appState = { lastMediaKey: null, mediaHistory: [], mediaHistoryIndex: -1 };
+        global.localImageDB = {
+            getAllKeys: vi.fn().mockResolvedValue(['key1', 'key2', 'key3']),
+            getImage: vi.fn().mockResolvedValue(new Blob(['test'], { type: 'image/png' }))
+        };
+        global.currentMediaObjectURL = null;
+        global.adjustMediaLayout = vi.fn();
+        global.getOrderedImageKeys = (keys) => keys;
+        global.getEffectiveImagePool = (keys) => keys;
+        global.highlightMemorialOshisForImage = vi.fn();
+        // single モードの currentCycleIndex は初期値 -1 から始める
+        global.currentCycleIndex = -1;
+    });
+
+    it('next で最初の画像（index 0）が表示されること', async () => {
+        await updateMediaArea('next');
+        expect(global.localImageDB.getImage).toHaveBeenCalledWith('key1');
+    });
+
+    it('next を2回呼ぶと2番目の画像（index 1）が表示されること', async () => {
+        await updateMediaArea('next');
+        global.localImageDB.getImage.mockClear();
+        await updateMediaArea('next');
+        expect(global.localImageDB.getImage).toHaveBeenCalledWith('key2');
+    });
+
+    it('prev で前の画像に戻ること', async () => {
+        global.currentCycleIndex = 1; // key2 を表示中
+        global.appState = { lastMediaKey: 'key2', mediaHistory: [], mediaHistoryIndex: -1 };
+        await updateMediaArea('prev');
+        expect(global.localImageDB.getImage).toHaveBeenCalledWith('key1');
+    });
+
+    it('next が末尾を超えると先頭に戻ること（ループ）', async () => {
+        global.currentCycleIndex = 2; // key3（末尾）を表示中
+        global.appState = { lastMediaKey: 'key3', mediaHistory: [], mediaHistoryIndex: -1 };
+        await updateMediaArea('next');
+        expect(global.localImageDB.getImage).toHaveBeenCalledWith('key1');
+    });
+
+    it('advance（resetToTodayMedia）で先頭画像に戻ること', async () => {
+        global.currentCycleIndex = 2; // key3 を表示中
+        global.appState = { lastMediaKey: 'key3', mediaHistory: [], mediaHistoryIndex: -1 };
+        await updateMediaArea('advance');
+        expect(global.localImageDB.getImage).toHaveBeenCalledWith('key1');
+    });
+});

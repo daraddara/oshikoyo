@@ -4353,8 +4353,8 @@ function updateQuickMediaButtons() {
             displayBtn.setAttribute('title', '表示モードの設定（現在はサイクル中）');
             displayBtn.setAttribute('data-original-title', '表示モードの設定（現在はサイクル中）');
         } else {
-            displayBtn.setAttribute('title', '表示モードの設定（現在は固定中）');
-            displayBtn.setAttribute('data-original-title', '表示モードの設定（現在は固定中）');
+            displayBtn.setAttribute('title', '表示モードの設定（現在は手動中）');
+            displayBtn.setAttribute('data-original-title', '表示モードの設定（現在は手動中）');
         }
     }
 
@@ -5201,7 +5201,7 @@ function prepareMediaContentLayer(container) {
  * @param {Function} handleNavigation ナビゲーション処理関数
  */
 function updateMediaNavigation(contentLayer, handleNavigation) {
-    if (appSettings.mediaMode === 'random' || appSettings.mediaMode === 'cycle') {
+    if (appSettings.mediaMode === 'random' || appSettings.mediaMode === 'cycle' || appSettings.mediaMode === 'single') {
         if (!contentLayer.querySelector('.media-nav-btn.prev')) {
             const btnPrev = document.createElement('button');
             btnPrev.type = 'button';
@@ -5260,8 +5260,8 @@ function determineTargetMediaKey(keys, mode) {
         // Restore last state on boot
         targetKey = appState.lastMediaKey;
 
-        // Sync index if in cycle mode
-        if (appSettings.mediaMode === 'cycle') {
+        // Sync index if in cycle or single mode
+        if (appSettings.mediaMode === 'cycle' || appSettings.mediaMode === 'single') {
             currentCycleIndex = keys.indexOf(targetKey);
         }
 
@@ -5288,6 +5288,10 @@ function determineTargetMediaKey(keys, mode) {
             }
         } else if (appSettings.mediaMode === 'cycle') {
             // Simple decrement
+            if (currentCycleIndex === -1) currentCycleIndex = 0;
+            currentCycleIndex = (currentCycleIndex - 1 + keys.length) % keys.length;
+            targetKey = keys[currentCycleIndex];
+        } else if (appSettings.mediaMode === 'single') {
             if (currentCycleIndex === -1) currentCycleIndex = 0;
             currentCycleIndex = (currentCycleIndex - 1 + keys.length) % keys.length;
             targetKey = keys[currentCycleIndex];
@@ -5333,7 +5337,16 @@ function determineTargetMediaKey(keys, mode) {
             }
             targetKey = keys[currentCycleIndex];
         } else if (appSettings.mediaMode === 'single') {
-            targetKey = keys[0];
+            if (mode === 'advance') {
+                // resetToTodayMedia から呼ばれる場合は先頭（最新画像）に戻す
+                currentCycleIndex = 0;
+                targetKey = keys[0];
+            } else {
+                // mode === 'next'（矢印・スワイプによる手動操作）
+                if (currentCycleIndex === -1) currentCycleIndex = 0;
+                else currentCycleIndex = (currentCycleIndex + 1) % keys.length;
+                targetKey = keys[currentCycleIndex];
+            }
         }
     } else {
         // Fallback/Default
@@ -6875,7 +6888,7 @@ function renderMobilePlaybackPopover() {
     const interval = appSettings.mediaIntervalPreset || '10m';
 
     const modes = [
-        { value: 'single', label: '固定（ピン留め）' },
+        { value: 'single', label: '手動（ピン留め）' },
         { value: 'random', label: 'ランダム' },
         { value: 'cycle',  label: 'サイクル' },
     ];
@@ -6899,7 +6912,7 @@ function renderMobilePlaybackPopover() {
         <div class="mobile-playback-section ${isFixed ? 'is-disabled' : ''}">
             <div class="menu-section-title">
                 切り替え間隔
-                ${isFixed ? '<span class="interval-disabled-note">固定モード中は無効</span>' : ''}
+                ${isFixed ? '<span class="interval-disabled-note">手動モード中は無効</span>' : ''}
             </div>
             <div class="mobile-playback-grid">
                 ${intervals.map(iv => `
