@@ -3646,315 +3646,313 @@ body.is-immersive .day-detail-sheet {
     display: none !important;
 }
 
-/* Mobile Specific Overrides — 768px 以下またはタッチデバイス（body.is-touch-device） */
-@media (max-width: 768px) {
-    body {
-        padding: 0 !important;
-    }
+/* Mobile Specific Overrides — body.is-mobile-ui（JS付与: isMobile() = タッチデバイスまたは幅768px以下） */
+body.is-mobile-ui {
+    padding: 0 !important;
+}
 
-    .main-layout {
-        flex-direction: column !important;
-        height: auto !important;
-        overflow-y: visible !important;
-    }
+body.is-mobile-ui .main-layout {
+    flex-direction: column !important;
+    height: auto !important;
+    overflow-y: visible !important;
+}
 
-    .media-area {
-        width: 100% !important;
-        max-width: 100% !important;
-        position: static !important;
-        order: 1 !important; /* 画像を常に上に固定（仕様 2.1） */
-    }
+body.is-mobile-ui .media-area {
+    width: 100% !important;
+    max-width: 100% !important;
+    position: static !important;
+    order: 1 !important; /* 画像を常に上に固定（仕様 2.1） */
+}
 
-    .layout-splitter {
-        order: 2 !important;
-    }
+body.is-mobile-ui .layout-splitter {
+    order: 2 !important;
+}
 
-    .calendar-section {
-        order: 3 !important; /* カレンダーを常に下に固定 */
-    }
+body.is-mobile-ui .calendar-section {
+    order: 3 !important; /* カレンダーを常に下に固定 */
+}
 
-    /* 画像エリアを全画面表示
-     * position:fixed で viewport y=0 に固定する理由:
-     * Chrome Mobile では body{min-height:100vh} が URL バーを含む大ビューポートで計算され、
-     * ドキュメントが実際の viewport より ~92px 長くなる。その結果 .main-layout が
-     * viewport の上方にはみ出し画像に黒余白が生じるため、fixed で viewport に直接貼り付ける。
-     */
-    .media-container {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        height: 100dvh !important;
-        min-height: unset !important;
-        padding: 0 !important;
-        border-radius: 0 !important;
-        border: none !important;
-        box-shadow: none !important;
-        background: #000 !important;
-        justify-content: center !important;
-    }
+/* 画像エリアを全画面表示
+ * position:fixed で viewport y=0 に固定する理由:
+ * Chrome Mobile では body{min-height:100vh} が URL バーを含む大ビューポートで計算され、
+ * ドキュメントが実際の viewport より ~92px 長くなる。その結果 .main-layout が
+ * viewport の上方にはみ出し画像に黒余白が生じるため、fixed で viewport に直接貼り付ける。
+ */
+body.is-mobile-ui .media-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 100dvh !important;
+    min-height: unset !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #000 !important;
+    justify-content: center !important;
+}
 
-    /* 画像を全幅表示（縦長画像も幅いっぱいに） */
-    .media-container img {
-        width: 100% !important;
-        max-width: 100% !important;
-        max-height: 100dvh !important;
-        height: auto !important;
-        border-radius: 0 !important;
-        object-fit: contain !important;
-    }
-    /* backdrop だけは object-fit:cover を維持（詳細度で上書き） */
-    .media-container .media-backdrop {
-        object-fit: cover !important;
-        width: 100% !important;
-        height: 100% !important;
-    }
+/* 画像を全幅表示（縦長画像も幅いっぱいに） */
+body.is-mobile-ui .media-container img {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 100dvh !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    object-fit: contain !important;
+}
+/* backdrop だけは object-fit:cover を維持（詳細度で上書き） */
+body.is-mobile-ui .media-container .media-backdrop {
+    object-fit: cover !important;
+    width: 100% !important;
+    height: 100% !important;
+}
 
-    /* カレンダーセクションはデフォルト非表示 */
-    .calendar-section {
-        display: none;
-        width: 100% !important;
-    }
+/* カレンダーセクションはデフォルト非表示 */
+body.is-mobile-ui .calendar-section {
+    display: none;
+    width: 100% !important;
+}
 
-    .calendar-wrapper {
-        flex-direction: column !important;
-        width: 100% !important;
-    }
+body.is-mobile-ui .calendar-wrapper {
+    flex-direction: column !important;
+    width: 100% !important;
+}
 
-    .calendar-month {
-        width: 100% !important;
-        max-width: 100% !important;
-        flex: none !important;
-    }
+body.is-mobile-ui .calendar-month {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+}
 
-    /* Hide desktop specific controls */
-    .toggle-months-btn,
-    #btnToggleLayout,
-    .layout-splitter {
-        display: none !important;
-    }
+/* Hide desktop specific controls */
+body.is-mobile-ui .toggle-months-btn,
+body.is-mobile-ui #btnToggleLayout,
+body.is-mobile-ui .layout-splitter {
+    display: none !important;
+}
 
-    /* モバイルでシートを有効化・z-index修正 */
-    .day-detail-sheet {
-        display: block;
-        z-index: calc(var(--z-modal) + 2); /* 2002: カレンダー・コントロールの上 */
-    }
+/* モバイルでシートを有効化・z-index修正 */
+body.is-mobile-ui .day-detail-sheet {
+    display: block;
+    z-index: calc(var(--z-modal) + 2); /* 2002: カレンダー・コントロールの上 */
+}
 
-    /* ---- 2ステートモバイルUI ---- */
+/* ---- 2ステートモバイルUI ---- */
 
-    /* カレンダーモード: 全画面オーバーレイ */
-    .calendar-section.is-expanded {
-        display: flex;
-        position: fixed;
-        inset: 0;
-        z-index: var(--z-modal);
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        background: var(--bg-color);
-        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-    }
+/* カレンダーモード: 全画面オーバーレイ */
+body.is-mobile-ui .calendar-section.is-expanded {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--bg-color);
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+}
 
-    .calendar-section.is-expanded .calendar-wrapper {
-        padding: 0 10px;
-    }
+body.is-mobile-ui .calendar-section.is-expanded .calendar-wrapper {
+    padding: 0 10px;
+}
 
-    /* 画像コントロール: 画像下部に左寄せオーバーレイ（backdrop-filterを避けてabsoluteを使用） */
-    .media-controls-wrapper {
-        position: absolute !important;
-        top: auto !important;
-        bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
-        left: 12px !important;
-        right: auto !important;
-        opacity: 0.9 !important;
-        pointer-events: auto !important;
-        gap: 4px !important;
-        justify-content: flex-start !important;
-    }
+/* 画像コントロール: 画像下部に左寄せオーバーレイ（backdrop-filterを避けてabsoluteを使用） */
+body.is-mobile-ui .media-controls-wrapper {
+    position: absolute !important;
+    top: auto !important;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    left: 12px !important;
+    right: auto !important;
+    opacity: 0.9 !important;
+    pointer-events: auto !important;
+    gap: 4px !important;
+    justify-content: flex-start !important;
+}
 
-    /* モバイルでは quick-media-controls は非表示（ボトムバーに統合） */
-    .quick-media-controls {
-        display: none !important;
-    }
+/* モバイルでは quick-media-controls は非表示（ボトムバーに統合） */
+body.is-mobile-ui .quick-media-controls {
+    display: none !important;
+}
 
-    /* カレンダーセクションにボトムバー＋コントロール分の余白 */
-    .calendar-section {
-        padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-    }
+/* カレンダーセクションにボトムバー＋コントロール分の余白 */
+body.is-mobile-ui .calendar-section {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+}
 
-    /* テロップバーの分だけ展開時のカレンダーを下げる（30px ticker + 8px gap） */
-    .calendar-section.is-expanded {
-        padding-top: 38px;
-    }
+/* テロップバーの分だけ展開時のカレンダーを下げる（30px ticker + 8px gap） */
+body.is-mobile-ui .calendar-section.is-expanded {
+    padding-top: 38px;
+}
 
-    /* モバイルでは .controls バーをテロップが代替するため非表示 */
-    .controls {
-        display: none !important;
-    }
+/* モバイルでは .controls バーをテロップが代替するため非表示 */
+body.is-mobile-ui .controls {
+    display: none !important;
+}
 
-    /* ===== カレンダー: Glassmorphism統一カード ===== */
+/* ===== カレンダー: Glassmorphism統一カード ===== */
 
-    /* ヘッダー + グリッドを単一カードに統合 */
-    .calendar-section.is-expanded .calendar-month {
-        background: var(--card-bg);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 18px;
-        padding: 5px 14px 6px;
-    }
+/* ヘッダー + グリッドを単一カードに統合 */
+body.is-mobile-ui .calendar-section.is-expanded .calendar-month {
+    background: var(--card-bg);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
+    padding: 5px 14px 6px;
+}
 
-    /* 年月ヘッダー: カード内上部。個別背景なし */
-    .month-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding-bottom: 4px;
-    }
-    .month-title {
-        font-size: 0.9rem;
-        font-weight: 700;
-    }
+/* 年月ヘッダー: カード内上部。個別背景なし */
+body.is-mobile-ui .month-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 4px;
+}
+body.is-mobile-ui .month-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+}
 
-    /* < > ボタン: 文字サイズに合わせた小ぶり配置 */
-    .month-nav-inline {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 26px;
-        height: 26px;
-        border: none;
-        background: none;
-        color: var(--text-primary);
-        font-size: 17px;
-        line-height: 1;
-        cursor: pointer;
-        border-radius: 6px;
-        -webkit-tap-highlight-color: transparent;
-        touch-action: manipulation;
-        padding: 0;
-        flex-shrink: 0;
-    }
-    .month-nav-inline:active { opacity: 0.45; }
+/* < > ボタン: 文字サイズに合わせた小ぶり配置 */
+body.is-mobile-ui .month-nav-inline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: none;
+    background: none;
+    color: var(--text-primary);
+    font-size: 17px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 6px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    padding: 0;
+    flex-shrink: 0;
+}
+body.is-mobile-ui .month-nav-inline:active { opacity: 0.45; }
 
-    /* 曜日ヘッダー */
-    .weekday-header {
-        margin-bottom: 2px;
-    }
-    .weekday-header span {
-        font-size: 0.68rem;
-    }
+/* 曜日ヘッダー */
+body.is-mobile-ui .weekday-header {
+    margin-bottom: 2px;
+}
+body.is-mobile-ui .weekday-header span {
+    font-size: 0.68rem;
+}
 
-    /* グリッド: 行高を固定して月移動時のガタつきを完全排除 */
-    .days-grid {
-        grid-auto-rows: 21px;
-    }
+/* グリッド: 行高を固定して月移動時のガタつきを完全排除 */
+body.is-mobile-ui .days-grid {
+    grid-auto-rows: 21px;
+}
 
-    /* 日付セル: grid-auto-rows に追従 */
-    .day-cell {
-        aspect-ratio: unset;
-        min-height: unset;
-        height: 100%;
-        overflow: hidden;
-    }
-    .day-number {
-        font-size: 0.68rem;
-        line-height: 1;
-    }
-    /* モバイル: 推しイベントをドット表示に変換（名前テキスト非表示） */
-    .oshi-events-container {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: nowrap;
-        gap: 2px;
-        justify-content: center;
-        position: absolute;
-        bottom: 2px;
-        left: 0;
-        right: 0;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-    }
+/* 日付セル: grid-auto-rows に追従 */
+body.is-mobile-ui .day-cell {
+    aspect-ratio: unset;
+    min-height: unset;
+    height: 100%;
+    overflow: hidden;
+}
+body.is-mobile-ui .day-number {
+    font-size: 0.68rem;
+    line-height: 1;
+}
+/* モバイル: 推しイベントをドット表示に変換（名前テキスト非表示） */
+body.is-mobile-ui .oshi-events-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 2px;
+    justify-content: center;
+    position: absolute;
+    bottom: 2px;
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
 
-    .oshi-event {
-        min-height: 0;
-        font-size: 0;
-        width: 5px;
-        height: 5px;
-        padding: 0;
-        border-radius: 50%;
-        flex-shrink: 0;
-        opacity: 0.9;
-        display: inline-block;
-    }
+body.is-mobile-ui .oshi-event {
+    min-height: 0;
+    font-size: 0;
+    width: 5px;
+    height: 5px;
+    padding: 0;
+    border-radius: 50%;
+    flex-shrink: 0;
+    opacity: 0.9;
+    display: inline-block;
+}
 
-    /* ドット内アイコンは非表示（日付数字横の day-icon-badge で代替） */
-    .oshi-event .oshi-event-icon {
-        display: none;
-    }
+/* ドット内アイコンは非表示（日付数字横の day-icon-badge で代替） */
+body.is-mobile-ui .oshi-event .oshi-event-icon {
+    display: none;
+}
 
-    /* 5推し目以降は非表示（セル幅オーバーフロー防止） */
-    .oshi-event:nth-child(n+5) {
-        display: none;
-    }
+/* 5推し目以降は非表示（セル幅オーバーフロー防止） */
+body.is-mobile-ui .oshi-event:nth-child(n+5) {
+    display: none;
+}
 
-    /* 日付数字横のアイコンバッジは非表示（ドットのみで表現） */
-    .day-icons {
-        display: none;
-    }
+/* 日付数字横のアイコンバッジは非表示（ドットのみで表現） */
+body.is-mobile-ui .day-icons {
+    display: none;
+}
 
-    /* 祝日名はセル内に収まらないため非表示（シートヘッダーに表示） */
-    .holiday-name {
-        display: none;
-    }
+/* 祝日名はセル内に収まらないため非表示（シートヘッダーに表示） */
+body.is-mobile-ui .holiday-name {
+    display: none;
+}
 
-    /* Day Detail Sheet ではポップアップ用ヘッダーを非表示（シート自体がヘッダーを持つため2重になる） */
-    #dayDetailBody .popup-header {
-        display: none;
-    }
+/* Day Detail Sheet ではポップアップ用ヘッダーを非表示（シート自体がヘッダーを持つため2重になる） */
+body.is-mobile-ui #dayDetailBody .popup-header {
+    display: none;
+}
 
-    /* 旧FABピルを非表示 */
-    .mobile-cal-fab {
-        display: none !important;
-    }
+/* 旧FABピルを非表示 */
+body.is-mobile-ui .mobile-cal-fab {
+    display: none !important;
+}
 
-    /* モバイルでは上/下/左/右/没入はいずれも自動と同等のためすべて非表示 */
-    .layout-item[data-layout="top"],
-    .layout-item[data-layout="bottom"],
-    .layout-item[data-layout="left"],
-    .layout-item[data-layout="right"],
-    .layout-item[data-layout="immersive"] {
-        display: none !important;
-    }
+/* モバイルでは上/下/左/右/没入はいずれも自動と同等のためすべて非表示 */
+body.is-mobile-ui .layout-item[data-layout="top"],
+body.is-mobile-ui .layout-item[data-layout="bottom"],
+body.is-mobile-ui .layout-item[data-layout="left"],
+body.is-mobile-ui .layout-item[data-layout="right"],
+body.is-mobile-ui .layout-item[data-layout="immersive"] {
+    display: none !important;
+}
 
-    /* 有効なレイアウト選択肢が自動のみになるためレイアウトボタン自体を非表示 */
-    #btnMobileLayout {
-        display: none !important;
-    }
+/* 有効なレイアウト選択肢が自動のみになるためレイアウトボタン自体を非表示 */
+body.is-mobile-ui #btnMobileLayout {
+    display: none !important;
+}
 
-    /* 没入モード時: ミニウィジェット(180px)を抑制 */
-    body.is-immersive .calendar-section {
-        display: none !important;
-        position: static !important;
-        width: auto !important;
-    }
-    /* カレンダーモード時は全画面で表示（没入モード上に被せる） */
-    body.is-immersive .calendar-section.is-expanded {
-        display: flex !important;
-        position: fixed !important;
-        inset: 0 !important;
-        z-index: calc(var(--z-modal) + 5) !important;
-        width: auto !important;
-    }
-    /* FABは没入モード中も表示維持 */
-    body.is-immersive .mobile-cal-fab {
-        display: flex !important;
-        z-index: calc(var(--z-modal) + 10) !important;
-    }
-    /* モバイルでは没入中もデイ詳細シートを有効化（グローバルの display:none を上書き） */
-    body.is-immersive .day-detail-sheet {
-        display: block !important;
-    }
+/* 没入モード時: ミニウィジェット(180px)を抑制 */
+body.is-mobile-ui.is-immersive .calendar-section {
+    display: none !important;
+    position: static !important;
+    width: auto !important;
+}
+/* カレンダーモード時は全画面で表示（没入モード上に被せる） */
+body.is-mobile-ui.is-immersive .calendar-section.is-expanded {
+    display: flex !important;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: calc(var(--z-modal) + 5) !important;
+    width: auto !important;
+}
+/* FABは没入モード中も表示維持 */
+body.is-mobile-ui.is-immersive .mobile-cal-fab {
+    display: flex !important;
+    z-index: calc(var(--z-modal) + 10) !important;
+}
+/* モバイルでは没入中もデイ詳細シートを有効化（グローバルの display:none を上書き） */
+body.is-mobile-ui.is-immersive .day-detail-sheet {
+    display: block !important;
 }
 
 @media (max-width: 600px) {
@@ -3979,13 +3977,16 @@ body.is-immersive .day-detail-sheet {
     }
 }
 
-/* ランドスケープ（横向き）スマートフォン対応 */
+/* ランドスケープ（横向き）スマートフォン対応
+ * body.is-mobile-ui のセレクタと特定性を揃えるため全ルールに body.is-mobile-ui を付与する。
+ * （body.is-mobile-ui は isMobile() = true のとき JS が付与するクラス。
+ *   幅 768px 以下の端末は横向きでも isMobile() = true になるため常に適用される。） */
 @media (max-height: 500px) and (orientation: landscape) {
-    body {
+    body.is-mobile-ui {
         padding: 0 !important;
     }
 
-    .main-layout {
+    body.is-mobile-ui .main-layout {
         flex-direction: row !important;
         align-items: stretch !important;
         height: 100dvh !important;
@@ -3994,7 +3995,7 @@ body.is-immersive .day-detail-sheet {
         padding: 0 !important;
     }
 
-    .media-area {
+    body.is-mobile-ui .media-area {
         width: 60% !important;
         max-width: 60% !important;
         height: 100dvh !important;
@@ -4006,13 +4007,13 @@ body.is-immersive .day-detail-sheet {
     }
 
     /* スプリッターはランドスケープでは不要 */
-    .layout-splitter {
+    body.is-mobile-ui .layout-splitter {
         display: none !important;
     }
 
-    .media-container {
-        /* ポートレートquery(max-width:768px)が同時適用される端末では
-         * position:fixed/left:0/right:0 が設定されてしまうためここでリセットする。
+    body.is-mobile-ui .media-container {
+        /* body.is-mobile-ui .media-container が position:fixed を設定するため
+         * ここで relative にリセットする。
          * relative にすることで .media-backdrop の position:absolute の基準にもなる */
         position: relative !important;
         top: auto !important;
@@ -4033,7 +4034,7 @@ body.is-immersive .day-detail-sheet {
 
     /* .media-display-area は JS で display:flex / align-items:center / justify-content:center の
      * インラインスタイルが設定されるため、同じ flex 方向で center 揃えを明示する */
-    .media-display-area {
+    body.is-mobile-ui .media-display-area {
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -4042,8 +4043,8 @@ body.is-immersive .day-detail-sheet {
     }
 
     /* .media-backdrop は img 要素だが全体を覆う必要があるため除外 */
-    .media-container img:not(.media-backdrop),
-    .media-main-img {
+    body.is-mobile-ui .media-container img:not(.media-backdrop),
+    body.is-mobile-ui .media-main-img {
         width: auto !important;
         height: auto !important;
         max-width: 100% !important;
@@ -4053,37 +4054,37 @@ body.is-immersive .day-detail-sheet {
     }
 
     /* backdrop はコンテナ全体を覆い、z-index:0 で左右両側にぼかし効果を表示する */
-    .media-backdrop {
+    body.is-mobile-ui .media-backdrop {
         width: 100% !important;
         height: 100% !important;
         z-index: 0 !important;
     }
 
     /* ランドスケープ: カレンダーを非表示にして画像のみ表示 */
-    .calendar-section {
+    body.is-mobile-ui .calendar-section {
         display: none !important;
     }
 
     /* ボトムバー・タブパネル・テロップ・ホームバーをすべて非表示 */
-    #mobile-bottom-bar,
-    .ticker-bar {
+    body.is-mobile-ui #mobile-bottom-bar,
+    body.is-mobile-ui .ticker-bar {
         display: none !important;
     }
-    .mobile-tab-panel,
-    .mobile-grid-library,
-    .mobile-playback-popover,
-    .mobile-add-submenu {
+    body.is-mobile-ui .mobile-tab-panel,
+    body.is-mobile-ui .mobile-grid-library,
+    body.is-mobile-ui .mobile-playback-popover,
+    body.is-mobile-ui .mobile-add-submenu {
         display: none !important;
     }
 
     /* メディアエリアをフル幅に */
-    .media-area {
+    body.is-mobile-ui .media-area {
         width: 100% !important;
         max-width: 100% !important;
     }
 
     /* コントロールボタンを左上に配置 */
-    .media-controls-wrapper {
+    body.is-mobile-ui .media-controls-wrapper {
         position: absolute !important;
         top: 8px !important;
         bottom: auto !important;
@@ -4742,40 +4743,38 @@ body.is-immersive.show-overlay .calendar-month:hover {
 }
 
 /* ── モバイル向け記念日行 追加スタイル ──────────────── */
-@media (max-width: 768px) {
-    .oshi-edit-content {
-        padding: 16px 16px 4px;
-    }
+body.is-mobile-ui .oshi-edit-content {
+    padding: 16px 16px 4px;
+}
 
-    .memorial-date-row {
-        gap: 8px 6px;
-        background: rgba(0, 0, 0, 0.03);
-        padding: 12px;
-        border-radius: 12px;
-        margin-bottom: 12px;
-    }
+body.is-mobile-ui .memorial-date-row {
+    gap: 8px 6px;
+    background: rgba(0, 0, 0, 0.03);
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
 
-    .mdate-icon-btn {
-        width: 36px;
-        height: 36px;
-    }
-    .mdate-delete {
-        padding: 8px;
-        margin-left: 4px;
-    }
-    .mdate-date {
-        font-size: 16px; /* モバイルでのズーム防止 */
-    }
-    .mdate-annual-label {
-        justify-content: flex-end;
-        padding-left: 8px;
-    }
-    .mdate-annual-icon {
-        font-size: 1.1em;
-    }
-    .mdate-type-select {
-        font-size: 16px; /* モバイルでのズーム防止 */
-    }
+body.is-mobile-ui .mdate-icon-btn {
+    width: 36px;
+    height: 36px;
+}
+body.is-mobile-ui .mdate-delete {
+    padding: 8px;
+    margin-left: 4px;
+}
+body.is-mobile-ui .mdate-date {
+    font-size: 16px; /* モバイルでのズーム防止 */
+}
+body.is-mobile-ui .mdate-annual-label {
+    justify-content: flex-end;
+    padding-left: 8px;
+}
+body.is-mobile-ui .mdate-annual-icon {
+    font-size: 1.1em;
+}
+body.is-mobile-ui .mdate-type-select {
+    font-size: 16px; /* モバイルでのズーム防止 */
 }
 
 .event-type-manager > summary::before {
@@ -4933,12 +4932,10 @@ body.is-immersive.show-overlay .calendar-month:hover {
     padding: 0 10px;
 }
 
-@media (max-width: 768px) {
-    .mdate-type-select {
-        flex: none;
-        width: 100%;
-        font-size: 16px; /* モバイルでのズーム防止 */
-    }
+body.is-mobile-ui .mdate-type-select {
+    flex: none;
+    width: 100%;
+    font-size: 16px; /* モバイルでのズーム防止 */
 }
 
 .mdate-type-new {
@@ -5037,897 +5034,895 @@ textarea:focus-visible,
     display: none;
 }
 
-@media (max-width: 768px) {
-    /* ===== タブバー本体 ===== */
-    #mobile-bottom-bar.smart-bottom-bar {
-        display: grid;
-        grid-template-columns: 1fr 1fr 0.75fr 1fr 1fr;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: calc(64px + env(safe-area-inset-bottom, 0px));
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-        z-index: 2000;
-        background: var(--card-bg, rgba(255, 255, 255, 0.88));
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border-top: 1px solid rgba(0, 0, 0, 0.08);
-        box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
-        align-items: flex-end;
-        overflow: visible;
-    }
-
-    /* ===== テロップバー ===== */
-    .ticker-bar {
-        display: block;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 30px;
-        z-index: 3000;
-        background: rgba(0, 0, 0, 0.38);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        overflow: hidden;
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-        transition: opacity 200ms ease;
-    }
-
-    /* 管理・設定タブではテロップを非表示（フェードアウト） */
-    body.mobile-tab-management #tickerBar,
-    body.mobile-tab-settings   #tickerBar {
-        opacity: 0;
-        pointer-events: none;
-    }
-    .ticker-inner {
-        display: flex;
-        align-items: center;
-        height: 100%;
-        padding: 0 12px;
-        overflow: hidden;
-        white-space: nowrap;
-    }
-    .ticker-text {
-        font-size: 11px;
-        color: rgba(255, 255, 255, 0.92);
-        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
-        letter-spacing: 0.02em;
-        white-space: nowrap;
-        display: inline-block;
-    }
-    .ticker-text.is-scrolling {
-        animation: ticker-scroll 22s linear infinite;
-        padding-left: 100%;
-    }
-
-    /* オートハイド */
-    #mobile-bottom-bar.smart-bottom-bar {
-        transition: opacity 0.4s ease, transform 0.4s ease;
-    }
-    #mobile-bottom-bar.is-hidden {
-        opacity: 0;
-        transform: translateY(8px);
-        pointer-events: none;
-    }
-
-    /* タブボタン共通 */
-    .mobile-tab-btn {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 3px;
-        border: none;
-        background: none;
-        color: var(--text-secondary, #888);
-        cursor: pointer;
-        font-size: 10px;
-        touch-action: manipulation;
-        padding: 8px 4px;
-        border-radius: 0;
-        transition: color 0.2s;
-        -webkit-tap-highlight-color: transparent;
-        height: 64px;
-    }
-    .mobile-tab-btn svg { flex-shrink: 0; }
-    .mobile-tab-btn:active { opacity: 0.7; }
-    .mobile-tab-btn.is-active { color: var(--accent-color, #ec4899); }
-
-    /* 中央の追加ボタン（浮き上がり） */
-    .mobile-tab-btn.mobile-tab-add {
-        position: relative;
-        background: var(--accent-color, #ec4899);
-        color: #fff;
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        padding: 0;
-        box-shadow: 0 4px 16px rgba(236, 72, 153, 0.4);
-        justify-self: center;
-        align-self: center;
-        margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 7px);
-        flex-direction: row;
-        top: -7px;
-    }
-    .mobile-tab-btn.mobile-tab-add span { display: none; }
-    .mobile-tab-btn.mobile-tab-add:active { opacity: 0.85; }
-
-    /* 追加サブメニュー */
-    .mobile-add-submenu {
-        display: none;
-        position: fixed;
-        bottom: calc(76px + env(safe-area-inset-bottom, 0px));
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--card-bg, rgba(255, 255, 255, 0.96));
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-        padding: 8px;
-        flex-direction: column;
-        gap: 2px;
-        min-width: 200px;
-        z-index: 2100;
-    }
-    .mobile-add-submenu.is-open { display: flex; }
-    .mobile-add-submenu button {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 16px;
-        border: none;
-        background: none;
-        width: 100%;
-        text-align: left;
-        font-size: 14px;
-        color: var(--text-primary);
-        border-radius: 10px;
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-    }
-    .mobile-add-submenu button:active { background: rgba(0, 0, 0, 0.05); }
-
-    /* ===== モバイルタブパネル ===== */
-    .mobile-tab-panel {
-        position: fixed;
-        inset: 0;
-        z-index: 1800;
-        overflow: hidden;
-        flex-direction: column;
-    }
-    body.mobile-tab-management #mobileManagementPanel { display: flex; }
-    body.mobile-tab-settings   #mobileSettingsPanel    { display: flex; }
-
-    /* パネル背景ブラー */
-    .mobile-panel-bg-blur {
-        position: absolute;
-        inset: 0;
-        background-size: cover;
-        background-position: center;
-        background-color: var(--bg-color, #f0f4f8);
-        filter: blur(25px) brightness(0.8);
-        transform: scale(1.1);
-        z-index: 0;
-    }
-    .mobile-tab-panel > *:not(.mobile-panel-bg-blur) {
-        position: relative;
-        z-index: 1;
-    }
-
-    /* 管理パネル内側 */
-    .mobile-management-inner {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        height: 100%;
-        padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
-        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-        background: rgba(255, 255, 255, 0.82);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-    }
-    .mobile-panel-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 16px 12px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-        flex-shrink: 0;
-    }
-    .mobile-panel-title {
-        font-size: 1.1rem;
-        font-weight: 700;
-        margin: 0;
-    }
-    .mobile-header-btn {
-        font-size: 13px;
-        padding: 6px 14px;
-    }
-    /* アクションエリア（追加・検索・ソート） */
-    .mobile-oshi-actions {
-        flex-shrink: 0;
-        display: none; /* JS で flex に切替 */
-        flex-direction: column;
-        gap: 8px;
-        padding: 10px 16px 12px;
-        border-bottom: 1px solid rgba(128, 128, 128, 0.1);
-    }
-    .mobile-oshi-add-top {
-        width: 100%;
-        padding: 10px;
-        font-size: 0.9rem;
-    }
-    .mobile-oshi-search-row {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-    }
-    .mobile-oshi-search {
-        flex: 1;
-        height: 36px;
-        border-radius: 10px;
-        border: 1px solid rgba(128, 128, 128, 0.2);
-        background: rgba(128, 128, 128, 0.09);
-        padding: 0 12px;
-        font-size: 0.85rem;
-        color: var(--text-primary);
-        outline: none;
-        -webkit-appearance: none;
-    }
-    .mobile-oshi-search::placeholder { color: var(--text-secondary); opacity: 0.55; }
-    .mobile-oshi-search:focus { border-color: var(--accent-color); }
-    .mobile-oshi-sort {
-        flex-shrink: 0;
-        height: 36px;
-        border-radius: 10px;
-        border: 1px solid rgba(128, 128, 128, 0.2);
-        background: rgba(128, 128, 128, 0.09);
-        color: var(--text-primary);
-        font-size: 0.8rem;
-        padding: 0 6px;
-        cursor: pointer;
-        outline: none;
-    }
-
-    /* 仮想スクロール本体 */
-    .mobile-oshi-content-row {
-        flex: 1;
-        display: none; /* JS で flex に切替 */
-        overflow: hidden;
-        min-height: 0;
-    }
-    .mobile-oshi-vscroll-area {
-        flex: 1;
-        overflow-y: scroll;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior: contain;
-        position: relative;
-        min-width: 0;
-    }
-    .mobile-oshi-vscroll-total {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 1px;
-        pointer-events: none;
-    }
-
-    /* 推しカードリスト（仮想スクロール用） */
-    .mobile-oshi-list {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-    }
-    .mobile-oshi-list--virt {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        will-change: transform;
-    }
-    .mobile-oshi-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 0 6px 0 16px;
-        height: 52px;
-        box-sizing: border-box;
-        border-bottom: 1px solid rgba(128, 128, 128, 0.1);
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-    }
-    .mobile-oshi-item:active { background: rgba(128, 128, 128, 0.07); }
-    .mobile-oshi-chip {
-        flex-shrink: 0;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
-    }
-    .mobile-oshi-info {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-    }
-    .mobile-oshi-name {
-        font-size: 0.93rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    .mobile-oshi-tags {
-        display: flex;
-        gap: 4px;
-        flex-wrap: nowrap;
-        overflow: hidden;
-    }
-    .mobile-oshi-tag-pill {
-        font-size: 0.65rem;
-        padding: 1px 6px;
-        border-radius: 20px;
-        background: rgba(128, 128, 128, 0.1);
-        color: var(--text-secondary);
-        white-space: nowrap;
-        opacity: 0.8;
-    }
-    .mobile-oshi-next-date {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        flex-shrink: 0;
-        min-width: 36px;
-    }
-    .m-date-mmdd {
-        font-size: 0.72rem;
-        color: var(--text-secondary);
-        opacity: 0.75;
-    }
-    .m-date-countdown {
-        font-size: 0.6rem;
-        color: var(--accent-color);
-        opacity: 0.85;
-        line-height: 1.2;
-    }
-    .m-date-countdown.is-today    { color: #ef4444; opacity: 1; font-weight: 600; }
-    .m-date-countdown.is-tomorrow { color: #f97316; opacity: 1; }
-    .m-date-countdown.is-soon     { color: #eab308; opacity: 1; }
-    .mobile-oshi-chevron {
-        flex-shrink: 0;
-        width: 7px;
-        height: 7px;
-        border-top: 1.5px solid var(--text-secondary);
-        border-right: 1.5px solid var(--text-secondary);
-        transform: rotate(45deg);
-        opacity: 0.35;
-        margin-right: 4px;
-    }
-    .mobile-oshi-no-results {
-        list-style: none;
-        padding: 40px 16px;
-        text-align: center;
-        font-size: 0.88rem;
-        color: var(--text-secondary);
-        opacity: 0.7;
-    }
-
-    /* インデックスレール */
-    .mobile-oshi-index-rail {
-        width: 24px;
-        flex-shrink: 0;
-        display: none;
-        flex-direction: column;
-        justify-content: space-around;
-        align-items: center;
-        padding: 6px 0;
-    }
-    .mobile-oshi-index-rail.is-visible { display: flex; }
-    .mobile-oshi-index-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        min-height: 16px;
-        font-size: 0.55rem;
-        font-weight: 700;
-        color: var(--accent-color);
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 1px 0;
-        -webkit-tap-highlight-color: transparent;
-        line-height: 1;
-    }
-
-    /* スクロールバブル */
-    .mobile-oshi-scroll-bubble {
-        position: fixed;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%) scale(0.75);
-        width: 72px;
-        height: 72px;
-        border-radius: 18px;
-        background: rgba(30, 30, 40, 0.88);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        color: #fff;
-        font-size: 1.5rem;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.18s, transform 0.18s;
-        z-index: 2000;
-    }
-    .mobile-oshi-scroll-bubble.is-visible {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-    }
-
-    /* 空の状態（管理タブ） */
-    #mobileOshiEmpty {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 32px 24px;
-    }
-
-    /* 三点メニューラッパー */
-    .mobile-oshi-menu-wrapper {
-        position: relative;
-    }
-
-    /* Ghost button — 背景・枠なし */
-    .mobile-oshi-menu-btn {
-        background: none !important;
-        border: none !important;
-        box-shadow: none !important;
-        font-size: 1.3rem;
-        letter-spacing: 0.08em;
-        padding: 4px 8px;
-        color: var(--text-primary);
-        opacity: 0.7;
-        transition: opacity 0.15s;
-    }
-    .mobile-oshi-menu-btn:hover,
-    .mobile-oshi-menu-btn:active {
-        opacity: 1;
-        background: none !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
-
-    /* ドロップダウンコンテナ */
-    .mobile-oshi-menu {
-        display: none;
-        position: absolute;
-        top: calc(100% + 6px);
-        right: 0;
-        background: rgba(30, 30, 40, 0.82);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 16px;
-        min-width: 200px;
-        z-index: 200;
-        overflow: hidden;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
-    }
-    .mobile-oshi-menu.is-open { display: block; }
-    .mobile-oshi-menu-item {
-        display: block;
-        width: 100%;
-        padding: 15px 18px;
-        text-align: left;
-        border: none;
-        background: none;
-        font-size: 0.92rem;
-        color: rgba(255, 255, 255, 0.92);
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-    }
-    .mobile-oshi-menu-item:not(:last-child) {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .mobile-oshi-menu-item:active { background: rgba(255, 255, 255, 0.1); }
-
-    /* 設定パネル */
-    .mobile-settings-inner {
-        width: 100%;
-        height: 100%;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        background: rgba(255, 255, 255, 0.82);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-    }
-    .mobile-settings-header {
-        padding: calc(env(safe-area-inset-top, 0px) + 16px) 20px 12px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-        position: sticky;
-        top: 0;
-        background: inherit;
-        backdrop-filter: inherit;
-        -webkit-backdrop-filter: inherit;
-        z-index: 1;
-    }
-    .mobile-settings-body {
-        padding: 16px 20px calc(80px + env(safe-area-inset-bottom, 0px));
-    }
-
-    /* ===== 設定メニューリスト ===== */
-    .settings-menu-list {
-        display: flex;
-        flex-direction: column;
-        padding: 8px 0;
-    }
-
-    .settings-menu-item {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        padding: 15px 20px;
-        background: rgba(255, 255, 255, 0.55);
-        border: none;
-        width: 100%;
-        text-align: left;
-        cursor: pointer;
-        color: var(--text-primary);
-        font-size: 1rem;
-        font-family: inherit;
-        border-radius: 12px;
-        margin: 2px 0;
-        transition: background 0.12s;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    .settings-menu-item:active {
-        background: rgba(236, 72, 153, 0.12);
-    }
-
-    .settings-menu-icon {
-        font-size: 1.25rem;
-        flex-shrink: 0;
-        width: 24px;
-        text-align: center;
-    }
-
-    .settings-menu-label-wrap {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        min-width: 0;
-    }
-
-    .settings-menu-label {
-        font-weight: 500;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .settings-menu-caption {
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .settings-menu-chevron {
-        color: var(--text-secondary);
-        font-size: 1.3rem;
-    }
-
-    /* ===== モバイル設定サブパネル ===== */
-    .mobile-sub-panel {
-        position: fixed;
-        inset: 0;
-        z-index: 1900;
-        display: flex;
-        flex-direction: column;
-        transform: translateX(100%);
-        transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
-        pointer-events: none;
-    }
-
-    .mobile-sub-panel.is-open {
-        transform: translateX(0);
-        pointer-events: auto;
-    }
-
-    .mobile-sub-panel-inner {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-    }
-
-    .mobile-sub-panel-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 12px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-        flex-shrink: 0;
-        position: sticky;
-        top: 0;
-        background: inherit;
-        backdrop-filter: inherit;
-        -webkit-backdrop-filter: inherit;
-        z-index: 1;
-    }
-
-    .mobile-sub-panel-title {
-        font-size: 1.0625rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        flex: 1;
-        margin: 0;
-    }
-
-    .mobile-sub-panel-back {
-        background: none;
-        border: none;
-        padding: 4px 8px;
-        cursor: pointer;
-        color: var(--accent-color, #ec4899);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 8px;
-        font-size: 1.6rem;
-        line-height: 1;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    .mobile-sub-panel-back:active {
-        background: rgba(236, 72, 153, 0.1);
-    }
-
-    .mobile-sub-panel-body {
-        flex: 1;
-        overflow-y: auto;
-        padding: 16px 20px calc(80px + env(safe-area-inset-bottom, 0px));
-        -webkit-overflow-scrolling: touch;
-    }
-
-    /* ===== ホームタブ 固定モードドット ===== */
-    .mobile-tab-btn[data-tab="home"] { position: relative; }
-    .mobile-home-dot {
-        display: none;
-        position: absolute;
-        top: 9px;
-        right: calc(50% - 17px);
-        width: 7px;
-        height: 7px;
-        background: #ec4899;
-        border-radius: 50%;
-        border: 1.5px solid var(--card-bg, #fff);
-    }
-    .mobile-home-dot.is-visible { display: block; }
-
-    /* ===== グリッドライブラリ ===== */
-    .mobile-grid-library.is-visible {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 2px;
-        position: fixed;
-        inset: 0;
-        z-index: 1900;
-        background: rgba(0, 0, 0, 0.9);
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-        align-content: start;
-    }
-    .mobile-grid-thumb {
-        aspect-ratio: 1;
-        overflow: hidden;
-        border: none;
-        background: #111;
-        padding: 0;
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-    }
-    .mobile-grid-thumb img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-    }
-    .mobile-grid-loading,
-    .mobile-grid-empty {
-        color: #fff;
-        text-align: center;
-        padding: 40px 20px;
-        grid-column: 1 / -1;
-        font-size: 14px;
-    }
-
-    /* ===== 再生設定ポップオーバー ===== */
-    .mobile-playback-popover.is-visible {
-        display: block;
-        position: fixed;
-        bottom: calc(76px + env(safe-area-inset-bottom, 0px));
-        left: 12px;
-        background: var(--card-bg, rgba(255, 255, 255, 0.96));
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-        padding: 12px;
-        min-width: 180px;
-        max-width: 240px;
-        z-index: 1900;
-    }
-    .mobile-playback-section { margin-bottom: 4px; }
-    .mobile-playback-item {
-        display: block;
-        width: 100%;
-        padding: 8px 12px;
-        border: none;
-        background: none;
-        text-align: left;
-        font-size: 13px;
-        color: var(--text-primary);
-        border-radius: 8px;
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-    }
-    .mobile-playback-item.is-active { color: var(--accent-color, #ec4899); font-weight: 600; }
-    .mobile-playback-item:active { background: rgba(0, 0, 0, 0.05); }
-    .mobile-playback-divider { height: 1px; background: rgba(0,0,0,0.08); margin: 8px 0; }
-    .mobile-playback-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 4px;
-    }
-    .mobile-interval-item {
-        padding: 6px 8px;
-        border: none;
-        background: rgba(0,0,0,0.04);
-        border-radius: 8px;
-        font-size: 12px;
-        color: var(--text-primary);
-        cursor: pointer;
-        text-align: center;
-        -webkit-tap-highlight-color: transparent;
-    }
-    .mobile-interval-item.is-active { background: var(--accent-color, #ec4899); color: #fff; }
-    .mobile-interval-item:active { opacity: 0.7; }
-    .mobile-interval-item:disabled {
-        opacity: 0.32;
-        cursor: not-allowed;
-        pointer-events: none;
-    }
-    .mobile-playback-section.is-disabled .menu-section-title {
-        opacity: 0.45;
-    }
-    .interval-disabled-note {
-        font-size: 10px;
-        font-weight: 400;
-        color: var(--text-secondary);
-        margin-left: 6px;
-        opacity: 0.8;
-    }
-
-    /* ===== モバイルイベントリスト ===== */
-    .mobile-event-list {
-        padding: 10px 16px;
-        margin-bottom: 24px;
-        max-height: 250px;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    .mobile-event-list-header {
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--text-secondary);
-        margin-bottom: 12px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    }
-    .mobile-event-row {
-        display: flex;
-        gap: 16px;
-        margin-bottom: 16px;
-    }
-    .mobile-event-date {
-        font-size: 14px;
-        font-weight: 700;
-        color: var(--text-secondary);
-        min-width: 46px;
-        padding-top: 4px;
-    }
-    .mobile-event-details {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-    .mobile-event-item {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 8px;
-        padding: 8px 12px;
-        border-radius: 10px;
-        font-size: 13px;
-    }
-    .mobile-event-name { font-weight: 700; }
-    .mobile-event-label { opacity: 0.85; font-size: 12px; }
-    .mobile-event-empty {
-        font-size: 14px;
-        color: var(--text-secondary);
-        text-align: center;
-        padding: 24px 0;
-    }
+/* ===== タブバー本体 ===== */
+body.is-mobile-ui #mobile-bottom-bar.smart-bottom-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 0.75fr 1fr 1fr;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    z-index: 2000;
+    background: var(--card-bg, rgba(255, 255, 255, 0.88));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+    align-items: flex-end;
+    overflow: visible;
 }
 
-@media (max-width: 768px) and (prefers-color-scheme: dark) {
-    #mobile-bottom-bar.smart-bottom-bar {
+/* ===== テロップバー ===== */
+body.is-mobile-ui .ticker-bar {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    z-index: 3000;
+    background: rgba(0, 0, 0, 0.38);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    overflow: hidden;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 200ms ease;
+}
+
+/* 管理・設定タブではテロップを非表示（フェードアウト） */
+body.is-mobile-ui.mobile-tab-management #tickerBar,
+body.is-mobile-ui.mobile-tab-settings   #tickerBar {
+    opacity: 0;
+    pointer-events: none;
+}
+body.is-mobile-ui .ticker-inner {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 12px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+body.is-mobile-ui .ticker-text {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    display: inline-block;
+}
+body.is-mobile-ui .ticker-text.is-scrolling {
+    animation: ticker-scroll 22s linear infinite;
+    padding-left: 100%;
+}
+
+/* オートハイド */
+body.is-mobile-ui #mobile-bottom-bar.smart-bottom-bar {
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+body.is-mobile-ui #mobile-bottom-bar.is-hidden {
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+}
+
+/* タブボタン共通 */
+body.is-mobile-ui .mobile-tab-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border: none;
+    background: none;
+    color: var(--text-secondary, #888);
+    cursor: pointer;
+    font-size: 10px;
+    touch-action: manipulation;
+    padding: 8px 4px;
+    border-radius: 0;
+    transition: color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    height: 64px;
+}
+body.is-mobile-ui .mobile-tab-btn svg { flex-shrink: 0; }
+body.is-mobile-ui .mobile-tab-btn:active { opacity: 0.7; }
+body.is-mobile-ui .mobile-tab-btn.is-active { color: var(--accent-color, #ec4899); }
+
+/* 中央の追加ボタン（浮き上がり） */
+body.is-mobile-ui .mobile-tab-btn.mobile-tab-add {
+    position: relative;
+    background: var(--accent-color, #ec4899);
+    color: #fff;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    box-shadow: 0 4px 16px rgba(236, 72, 153, 0.4);
+    justify-self: center;
+    align-self: center;
+    margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 7px);
+    flex-direction: row;
+    top: -7px;
+}
+body.is-mobile-ui .mobile-tab-btn.mobile-tab-add span { display: none; }
+body.is-mobile-ui .mobile-tab-btn.mobile-tab-add:active { opacity: 0.85; }
+
+/* 追加サブメニュー */
+body.is-mobile-ui .mobile-add-submenu {
+    display: none;
+    position: fixed;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--card-bg, rgba(255, 255, 255, 0.96));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    padding: 8px;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 200px;
+    z-index: 2100;
+}
+body.is-mobile-ui .mobile-add-submenu.is-open { display: flex; }
+body.is-mobile-ui .mobile-add-submenu button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-size: 14px;
+    color: var(--text-primary);
+    border-radius: 10px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+body.is-mobile-ui .mobile-add-submenu button:active { background: rgba(0, 0, 0, 0.05); }
+
+/* ===== モバイルタブパネル ===== */
+body.is-mobile-ui .mobile-tab-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 1800;
+    overflow: hidden;
+    flex-direction: column;
+}
+body.is-mobile-ui.mobile-tab-management #mobileManagementPanel { display: flex; }
+body.is-mobile-ui.mobile-tab-settings   #mobileSettingsPanel { display: flex; }
+
+/* パネル背景ブラー */
+body.is-mobile-ui .mobile-panel-bg-blur {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--bg-color, #f0f4f8);
+    filter: blur(25px) brightness(0.8);
+    transform: scale(1.1);
+    z-index: 0;
+}
+body.is-mobile-ui .mobile-tab-panel > *:not(.mobile-panel-bg-blur) {
+    position: relative;
+    z-index: 1;
+}
+
+/* 管理パネル内側 */
+body.is-mobile-ui .mobile-management-inner {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+body.is-mobile-ui .mobile-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+}
+body.is-mobile-ui .mobile-panel-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+}
+body.is-mobile-ui .mobile-header-btn {
+    font-size: 13px;
+    padding: 6px 14px;
+}
+/* アクションエリア（追加・検索・ソート） */
+body.is-mobile-ui .mobile-oshi-actions {
+    flex-shrink: 0;
+    display: none; /* JS で flex に切替 */
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 16px 12px;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+}
+body.is-mobile-ui .mobile-oshi-add-top {
+    width: 100%;
+    padding: 10px;
+    font-size: 0.9rem;
+}
+body.is-mobile-ui .mobile-oshi-search-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+body.is-mobile-ui .mobile-oshi-search {
+    flex: 1;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    background: rgba(128, 128, 128, 0.09);
+    padding: 0 12px;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    outline: none;
+    -webkit-appearance: none;
+}
+body.is-mobile-ui .mobile-oshi-search::placeholder { color: var(--text-secondary); opacity: 0.55; }
+body.is-mobile-ui .mobile-oshi-search:focus { border-color: var(--accent-color); }
+body.is-mobile-ui .mobile-oshi-sort {
+    flex-shrink: 0;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    background: rgba(128, 128, 128, 0.09);
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    padding: 0 6px;
+    cursor: pointer;
+    outline: none;
+}
+
+/* 仮想スクロール本体 */
+body.is-mobile-ui .mobile-oshi-content-row {
+    flex: 1;
+    display: none; /* JS で flex に切替 */
+    overflow: hidden;
+    min-height: 0;
+}
+body.is-mobile-ui .mobile-oshi-vscroll-area {
+    flex: 1;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    position: relative;
+    min-width: 0;
+}
+body.is-mobile-ui .mobile-oshi-vscroll-total {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    pointer-events: none;
+}
+
+/* 推しカードリスト（仮想スクロール用） */
+body.is-mobile-ui .mobile-oshi-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+body.is-mobile-ui .mobile-oshi-list--virt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    will-change: transform;
+}
+body.is-mobile-ui .mobile-oshi-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 6px 0 16px;
+    height: 52px;
+    box-sizing: border-box;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+body.is-mobile-ui .mobile-oshi-item:active { background: rgba(128, 128, 128, 0.07); }
+body.is-mobile-ui .mobile-oshi-chip {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+body.is-mobile-ui .mobile-oshi-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+body.is-mobile-ui .mobile-oshi-name {
+    font-size: 0.93rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+body.is-mobile-ui .mobile-oshi-tags {
+    display: flex;
+    gap: 4px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+}
+body.is-mobile-ui .mobile-oshi-tag-pill {
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    border-radius: 20px;
+    background: rgba(128, 128, 128, 0.1);
+    color: var(--text-secondary);
+    white-space: nowrap;
+    opacity: 0.8;
+}
+body.is-mobile-ui .mobile-oshi-next-date {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+    min-width: 36px;
+}
+body.is-mobile-ui .m-date-mmdd {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    opacity: 0.75;
+}
+body.is-mobile-ui .m-date-countdown {
+    font-size: 0.6rem;
+    color: var(--accent-color);
+    opacity: 0.85;
+    line-height: 1.2;
+}
+body.is-mobile-ui .m-date-countdown.is-today { color: #ef4444; opacity: 1; font-weight: 600; }
+body.is-mobile-ui .m-date-countdown.is-tomorrow { color: #f97316; opacity: 1; }
+body.is-mobile-ui .m-date-countdown.is-soon { color: #eab308; opacity: 1; }
+body.is-mobile-ui .mobile-oshi-chevron {
+    flex-shrink: 0;
+    width: 7px;
+    height: 7px;
+    border-top: 1.5px solid var(--text-secondary);
+    border-right: 1.5px solid var(--text-secondary);
+    transform: rotate(45deg);
+    opacity: 0.35;
+    margin-right: 4px;
+}
+body.is-mobile-ui .mobile-oshi-no-results {
+    list-style: none;
+    padding: 40px 16px;
+    text-align: center;
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+/* インデックスレール */
+body.is-mobile-ui .mobile-oshi-index-rail {
+    width: 24px;
+    flex-shrink: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    padding: 6px 0;
+}
+body.is-mobile-ui .mobile-oshi-index-rail.is-visible { display: flex; }
+body.is-mobile-ui .mobile-oshi-index-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 16px;
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: var(--accent-color);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 1px 0;
+    -webkit-tap-highlight-color: transparent;
+    line-height: 1;
+}
+
+/* スクロールバブル */
+body.is-mobile-ui .mobile-oshi-scroll-bubble {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0.75);
+    width: 72px;
+    height: 72px;
+    border-radius: 18px;
+    background: rgba(30, 30, 40, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s, transform 0.18s;
+    z-index: 2000;
+}
+body.is-mobile-ui .mobile-oshi-scroll-bubble.is-visible {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* 空の状態（管理タブ） */
+body.is-mobile-ui #mobileOshiEmpty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 24px;
+}
+
+/* 三点メニューラッパー */
+body.is-mobile-ui .mobile-oshi-menu-wrapper {
+    position: relative;
+}
+
+/* Ghost button — 背景・枠なし */
+body.is-mobile-ui .mobile-oshi-menu-btn {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    font-size: 1.3rem;
+    letter-spacing: 0.08em;
+    padding: 4px 8px;
+    color: var(--text-primary);
+    opacity: 0.7;
+    transition: opacity 0.15s;
+}
+body.is-mobile-ui .mobile-oshi-menu-btn:hover,
+body.is-mobile-ui .mobile-oshi-menu-btn:active {
+    opacity: 1;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* ドロップダウンコンテナ */
+body.is-mobile-ui .mobile-oshi-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: rgba(30, 30, 40, 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    min-width: 200px;
+    z-index: 200;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+body.is-mobile-ui .mobile-oshi-menu.is-open { display: block; }
+body.is-mobile-ui .mobile-oshi-menu-item {
+    display: block;
+    width: 100%;
+    padding: 15px 18px;
+    text-align: left;
+    border: none;
+    background: none;
+    font-size: 0.92rem;
+    color: rgba(255, 255, 255, 0.92);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+body.is-mobile-ui .mobile-oshi-menu-item:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+body.is-mobile-ui .mobile-oshi-menu-item:active { background: rgba(255, 255, 255, 0.1); }
+
+/* 設定パネル */
+body.is-mobile-ui .mobile-settings-inner {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+body.is-mobile-ui .mobile-settings-header {
+    padding: calc(env(safe-area-inset-top, 0px) + 16px) 20px 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 0;
+    background: inherit;
+    backdrop-filter: inherit;
+    -webkit-backdrop-filter: inherit;
+    z-index: 1;
+}
+body.is-mobile-ui .mobile-settings-body {
+    padding: 16px 20px calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ===== 設定メニューリスト ===== */
+body.is-mobile-ui .settings-menu-list {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0;
+}
+
+body.is-mobile-ui .settings-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.55);
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+    border-radius: 12px;
+    margin: 2px 0;
+    transition: background 0.12s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body.is-mobile-ui .settings-menu-item:active {
+    background: rgba(236, 72, 153, 0.12);
+}
+
+body.is-mobile-ui .settings-menu-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    width: 24px;
+    text-align: center;
+}
+
+body.is-mobile-ui .settings-menu-label-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+body.is-mobile-ui .settings-menu-label {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+body.is-mobile-ui .settings-menu-caption {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+body.is-mobile-ui .settings-menu-chevron {
+    color: var(--text-secondary);
+    font-size: 1.3rem;
+}
+
+/* ===== モバイル設定サブパネル ===== */
+body.is-mobile-ui .mobile-sub-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 1900;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+    pointer-events: none;
+}
+
+body.is-mobile-ui .mobile-sub-panel.is-open {
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+body.is-mobile-ui .mobile-sub-panel-inner {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+body.is-mobile-ui .mobile-sub-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    background: inherit;
+    backdrop-filter: inherit;
+    -webkit-backdrop-filter: inherit;
+    z-index: 1;
+}
+
+body.is-mobile-ui .mobile-sub-panel-title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    flex: 1;
+    margin: 0;
+}
+
+body.is-mobile-ui .mobile-sub-panel-back {
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    color: var(--accent-color, #ec4899);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 1.6rem;
+    line-height: 1;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body.is-mobile-ui .mobile-sub-panel-back:active {
+    background: rgba(236, 72, 153, 0.1);
+}
+
+body.is-mobile-ui .mobile-sub-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px calc(80px + env(safe-area-inset-bottom, 0px));
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ===== ホームタブ 固定モードドット ===== */
+body.is-mobile-ui .mobile-tab-btn[data-tab="home"] { position: relative; }
+body.is-mobile-ui .mobile-home-dot {
+    display: none;
+    position: absolute;
+    top: 9px;
+    right: calc(50% - 17px);
+    width: 7px;
+    height: 7px;
+    background: #ec4899;
+    border-radius: 50%;
+    border: 1.5px solid var(--card-bg, #fff);
+}
+body.is-mobile-ui .mobile-home-dot.is-visible { display: block; }
+
+/* ===== グリッドライブラリ ===== */
+body.is-mobile-ui .mobile-grid-library.is-visible {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    position: fixed;
+    inset: 0;
+    z-index: 1900;
+    background: rgba(0, 0, 0, 0.9);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    align-content: start;
+}
+body.is-mobile-ui .mobile-grid-thumb {
+    aspect-ratio: 1;
+    overflow: hidden;
+    border: none;
+    background: #111;
+    padding: 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+body.is-mobile-ui .mobile-grid-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+body.is-mobile-ui .mobile-grid-loading,
+body.is-mobile-ui .mobile-grid-empty {
+    color: #fff;
+    text-align: center;
+    padding: 40px 20px;
+    grid-column: 1 / -1;
+    font-size: 14px;
+}
+
+/* ===== 再生設定ポップオーバー ===== */
+body.is-mobile-ui .mobile-playback-popover.is-visible {
+    display: block;
+    position: fixed;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    left: 12px;
+    background: var(--card-bg, rgba(255, 255, 255, 0.96));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    padding: 12px;
+    min-width: 180px;
+    max-width: 240px;
+    z-index: 1900;
+}
+body.is-mobile-ui .mobile-playback-section { margin-bottom: 4px; }
+body.is-mobile-ui .mobile-playback-item {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 13px;
+    color: var(--text-primary);
+    border-radius: 8px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+body.is-mobile-ui .mobile-playback-item.is-active { color: var(--accent-color, #ec4899); font-weight: 600; }
+body.is-mobile-ui .mobile-playback-item:active { background: rgba(0, 0, 0, 0.05); }
+body.is-mobile-ui .mobile-playback-divider { height: 1px; background: rgba(0,0,0,0.08); margin: 8px 0; }
+body.is-mobile-ui .mobile-playback-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+}
+body.is-mobile-ui .mobile-interval-item {
+    padding: 6px 8px;
+    border: none;
+    background: rgba(0,0,0,0.04);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+}
+body.is-mobile-ui .mobile-interval-item.is-active { background: var(--accent-color, #ec4899); color: #fff; }
+body.is-mobile-ui .mobile-interval-item:active { opacity: 0.7; }
+body.is-mobile-ui .mobile-interval-item:disabled {
+    opacity: 0.32;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+body.is-mobile-ui .mobile-playback-section.is-disabled .menu-section-title {
+    opacity: 0.45;
+}
+body.is-mobile-ui .interval-disabled-note {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin-left: 6px;
+    opacity: 0.8;
+}
+
+/* ===== モバイルイベントリスト ===== */
+body.is-mobile-ui .mobile-event-list {
+    padding: 10px 16px;
+    margin-bottom: 24px;
+    max-height: 250px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+body.is-mobile-ui .mobile-event-list-header {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+body.is-mobile-ui .mobile-event-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+body.is-mobile-ui .mobile-event-date {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    min-width: 46px;
+    padding-top: 4px;
+}
+body.is-mobile-ui .mobile-event-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+body.is-mobile-ui .mobile-event-item {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+}
+body.is-mobile-ui .mobile-event-name { font-weight: 700; }
+body.is-mobile-ui .mobile-event-label { opacity: 0.85; font-size: 12px; }
+body.is-mobile-ui .mobile-event-empty {
+    font-size: 14px;
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 24px 0;
+}
+
+@media (prefers-color-scheme: dark) {
+    body.is-mobile-ui #mobile-bottom-bar.smart-bottom-bar {
         background: rgba(15, 23, 42, 0.92);
         border-top: 1px solid rgba(255, 255, 255, 0.08);
         box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.3);
     }
-    .mobile-tab-btn:active { opacity: 0.6; }
-    .mobile-add-submenu {
+    body.is-mobile-ui .mobile-tab-btn:active { opacity: 0.6; }
+    body.is-mobile-ui .mobile-add-submenu {
         background: rgba(30, 41, 59, 0.96);
         border-color: rgba(255, 255, 255, 0.1);
     }
-    .mobile-add-submenu button { color: var(--text-primary); }
-    .mobile-add-submenu button:active { background: rgba(255, 255, 255, 0.05); }
-    .mobile-management-inner,
-    .mobile-settings-inner {
+    body.is-mobile-ui .mobile-add-submenu button { color: var(--text-primary); }
+    body.is-mobile-ui .mobile-add-submenu button:active { background: rgba(255, 255, 255, 0.05); }
+    body.is-mobile-ui .mobile-management-inner,
+    body.is-mobile-ui .mobile-settings-inner {
         background: rgba(15, 23, 42, 0.88);
     }
-    .mobile-panel-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
-    .mobile-oshi-actions { border-bottom-color: rgba(255, 255, 255, 0.08); }
-    .mobile-oshi-search,
-    .mobile-oshi-sort {
+    body.is-mobile-ui .mobile-panel-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
+    body.is-mobile-ui .mobile-oshi-actions { border-bottom-color: rgba(255, 255, 255, 0.08); }
+    body.is-mobile-ui .mobile-oshi-search,
+    body.is-mobile-ui .mobile-oshi-sort {
         background: rgba(255, 255, 255, 0.07);
         border-color: rgba(255, 255, 255, 0.12);
         color-scheme: dark;
     }
-    .mobile-oshi-item { border-bottom-color: rgba(255, 255, 255, 0.06); }
-    .mobile-oshi-table td { border-bottom-color: rgba(255, 255, 255, 0.06); }
-    .mobile-settings-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
-    .settings-menu-item {
+    body.is-mobile-ui .mobile-oshi-item { border-bottom-color: rgba(255, 255, 255, 0.06); }
+    body.is-mobile-ui .mobile-oshi-table td { border-bottom-color: rgba(255, 255, 255, 0.06); }
+    body.is-mobile-ui .mobile-settings-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
+    body.is-mobile-ui .settings-menu-item {
         background: rgba(255, 255, 255, 0.06);
     }
-    .settings-menu-item:active { background: rgba(255, 130, 165, 0.15); }
-    .settings-menu-caption { color: rgba(255, 255, 255, 0.45); }
-    .mobile-sub-panel-inner {
+    body.is-mobile-ui .settings-menu-item:active { background: rgba(255, 130, 165, 0.15); }
+    body.is-mobile-ui .settings-menu-caption { color: rgba(255, 255, 255, 0.45); }
+    body.is-mobile-ui .mobile-sub-panel-inner {
         background: rgba(15, 23, 42, 0.92);
     }
-    .mobile-sub-panel-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
-    .mobile-event-list-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
-    .mobile-playback-popover.is-visible {
+    body.is-mobile-ui .mobile-sub-panel-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
+    body.is-mobile-ui .mobile-event-list-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
+    body.is-mobile-ui .mobile-playback-popover.is-visible {
         background: rgba(30, 41, 59, 0.96);
         border-color: rgba(255, 255, 255, 0.1);
     }
-    .mobile-playback-item { color: var(--text-primary); }
-    .mobile-playback-divider { background: rgba(255, 255, 255, 0.08); }
-    .mobile-interval-item { background: rgba(255, 255, 255, 0.06); color: var(--text-primary); }
+    body.is-mobile-ui .mobile-playback-item { color: var(--text-primary); }
+    body.is-mobile-ui .mobile-playback-divider { background: rgba(255, 255, 255, 0.08); }
+    body.is-mobile-ui .mobile-interval-item { background: rgba(255, 255, 255, 0.06); color: var(--text-primary); }
 }
 
 /* ========== Import Menu (main UI) ========== */
@@ -6062,696 +6057,3 @@ textarea:focus-visible,
     background: #b91c1c;
 }
 
-/* =========================================================
- * body.is-touch-device — タッチデバイス（768px 超）向けモバイルUI
- *
- * @media (max-width: 768px) で拾えない幅広タッチデバイス（iPad 等）に
- * モバイルUIを提供するため、JS が body.is-touch-device クラスを付与する。
- * navigator.maxTouchPoints > 0 のときのみ付与されるため、
- * デスクトップブラウザでは一切適用されない。
- *
- * スマートフォン横向き（max-height: 500px & orientation: landscape）は
- * 既存の landscape 専用 CSS がレイアウトを管理するため除外する。
- * ========================================================= */
-@media not ((max-height: 500px) and (orientation: landscape)) {
-
-/* ===== レイアウト ===== */
-body.is-touch-device {
-    padding: 0 !important;
-}
-body.is-touch-device .main-layout {
-    flex-direction: column !important;
-    height: auto !important;
-    overflow-y: visible !important;
-}
-body.is-touch-device .media-area {
-    width: 100% !important;
-    max-width: 100% !important;
-    position: static !important;
-    order: 1 !important;
-}
-body.is-touch-device .layout-splitter {
-    order: 2 !important;
-}
-body.is-touch-device .calendar-section {
-    order: 3 !important;
-}
-body.is-touch-device .media-container {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    height: 100dvh !important;
-    min-height: unset !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    border: none !important;
-    box-shadow: none !important;
-    background: #000 !important;
-    justify-content: center !important;
-}
-body.is-touch-device .media-container img {
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: 100dvh !important;
-    height: auto !important;
-    border-radius: 0 !important;
-    object-fit: contain !important;
-}
-body.is-touch-device .media-container .media-backdrop {
-    object-fit: cover !important;
-    width: 100% !important;
-    height: 100% !important;
-}
-body.is-touch-device .calendar-section {
-    display: none;
-    width: 100% !important;
-}
-body.is-touch-device .calendar-section.is-expanded {
-    display: flex;
-    position: fixed;
-    inset: 0;
-    z-index: var(--z-modal);
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    background: var(--bg-color);
-    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-}
-body.is-touch-device .toggle-months-btn,
-body.is-touch-device #btnToggleLayout,
-body.is-touch-device .layout-splitter {
-    display: none !important;
-}
-body.is-touch-device .quick-media-controls {
-    display: none !important;
-}
-body.is-touch-device .controls {
-    display: none !important;
-}
-body.is-touch-device .day-detail-sheet {
-    display: block;
-    z-index: calc(var(--z-modal) + 2);
-}
-body.is-touch-device .media-controls-wrapper {
-    position: absolute !important;
-    top: auto !important;
-    bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
-    left: 12px !important;
-    right: auto !important;
-    opacity: 0.9 !important;
-    pointer-events: auto !important;
-    gap: 4px !important;
-    justify-content: flex-start !important;
-}
-body.is-touch-device .calendar-section {
-    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-}
-body.is-touch-device .layout-item[data-layout="top"],
-body.is-touch-device .layout-item[data-layout="bottom"],
-body.is-touch-device .layout-item[data-layout="left"],
-body.is-touch-device .layout-item[data-layout="right"],
-body.is-touch-device .layout-item[data-layout="immersive"] {
-    display: none !important;
-}
-body.is-touch-device #btnMobileLayout {
-    display: none !important;
-}
-
-/* ===== ボトムバー本体 ===== */
-body.is-touch-device #mobile-bottom-bar.smart-bottom-bar {
-    display: grid;
-    grid-template-columns: 1fr 1fr 0.75fr 1fr 1fr;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: calc(64px + env(safe-area-inset-bottom, 0px));
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    z-index: 2000;
-    background: var(--card-bg, rgba(255, 255, 255, 0.88));
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
-    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
-    align-items: flex-end;
-    overflow: visible;
-    transition: opacity 0.4s ease, transform 0.4s ease;
-}
-body.is-touch-device #mobile-bottom-bar.is-hidden {
-    opacity: 0;
-    transform: translateY(8px);
-    pointer-events: none;
-}
-
-/* ===== テロップバー ===== */
-body.is-touch-device .ticker-bar {
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 30px;
-    z-index: 3000;
-    background: rgba(0, 0, 0, 0.38);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    overflow: hidden;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: opacity 200ms ease;
-}
-body.is-touch-device.mobile-tab-management .ticker-bar,
-body.is-touch-device.mobile-tab-settings   .ticker-bar {
-    opacity: 0;
-    pointer-events: none;
-}
-body.is-touch-device .ticker-inner {
-    display: flex;
-    align-items: center;
-    height: 100%;
-    padding: 0 12px;
-    overflow: hidden;
-    white-space: nowrap;
-}
-body.is-touch-device .ticker-text {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.92);
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
-    letter-spacing: 0.02em;
-    white-space: nowrap;
-    display: inline-block;
-}
-body.is-touch-device .ticker-text.is-scrolling {
-    animation: ticker-scroll 22s linear infinite;
-    padding-left: 100%;
-}
-
-/* ===== タブボタン ===== */
-body.is-touch-device .mobile-tab-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    border: none;
-    background: none;
-    color: var(--text-secondary, #888);
-    cursor: pointer;
-    font-size: 10px;
-    touch-action: manipulation;
-    padding: 8px 4px;
-    border-radius: 0;
-    transition: color 0.2s;
-    -webkit-tap-highlight-color: transparent;
-    height: 64px;
-}
-body.is-touch-device .mobile-tab-btn svg { flex-shrink: 0; }
-body.is-touch-device .mobile-tab-btn:active { opacity: 0.7; }
-body.is-touch-device .mobile-tab-btn.is-active { color: var(--accent-color, #ec4899); }
-body.is-touch-device .mobile-tab-btn[data-tab="home"] { position: relative; }
-body.is-touch-device .mobile-home-dot {
-    display: none;
-    position: absolute;
-    top: 9px;
-    right: calc(50% - 17px);
-    width: 7px;
-    height: 7px;
-    background: #ec4899;
-    border-radius: 50%;
-    border: 1.5px solid var(--card-bg, #fff);
-}
-body.is-touch-device .mobile-home-dot.is-visible { display: block; }
-body.is-touch-device .mobile-tab-btn.mobile-tab-add {
-    position: relative;
-    background: var(--accent-color, #ec4899);
-    color: #fff;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    padding: 0;
-    box-shadow: 0 4px 16px rgba(236, 72, 153, 0.4);
-    justify-self: center;
-    align-self: center;
-    margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 7px);
-    flex-direction: row;
-    top: -7px;
-}
-body.is-touch-device .mobile-tab-btn.mobile-tab-add span { display: none; }
-body.is-touch-device .mobile-tab-btn.mobile-tab-add:active { opacity: 0.85; }
-
-/* ===== モバイルタブパネル ===== */
-body.is-touch-device .mobile-tab-panel {
-    position: fixed;
-    inset: 0;
-    z-index: 1800;
-    overflow: hidden;
-    flex-direction: column;
-}
-body.is-touch-device.mobile-tab-management #mobileManagementPanel { display: flex; }
-body.is-touch-device.mobile-tab-settings   #mobileSettingsPanel    { display: flex; }
-
-/* パネル背景ブラー（panel 全体を覆う必須要素） */
-body.is-touch-device .mobile-panel-bg-blur {
-    position: absolute;
-    inset: 0;
-    background-size: cover;
-    background-position: center;
-    background-color: var(--bg-color, #f0f4f8);
-    filter: blur(25px) brightness(0.8);
-    transform: scale(1.1);
-    z-index: 0;
-}
-/* コンテンツをブラー層の上に配置 */
-body.is-touch-device .mobile-tab-panel > *:not(.mobile-panel-bg-blur) {
-    position: relative;
-    z-index: 1;
-}
-
-/* ===== 管理パネル内側 ===== */
-body.is-touch-device .mobile-management-inner {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-    padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
-    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-    background: rgba(255, 255, 255, 0.82);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-}
-body.is-touch-device .mobile-panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 16px 12px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    flex-shrink: 0;
-}
-body.is-touch-device .mobile-panel-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin: 0;
-}
-
-/* ===== 設定パネル内側 ===== */
-body.is-touch-device .mobile-settings-inner {
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    background: rgba(255, 255, 255, 0.82);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-}
-body.is-touch-device .mobile-settings-header {
-    padding: calc(env(safe-area-inset-top, 0px) + 16px) 20px 12px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    position: sticky;
-    top: 0;
-    background: inherit;
-    backdrop-filter: inherit;
-    -webkit-backdrop-filter: inherit;
-    z-index: 1;
-}
-body.is-touch-device .mobile-settings-body {
-    padding: 16px 20px calc(80px + env(safe-area-inset-bottom, 0px));
-}
-body.is-touch-device .settings-menu-list {
-    display: flex;
-    flex-direction: column;
-    padding: 8px 0;
-}
-body.is-touch-device .settings-menu-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 15px 20px;
-    background: rgba(255, 255, 255, 0.55);
-    border: none;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-    color: var(--text-primary);
-    font-size: 1rem;
-    font-family: inherit;
-    border-radius: 12px;
-    margin: 2px 0;
-    transition: background 0.12s;
-    -webkit-tap-highlight-color: transparent;
-}
-body.is-touch-device .settings-menu-item:active {
-    background: rgba(236, 72, 153, 0.12);
-}
-body.is-touch-device .settings-menu-icon {
-    font-size: 1.25rem;
-    flex-shrink: 0;
-    width: 24px;
-    text-align: center;
-}
-body.is-touch-device .settings-menu-label-wrap {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-}
-body.is-touch-device .settings-menu-label {
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-body.is-touch-device .settings-menu-caption {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* ===== 設定サブパネル ===== */
-body.is-touch-device .mobile-sub-panel {
-    display: flex;
-    position: fixed;
-    inset: 0;
-    z-index: 1900;
-    flex-direction: column;
-    transform: translateX(100%);
-    transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
-    pointer-events: none;
-}
-body.is-touch-device .mobile-sub-panel.is-open {
-    transform: translateX(0);
-    pointer-events: auto;
-}
-body.is-touch-device .mobile-sub-panel-inner {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-}
-body.is-touch-device .mobile-sub-panel-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 12px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    flex-shrink: 0;
-    position: sticky;
-    top: 0;
-    background: inherit;
-    backdrop-filter: inherit;
-    -webkit-backdrop-filter: inherit;
-    z-index: 1;
-}
-body.is-touch-device .mobile-sub-panel-title {
-    font-size: 1.0625rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    flex: 1;
-    margin: 0;
-}
-body.is-touch-device .mobile-sub-panel-back {
-    background: none;
-    border: none;
-    padding: 4px 8px;
-    cursor: pointer;
-    color: var(--accent-color, #ec4899);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    font-size: 1.6rem;
-    line-height: 1;
-    -webkit-tap-highlight-color: transparent;
-}
-body.is-touch-device .mobile-sub-panel-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px 20px calc(80px + env(safe-area-inset-bottom, 0px));
-    -webkit-overflow-scrolling: touch;
-}
-
-/* ===== 管理パネル メニュードロップダウン ===== */
-body.is-touch-device .mobile-oshi-menu-wrapper { position: relative; }
-body.is-touch-device .mobile-oshi-menu-btn {
-    background: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    font-size: 1.3rem;
-    letter-spacing: 0.08em;
-    padding: 4px 8px;
-    color: var(--text-primary);
-    opacity: 0.7;
-    transition: opacity 0.15s;
-}
-body.is-touch-device .mobile-oshi-menu {
-    display: none;
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    background: rgba(30, 30, 40, 0.82);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 16px;
-    min-width: 200px;
-    z-index: 200;
-    overflow: hidden;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-body.is-touch-device .mobile-oshi-menu.is-open { display: block; }
-body.is-touch-device .mobile-oshi-menu-item {
-    display: block;
-    width: 100%;
-    padding: 15px 18px;
-    text-align: left;
-    border: none;
-    background: none;
-    font-size: 0.92rem;
-    color: rgba(255, 255, 255, 0.92);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-}
-body.is-touch-device .mobile-oshi-menu-item:not(:last-child) {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* ===== 空の状態 縦中央寄せ ===== */
-body.is-touch-device .oshi-empty-state {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-/* ===== 管理パネル 推しリスト ===== */
-body.is-touch-device .mobile-oshi-actions {
-    flex-shrink: 0;
-    display: none;
-    flex-direction: column;
-    gap: 8px;
-    padding: 10px 16px 12px;
-    border-bottom: 1px solid rgba(128, 128, 128, 0.1);
-}
-body.is-touch-device .mobile-oshi-content-row {
-    flex: 1;
-    display: none;
-    overflow: hidden;
-    min-height: 0;
-}
-body.is-touch-device .mobile-oshi-vscroll-area {
-    flex: 1;
-    overflow-y: scroll;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-    position: relative;
-    min-width: 0;
-}
-body.is-touch-device .mobile-oshi-vscroll-total {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 1px;
-    pointer-events: none;
-}
-body.is-touch-device .mobile-oshi-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-body.is-touch-device .mobile-oshi-list--virt {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    will-change: transform;
-}
-body.is-touch-device .mobile-oshi-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0 6px 0 16px;
-    height: 52px;
-    box-sizing: border-box;
-    border-bottom: 1px solid rgba(128, 128, 128, 0.1);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-}
-body.is-touch-device .mobile-oshi-chip {
-    flex-shrink: 0;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
-}
-body.is-touch-device .mobile-oshi-info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-body.is-touch-device .mobile-oshi-name {
-    font-size: 0.93rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-body.is-touch-device .mobile-oshi-chevron {
-    flex-shrink: 0;
-    width: 7px;
-    height: 7px;
-    border-top: 1.5px solid var(--text-secondary);
-    border-right: 1.5px solid var(--text-secondary);
-    transform: rotate(45deg);
-    opacity: 0.35;
-    margin-right: 4px;
-}
-body.is-touch-device .mobile-oshi-index-rail {
-    width: 24px;
-    flex-shrink: 0;
-    display: none;
-    flex-direction: column;
-    justify-content: space-around;
-    align-items: center;
-    padding: 6px 0;
-}
-body.is-touch-device .mobile-oshi-index-rail.is-visible { display: flex; }
-
-/* ===== 追加サブメニュー ===== */
-body.is-touch-device .mobile-add-submenu {
-    position: fixed;
-    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--card-bg, rgba(255, 255, 255, 0.96));
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-    padding: 8px;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 200px;
-    z-index: 2100;
-}
-body.is-touch-device .mobile-add-submenu.is-open { display: flex; }
-body.is-touch-device .mobile-add-submenu button {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    border: none;
-    background: none;
-    width: 100%;
-    text-align: left;
-    font-size: 14px;
-    color: var(--text-primary);
-    border-radius: 10px;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-}
-
-/* ===== 再生設定ポップオーバー ===== */
-body.is-touch-device .mobile-playback-popover.is-visible {
-    display: block;
-    position: fixed;
-    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
-    left: 12px;
-    background: var(--card-bg, rgba(255, 255, 255, 0.96));
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-    padding: 12px;
-    min-width: 180px;
-    max-width: 240px;
-    z-index: 1900;
-}
-body.is-touch-device .mobile-playback-section { margin-bottom: 4px; }
-body.is-touch-device .mobile-playback-item {
-    display: block;
-    width: 100%;
-    padding: 8px 12px;
-    border: none;
-    background: none;
-    text-align: left;
-    font-size: 13px;
-    color: var(--text-primary);
-    border-radius: 8px;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-}
-body.is-touch-device .mobile-playback-item.is-active { color: var(--accent-color, #ec4899); font-weight: 600; }
-body.is-touch-device .mobile-playback-divider { height: 1px; background: rgba(0,0,0,0.08); margin: 8px 0; }
-body.is-touch-device .mobile-playback-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-body.is-touch-device .mobile-interval-item {
-    padding: 6px 8px;
-    border: none;
-    background: rgba(0,0,0,0.04);
-    border-radius: 8px;
-    font-size: 12px;
-    color: var(--text-primary);
-    cursor: pointer;
-    text-align: center;
-    -webkit-tap-highlight-color: transparent;
-}
-body.is-touch-device .mobile-interval-item.is-active { background: var(--accent-color, #ec4899); color: #fff; }
-body.is-touch-device .mobile-interval-item:disabled { opacity: 0.32; pointer-events: none; }
-
-/* ===== ダークモード ===== */
-@media (prefers-color-scheme: dark) {
-    body.is-touch-device #mobile-bottom-bar.smart-bottom-bar {
-        background: rgba(15, 23, 42, 0.92);
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.3);
-    }
-    body.is-touch-device .mobile-add-submenu,
-    body.is-touch-device .mobile-playback-popover {
-        background: rgba(30, 41, 59, 0.96);
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-    body.is-touch-device .mobile-playback-divider { background: rgba(255,255,255,0.1); }
-    body.is-touch-device .mobile-interval-item { background: rgba(255,255,255,0.06); }
-    body.is-touch-device .mobile-interval-item.is-active { background: var(--accent-color, #ec4899); }
-    body.is-touch-device .mobile-management-inner,
-    body.is-touch-device .mobile-settings-inner {
-        background: rgba(15, 23, 42, 0.88);
-    }
-    body.is-touch-device .mobile-panel-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
-    body.is-touch-device .mobile-settings-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
-    body.is-touch-device .mobile-sub-panel-inner { background: rgba(15, 23, 42, 0.88); }
-    body.is-touch-device .mobile-sub-panel-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
-    body.is-touch-device .mobile-oshi-item { border-bottom-color: rgba(255, 255, 255, 0.06); }
-    body.is-touch-device .mobile-oshi-actions { border-bottom-color: rgba(255, 255, 255, 0.08); }
-}
-} /* @media not ((max-height: 500px) and (orientation: landscape)) */
