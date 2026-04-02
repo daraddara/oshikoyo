@@ -16,7 +16,7 @@
 | `base64ToBlob(base64, type)` | Base64 文字列を Blob に戻す（インポート用）。 |
 | `isDuplicateBlob(blob, sigMap)` | 画像の重複チェック（サイズ、MIME、サンプリングハッシュによる高速判定）。 |
 | `compressImageFile(file, maxDimension, quality)` | `canvas` を使用した画像リサイズおよび JPEG 圧縮。最大ピクセル数と品質を指定して圧縮。 |
-| `updateMediaArea(mode)` | 画像表示エリアの更新。ランダム、サイクル、固定表示の切り替えロジックを含む。 |
+| `updateMediaArea(mode)` | 画像表示エリアの更新。ランダム、サイクル、手動切り替え（旧固定）の各ロジックを含む。 |
 
 ## 3. カレンダーロジック
 | 関数名 | 内容 |
@@ -51,5 +51,5 @@
 | `setupSwipeGestures()` | モバイルでのスワイプによる月移動などのジェスチャー制御。 |
 | `setupMobileTabBar()` | ボトムタブナビゲーションバーを生成・初期化。ホーム/カレンダー/推し管理/設定の4タブ。 |
 | `renderMobilePlaybackPopover()` | ホームタブタップ時に表示する再生モード選択ポップオーバーを描画（表示モード・切り替え間隔）。 |
-| `updateMobileHomeTabIndicator()` | 固定モード時にホームタブへピンインジケーター（`.mobile-home-dot`）を表示/非表示。 |
+| `updateMobileHomeTabIndicator()` | 手動モード時にホームタブへピンインジケーター（`.mobile-home-dot`）を表示/非表示。 |
 | `switchMobileTab(tabName)` | モバイルタブを切り替え、対応するパネルを表示。 |
