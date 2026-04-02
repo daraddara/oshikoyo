@@ -38,6 +38,7 @@ describe('handleFiles', () => {
         };
         mockGrid = {
             innerHTML: '',
+            classList: { add: vi.fn(), remove: vi.fn() },
             appendChild: vi.fn(), querySelectorAll: vi.fn(() => [])
         };
 

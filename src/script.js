@@ -2753,8 +2753,16 @@ async function renderLocalImageManager() {
         div.className = 'local-image-item';
         div.dataset.imgId = item.id;
 
+        const blobUrl = URL.createObjectURL(item.file);
+
+        const bgImg = document.createElement('img');
+        bgImg.className = 'local-img-blur-bg';
+        bgImg.src = blobUrl;
+        bgImg.alt = '';
+        bgImg.setAttribute('aria-hidden', 'true');
+
         const img = document.createElement('img');
-        img.src = URL.createObjectURL(item.file);
+        img.src = blobUrl;
         img.alt = item.file.name || '';
         img.style.cursor = 'zoom-in';
         img.addEventListener('click', () => openImageLightbox(img.src, async () => {
@@ -2832,6 +2840,7 @@ async function renderLocalImageManager() {
             div.appendChild(overlay);
         };
 
+        div.appendChild(bgImg);
         div.appendChild(img);
         div.appendChild(handle);
         div.appendChild(btnDel);
@@ -3545,14 +3554,39 @@ function renderPreview() {
     grid.querySelectorAll('img').forEach(img => URL.revokeObjectURL(img.src));
     grid.innerHTML = '';
 
+    const isSingle = pendingPreviewFiles.length === 1;
+    if (isSingle) {
+        grid.classList.add('is-single');
+    } else {
+        grid.classList.remove('is-single');
+    }
+
     pendingPreviewFiles.forEach(file => {
         const item = document.createElement('div');
         item.className = 'preview-item';
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(file);
-        img.alt = file.name || 'Image preview';
-        // clean up object url later? for preview it's short lived
-        item.appendChild(img);
+
+        const blobUrl = URL.createObjectURL(file);
+
+        if (isSingle) {
+            const img = document.createElement('img');
+            img.src = blobUrl;
+            img.alt = file.name || 'Image preview';
+            item.appendChild(img);
+        } else {
+            const bgImg = document.createElement('img');
+            bgImg.className = 'preview-blur-bg';
+            bgImg.src = blobUrl;
+            bgImg.alt = '';
+            bgImg.setAttribute('aria-hidden', 'true');
+
+            const fgImg = document.createElement('img');
+            fgImg.src = blobUrl;
+            fgImg.alt = file.name || 'Image preview';
+
+            item.appendChild(bgImg);
+            item.appendChild(fgImg);
+        }
+
         grid.appendChild(item);
     });
 }
