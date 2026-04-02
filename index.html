@@ -730,17 +730,21 @@
     <!-- Preview Modal -->
     <dialog id="previewModal" class="settings-modal preview-modal">
         <form method="dialog" class="settings-form">
-            <h2>画像の追加確認</h2>
-            <div class="setting-group" id="previewTagGroup">
-                <label>共通タグ（全画像に付与・任意）</label>
-                <div id="previewTagInputArea" class="tag-input-area"></div>
+            <div class="settings-header">
+                <h2 class="settings-title">画像の追加確認</h2>
             </div>
-            <div class="settings-scroll-area">
-                <div id="previewGrid" class="preview-grid">
-                    <!-- Previews injected here -->
+            <div class="preview-modal-content">
+                <div class="setting-group" id="previewTagGroup">
+                    <label>共通タグ（全画像に付与・任意）</label>
+                    <div id="previewTagInputArea" class="tag-input-area"></div>
                 </div>
+                <div class="settings-scroll-area">
+                    <div id="previewGrid" class="preview-grid">
+                        <!-- Previews injected here -->
+                    </div>
+                </div>
+                <p class="setting-description preview-disclaimer">画像はこのデバイスにのみ保存されます。著作権・肖像権のある画像の取り扱いはご自身の責任においてお願いします。</p>
             </div>
-            <p class="setting-description preview-disclaimer">画像はこのデバイスにのみ保存されます。著作権・肖像権のある画像の取り扱いはご自身の責任においてお願いします。</p>
             <div class="form-actions">
                 <button type="button" id="btnCancelPreview" class="btn-cancel">キャンセル</button>
                 <button type="button" id="btnAddPreview" class="btn-primary">追加する</button>
