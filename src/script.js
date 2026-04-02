@@ -4836,7 +4836,7 @@ function updateLayoutMenuUI() {
     }
 
     // Update active state in dropdown
-    const layoutItems = document.querySelectorAll('.layout-item');
+    const layoutItems = document.querySelectorAll('.layout-item[data-layout]');
     layoutItems.forEach(item => {
         if (item.getAttribute('data-layout') === appSettings.layoutMode) {
             item.classList.add('is-active');
@@ -4924,7 +4924,9 @@ function setupLayoutMenu() {
         });
     }
 
-    const layoutItems = document.querySelectorAll('.layout-item');
+    const layoutItems = layoutDropdown
+        ? layoutDropdown.querySelectorAll('.layout-item')
+        : document.querySelectorAll('.layout-item[data-layout]');
     layoutItems.forEach(item => {
         item.addEventListener('click', (e) => {
             const mode = e.currentTarget.getAttribute('data-layout');
