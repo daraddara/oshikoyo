@@ -32,4 +32,3 @@ tests/e2e/screenshots/**/actuals/
 tests/e2e/screenshots/**/diffs/
 tests/e2e/screenshots/latest_ui.png
 server.log
-/docs/*.csv
