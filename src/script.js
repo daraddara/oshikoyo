@@ -2932,7 +2932,12 @@ async function handleImportFullBackup(file) {
         }));
         await localImageDB.restoreImages(filesToRestore);
 
-        appSettings = { ...DEFAULT_SETTINGS, ...json.settings };
+        const validatedSettings = validateImportedSettings(json.settings);
+        if (!validatedSettings) {
+            throw new Error('設定データの形式が不正です。');
+        }
+
+        appSettings = { ...DEFAULT_SETTINGS, ...validatedSettings };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
 
         alert('復元が完了しました。画面を更新します。');
