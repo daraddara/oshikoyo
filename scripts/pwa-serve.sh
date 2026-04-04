@@ -38,7 +38,7 @@ TUNNEL_PID=$!
 TUNNEL_URL=""
 for i in $(seq 1 100); do
   sleep 0.2
-  TUNNEL_URL=$(grep -o 'https://[^ ]*\.trycloudflare\.com' /tmp/tunnel.log 2>/dev/null | head -1 || true)
+  TUNNEL_URL=$(grep -ao 'https://[^ |]*\.trycloudflare\.com' /tmp/tunnel.log 2>/dev/null | head -1 || true)
   if [ -n "$TUNNEL_URL" ]; then
     break
   fi
