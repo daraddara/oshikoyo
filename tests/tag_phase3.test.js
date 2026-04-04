@@ -33,7 +33,8 @@ describe('getTodayMemorialOshis', () => {
         vi.setSystemTime(new Date('2026-03-21'));
         const { getTodayMemorialOshis } = makePhase3({
             oshiList: [{ name: 'A', memorial_dates: [] }],
-            localImageMeta: {}
+            localImageMeta: {},
+            activeFilter: null,
         });
         expect(getTodayMemorialOshis()).toEqual([]);
     });
@@ -151,6 +152,7 @@ describe('getEffectiveImagePool — memorialDisplayMode', () => {
         oshiList: [{ name: 'A', tags: [], memorial_dates: [{ date: '3/21', is_annual: true }] }],
         localImageMeta: { 1: { tags: ['A'] }, 2: { tags: ['X'] } },
         memorialDisplayMode: mode,
+        activeFilter: null,
     });
 
     it('exclusive: 記念日画像のみのプールを返す', () => {
