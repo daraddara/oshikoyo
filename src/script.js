@@ -1759,6 +1759,7 @@ function createTagInputUI(initialTags, onChange) {
         const input = document.createElement('input');
         input.type = 'text';
         input.setAttribute('list', 'tagDatalist');
+        input.setAttribute('aria-label', '新しいタグを入力');
         input.placeholder = tags.length ? '' : 'タグを追加...';
         input.addEventListener('focus', () => { input.dataset.prev = input.value; input.value = ''; });
         input.addEventListener('blur', () => { if (!input.dataset.composing) commitInput(input); });
