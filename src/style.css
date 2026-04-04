@@ -3258,14 +3258,24 @@ details[open]>summary::before {
 
 /* スクロール可能なテーブル領域 */
 .oshi-manager-content {
-    padding: 0 20px 8px;
-    overflow-y: auto;
+    padding: 0;
+    overflow: hidden;
     max-height: 65vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.oshi-table-header-area {
+    flex: 0 0 auto;
+    background: transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    z-index: 10;
 }
 
 .oshi-manager-scroll-area {
-    overflow-y: visible;
-    margin-bottom: 12px;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* 編集モーダルのコンテンツ領域 */
@@ -3297,29 +3307,53 @@ details[open]>summary::before {
 .oshi-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.9rem;
+}
+
+.oshi-table thead tr,
+.oshi-table tbody tr {
+    display: grid;
+    grid-template-columns: 48px 44px 1.2fr 1fr 1.5fr 80px;
+    align-items: center;
+}
+
+/* グループ列あり（1人でもグループ設定済み）の場合は7列レイアウト */
+body.oshi-has-group .oshi-table thead tr,
+body.oshi-has-group .oshi-table tbody tr {
+    grid-template-columns: 48px 44px 1fr 0.8fr 0.9fr 1.3fr 80px;
 }
 
 .oshi-table th,
 .oshi-table td {
-    padding: 10px 12px;
+    padding: 10px 8px;
     text-align: left;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .oshi-table th {
     font-weight: 600;
     font-size: 0.85rem;
     color: var(--text-secondary);
-    background: transparent;
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+    .oshi-table-header-area {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+}
+
+.oshi-table td {
+    padding-left: 8px;
+    padding-right: 8px;
 }
 
 .oshi-table tbody tr {
     transition: background 0.15s;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.05);
 }
 
 .oshi-table tbody tr:hover {
@@ -3344,16 +3378,17 @@ details[open]>summary::before {
 
 /* D. ドラッグハンドル列 */
 .oshi-th-handle {
-    width: 28px;
+    padding-left: 20px !important;
 }
 
 .oshi-handle-cell {
-    width: 28px;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #ccc;
     cursor: grab;
     user-select: none;
-    padding: 0 4px !important;
+    padding-left: 20px !important;
 }
 
 .oshi-handle-cell:active {
@@ -3444,11 +3479,46 @@ details[open]>summary::before {
 .oshi-date-cd.is-tomorrow { color: #f97316; opacity: 1; }
 .oshi-date-cd.is-soon     { color: #eab308; opacity: 1; }
 
-/* アクション列 */
-.oshi-table-actions {
-    text-align: right;
+/* アクション列 — .oshi-table td (0,1,1) より詳細度を上げる必要がある */
+.oshi-table td.oshi-table-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-right: 20px !important;
+    overflow: visible;
+}
+
+.oshi-th-actions {
+    padding-right: 20px !important;
+}
+
+/* グループ列: デフォルト非表示（グループ未設定環境） */
+.oshi-th-group,
+.oshi-group-cell {
+    display: none;
+}
+
+/* 1人でもグループ設定済みなら列を表示 */
+body.oshi-has-group .oshi-th-group,
+body.oshi-has-group .oshi-group-cell {
+    display: block;
+    font-size: 0.82em;
+    color: var(--text-secondary);
     white-space: nowrap;
-    width: 68px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* タブレット幅（900px以下）ではグループ列を隠し、6列レイアウトに戻す */
+@media (max-width: 900px) {
+    body.oshi-has-group .oshi-th-group,
+    body.oshi-has-group .oshi-group-cell {
+        display: none;
+    }
+    body.oshi-has-group .oshi-table thead tr,
+    body.oshi-has-group .oshi-table tbody tr {
+        grid-template-columns: 48px 44px 1.2fr 1fr 1.5fr 80px;
+    }
 }
 
 .btn-icon-delete {
@@ -5094,10 +5164,67 @@ textarea:focus-visible,
 
 /* ===== モバイルオーバーレイ要素 (デフォルト: 非表示) ===== */
 .mobile-tab-panel,
-.mobile-sub-panel,
+.mobile-sub-panel {
+    display: none;
+}
+
 /* ===== テロップバー ===== */
 .ticker-bar {
-    display: none; /* デスクトップは非表示、モバイルのみ有効 */
+    display: block;
+    height: 28px;
+    background: rgba(0, 0, 0, 0.30);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    overflow: hidden;
+    cursor: default;
+}
+
+.ticker-inner {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 12px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.ticker-text {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.ticker-text.is-scrolling {
+    animation: ticker-scroll 22s linear infinite;
+    padding-left: 100%;
+}
+
+/* フォーカスモードの非表示イベント通知部分 */
+.ticker-hidden-events {
+    color: rgba(255, 220, 120, 0.92);
+}
+
+/* ===== フォーカスフィルターバー ===== */
+.focus-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 12px 4px;
+    justify-content: center;
+    border-bottom: 1px solid var(--border-color, rgba(0,0,0,0.08));
+}
+
+.focus-chip-badge {
+    font-size: 10px;
+    vertical-align: middle;
+}
+
+body.is-mobile-ui .focus-filter-bar {
+    padding: 4px 8px 4px;
+    justify-content: flex-start;
 }
 
 @keyframes ticker-scroll {
@@ -5155,26 +5282,7 @@ body.is-mobile-ui.mobile-tab-settings   #tickerBar {
     opacity: 0;
     pointer-events: none;
 }
-body.is-mobile-ui .ticker-inner {
-    display: flex;
-    align-items: center;
-    height: 100%;
-    padding: 0 12px;
-    overflow: hidden;
-    white-space: nowrap;
-}
-body.is-mobile-ui .ticker-text {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.92);
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
-    letter-spacing: 0.02em;
-    white-space: nowrap;
-    display: inline-block;
-}
-body.is-mobile-ui .ticker-text.is-scrolling {
-    animation: ticker-scroll 22s linear infinite;
-    padding-left: 100%;
-}
+/* モバイル固有の上書きはなし（デスクトップ共通スタイルを継承） */
 
 /* オートハイド */
 body.is-mobile-ui #mobile-bottom-bar.smart-bottom-bar {
@@ -5426,8 +5534,16 @@ body.is-mobile-ui .mobile-oshi-info {
     flex: 1;
     min-width: 0;
     display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+body.is-mobile-ui .mobile-oshi-name-col {
+    flex: 0 1 auto;
+    min-width: 0;
+    display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 1px;
 }
 body.is-mobile-ui .mobile-oshi-name {
     font-size: 0.93rem;
@@ -5437,11 +5553,22 @@ body.is-mobile-ui .mobile-oshi-name {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-body.is-mobile-ui .mobile-oshi-tags {
-    display: flex;
-    gap: 4px;
-    flex-wrap: nowrap;
+body.is-mobile-ui .mobile-oshi-group {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
+}
+body.is-mobile-ui .mobile-oshi-tags {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    gap: 3px 4px;
+    flex-wrap: wrap;
+    overflow: hidden;
+    max-height: 36px;
+    align-content: center;
 }
 body.is-mobile-ui .mobile-oshi-tag-pill {
     font-size: 0.65rem;

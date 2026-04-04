@@ -31,7 +31,9 @@ const DEFAULT_SETTINGS = {
     imageCompressMode: 'standard',     // 'off' | 'standard' | 'aggressive'
     // Holiday API Settings
     externalHolidays: {},              // { "YYYY-MM-DD": "祝日名" }
-    lastHolidayUpdate: null            // Timestamp
+    lastHolidayUpdate: null,           // Timestamp
+    // Focus Mode
+    activeFilter: null,                // string | null — 選択中グループ名
 };
 
 // --- IndexedDB Management ---
@@ -993,7 +995,11 @@ function renderCalendar(container, year, month) {
     }
 
     // Pre-calculate parsed memorial dates and styles for each oshi
+    const activeFilter = appSettings.activeFilter;
     const oshiEventDates = (appSettings.oshiList || []).map(oshi => {
+        // フォーカスモード: 対象外グループは非表示
+        if (activeFilter !== null && (oshi.group || '') !== activeFilter) return null;
+
         const textColor = oshi.color ? getContrastColor(oshi.color) : '#333';
         const textShadow = textColor === '#ffffff' ? '0 0 1px rgba(0,0,0,0.3)' : 'none';
         const escapedColor = oshi.color ? escapeHTML(oshi.color) : null;
@@ -1014,7 +1020,7 @@ function renderCalendar(container, year, month) {
                 parsed: parseDateString(md.date)
             }))
         };
-    });
+    }).filter(Boolean);
 
     // Optimization: Group events by day to avoid O(Days * Oshis) nested loop bottleneck
     const eventTypesMap = new Map((appSettings.event_types || []).map(t => [t.id, t]));
@@ -1226,6 +1232,7 @@ function updateView() {
 
     updateMediaArea('layout');
     updateTickerBar();
+    renderFocusFilterBar();
 }
 
 // --- Media Logic ---
@@ -1286,19 +1293,40 @@ function getTodayMemorialOshis() {
 }
 
 function getEffectiveImagePool(orderedKeys) {
+    // Step 1: 記念日ロジック（最優先）
     const memOshis = getTodayMemorialOshis();
-    if (memOshis.length === 0) return orderedKeys;
-    const targetTags = new Set();
-    memOshis.forEach(oshi => {
-        if (oshi.name) targetTags.add(oshi.name);
-        (oshi.tags || []).forEach(t => targetTags.add(t));
-    });
-    const preferred = orderedKeys.filter(id =>
-        getImageTags(id).some(t => targetTags.has(t))
-    );
-    if (preferred.length === 0) return orderedKeys;
-    if (appSettings.memorialDisplayMode === 'exclusive') return preferred;
-    return Math.random() < 0.8 ? preferred : orderedKeys;
+    let pool = orderedKeys;
+    if (memOshis.length > 0) {
+        const targetTags = new Set();
+        memOshis.forEach(oshi => {
+            if (oshi.name) targetTags.add(oshi.name);
+            (oshi.tags || []).forEach(t => targetTags.add(t));
+        });
+        const preferred = orderedKeys.filter(id =>
+            getImageTags(id).some(t => targetTags.has(t))
+        );
+        if (preferred.length > 0) {
+            if (appSettings.memorialDisplayMode === 'exclusive') {
+                pool = preferred;
+            } else {
+                pool = Math.random() < 0.8 ? preferred : orderedKeys;
+            }
+        }
+    }
+
+    // Step 2: groupフィルター（セカンダリ）
+    const activeFilter = appSettings.activeFilter;
+    if (activeFilter) {
+        const groupOshis = (appSettings.oshiList || []).filter(o => o.group === activeFilter);
+        const groupTags = new Set(
+            groupOshis.flatMap(o => [o.name, ...(o.tags || [])].filter(Boolean))
+        );
+        const filtered = pool.filter(id => getImageTags(id).some(t => groupTags.has(t)));
+        if (filtered.length > 0) return filtered;
+        // マッチなしはフォールバック（groupフィルター無視）
+    }
+
+    return pool;
 }
 
 /**
@@ -1354,25 +1382,26 @@ function renderOshiTable() {
 
     tbody.innerHTML = '';
 
-    const addTopRow = document.getElementById('oshiTableAddTopRow');
     const hasAny = (appSettings.oshiList || []).length > 0;
 
     if (!hasAny) {
         if (emptyMsg) emptyMsg.style.display = 'block';
-        if (addTopRow) addTopRow.style.display = 'none';
         return;
     }
 
     if (emptyMsg) emptyMsg.style.display = 'none';
-    if (addTopRow) addTopRow.style.display = 'block';
 
     const list = getFilteredSortedOshiList(oshiTable.search, oshiTable.sort);
     const isDragEnabled = (oshiTable.search === '' && oshiTable.sort === 'index');
 
+    // グループ列の動的表示制御: 1人でもグループ設定済みなら列を表示
+    const hasAnyGroup = (appSettings.oshiList || []).some(o => o.group && o.group.trim());
+    document.body.classList.toggle('oshi-has-group', hasAnyGroup);
+
     if (list.length === 0) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
-        td.colSpan = 6;
+        td.colSpan = hasAnyGroup ? 7 : 6;
         td.className = 'oshi-table-no-results';
         td.textContent = '検索結果がありません';
         tr.appendChild(td);
@@ -1416,6 +1445,12 @@ function renderOshiTable() {
         const nameCell = document.createElement('td');
         nameCell.textContent = oshi.name || '-';
         row.appendChild(nameCell);
+
+        // Group
+        const groupCell = document.createElement('td');
+        groupCell.className = 'oshi-group-cell';
+        groupCell.textContent = oshi.group || '';
+        row.appendChild(groupCell);
 
         // Tags
         const tagsCell = document.createElement('td');
@@ -1673,6 +1708,15 @@ function updateTagDatalist() {
     dl.innerHTML = allOptions.map(t => `<option value="${escapeHTML(t)}">`).join('');
 }
 
+function updateGroupDatalist() {
+    const dl = document.getElementById('groupDatalist');
+    if (!dl) return;
+    const groups = [...new Set(
+        (appSettings.oshiList || []).map(o => o.group).filter(g => g && g.trim())
+    )];
+    dl.innerHTML = groups.map(g => `<option value="${escapeHTML(g)}">`).join('');
+}
+
 // --- Tag UI ---
 function createTagInputUI(initialTags, onChange) {
     const area = document.createElement('div');
@@ -1910,6 +1954,13 @@ function openOshiEditForm(index = -1) {
         syncOshiColorUI('#3b82f6');
     }
 
+    // 所属グループ入力を初期化
+    updateGroupDatalist();
+    const groupEl = document.getElementById('oshiEditGroup');
+    if (groupEl) {
+        groupEl.value = (index >= 0 ? appSettings.oshiList[index]?.group : '') || '';
+    }
+
     // タグ入力UIを初期化
     updateTagDatalist();
     const currentOshiTags = (index >= 0 ? appSettings.oshiList[index]?.tags : null) || [];
@@ -1994,11 +2045,15 @@ function saveOshiFromForm() {
     const tags = tagBadges.map(b => b.childNodes[0].textContent.trim()).filter(Boolean);
     addTagsToMaster(tags);
 
+    const groupEl = document.getElementById('oshiEditGroup');
+    const group = groupEl ? groupEl.value.trim() : '';
+
     const oshiData = {
         name,
         color,
         memorial_dates,
         tags,
+        group,
         avatar: index >= 0 ? (appSettings.oshiList[index].avatar ?? null) : null,
     };
 
@@ -2124,6 +2179,7 @@ function exportOshiAsCsv() {
             escapeCsvField(bday),
             escapeCsvField(debut),
             ...eventCols,
+            escapeCsvField(oshi.group || ''),
             escapeCsvField(tags)
         ].join(','));
     });
@@ -2151,14 +2207,14 @@ const OSHI_CSV_TEMPLATE_HEADERS = [
     'イベント1_種別', 'イベント1_日付',
     'イベント2_種別', 'イベント2_日付',
     'イベント3_種別', 'イベント3_日付',
-    'タグ'
+    '所属グループ', 'タグ'
 ];
 
 // CSV の2行目に挿入する書式説明コメント行（# 始まりの行はインポート時にスキップされる）
 const OSHI_CSV_FORMAT_COMMENT =
     '# 書式:,,M/D または YYYY/M/D,M/D または YYYY/M/D,' +
     '(種別名),(M/D または YYYY/M/D),(種別名),(M/D または YYYY/M/D),(種別名),(M/D または YYYY/M/D),' +
-    'タグ1;タグ2';
+    '(グループ名),タグ1;タグ2';
 
 /**
  * CSVテンプレートファイルをダウンロードする。
@@ -2167,8 +2223,8 @@ function downloadOshiCsvTemplate() {
     const sample = [
         OSHI_CSV_TEMPLATE_HEADERS.join(','),
         OSHI_CSV_FORMAT_COMMENT,
-        '推しA,#ff6b9d,3/21,2019/9/1,3Dお披露目,2022/4/1,,,,,VTuber;歌手',
-        '推しB,#3b82f6,11/5,,,,,,,,'
+        '推しA,#ff6b9d,3/21,2019/9/1,3Dお披露目,2022/4/1,,,,,グループA,VTuber;歌手',
+        '推しB,#3b82f6,11/5,,,,,,,,,,'
     ].join('\r\n');
     const bom = '\uFEFF'; // UTF-8 BOM（Excelで文字化けしないように）
     const blob = new Blob([bom + sample], { type: 'text/csv;charset=utf-8' });
@@ -2276,7 +2332,10 @@ function convertCsvRowsToOshiItems(rows, fileName) {
         const tagRaw = row['タグ'] || row['tags'] || '';
         const tags = tagRaw ? tagRaw.split(';').map(t => t.trim()).filter(Boolean) : [];
 
-        items.push({ name, color, memorial_dates, tags });
+        // 所属グループ
+        const group = (row['所属グループ'] || row['group'] || '').trim();
+
+        items.push({ name, color, memorial_dates, tags, group });
     });
 
     return { items, skippedRows };
@@ -4165,10 +4224,14 @@ function loadSettings() {
                 appSettings.localImageMeta = {};
             }
             appSettings.oshiList = (appSettings.oshiList || []).map(o =>
-                ({ ...o, tags: Array.isArray(o.tags) ? o.tags : [] })
+                ({ ...o, tags: Array.isArray(o.tags) ? o.tags : [], group: typeof o.group === 'string' ? o.group : '' })
             );
             if (!appSettings.memorialDisplayMode) {
                 appSettings.memorialDisplayMode = 'preferred';
+            }
+            // Migration: activeFilter（フォーカスモード）
+            if (typeof appSettings.activeFilter !== 'string' && appSettings.activeFilter !== null) {
+                appSettings.activeFilter = null;
             }
             if (!appSettings.imageCompressMode ||
                 !['off', 'standard', 'aggressive'].includes(appSettings.imageCompressMode)) {
@@ -5933,7 +5996,39 @@ function renderTickerBar() {
         });
         eventStr = '　' + parts.join('　');
     }
-    span.textContent = dateStr + eventStr;
+
+    // フォーカスモード中: 非表示グループのイベント数をテキストで追記
+    const activeFilter = appSettings.activeFilter;
+    let hiddenStr = '';
+    if (activeFilter !== null) {
+        const hiddenOshis = (appSettings.oshiList || []).filter(o => (o.group || '') !== activeFilter);
+        // 当月の非表示イベント件数をグループ別に集計
+        const refDate = typeof currentRefDate !== 'undefined' ? currentRefDate : new Date();
+        const y = refDate.getFullYear();
+        const m = refDate.getMonth() + 1;
+        const groupCounts = new Map();
+        hiddenOshis.forEach(oshi => {
+            if (!oshi.name) return;
+            let count = 0;
+            (oshi.memorial_dates || []).forEach(md => {
+                const parsed = parseDateString(md.date);
+                if (!parsed || parsed.month !== m) return;
+                if (!md.is_annual && parsed.year && parsed.year !== y) return;
+                count++;
+            });
+            if (count > 0) {
+                const grpLabel = oshi.group || '未分類';
+                groupCounts.set(grpLabel, (groupCounts.get(grpLabel) || 0) + count);
+            }
+        });
+        if (groupCounts.size > 0) {
+            const hiddenParts = [...groupCounts.entries()].map(([g, n]) => `${g}（${n}件）`);
+            hiddenStr = `　🔕 非表示中: ${hiddenParts.join('、')}`;
+        }
+    }
+
+    span.innerHTML = escapeHTML(dateStr + eventStr)
+        + (hiddenStr ? ` <span class="ticker-hidden-events">${escapeHTML(hiddenStr)}</span>` : '');
 }
 
 function setupTickerBar() {
@@ -5957,8 +6052,64 @@ function setupTickerBar() {
 }
 
 function updateTickerBar() {
-    if (!isMobile()) return;
     setupTickerBar();
+}
+
+// --- Focus Filter Bar ---
+
+function getGroupHasTodayEvent(group) {
+    return getTodayMemorialOshis().some(o => o.group === group);
+}
+
+function renderFocusFilterBar() {
+    const bar = document.getElementById('focusFilterBar');
+    if (!bar) return;
+
+    const groups = [...new Set(
+        (appSettings.oshiList || []).map(o => o.group).filter(g => g && g.trim())
+    )];
+
+    if (groups.length === 0) {
+        bar.style.display = 'none';
+        bar.innerHTML = '';
+        return;
+    }
+
+    bar.style.display = 'flex';
+    bar.innerHTML = '';
+
+    const allChip = document.createElement('button');
+    allChip.type = 'button';
+    allChip.className = 'img-filter-chip' + (appSettings.activeFilter === null ? ' active' : '');
+    allChip.textContent = 'すべて';
+    allChip.addEventListener('click', () => {
+        appSettings.activeFilter = null;
+        saveSettingsSilently();
+        renderFocusFilterBar();
+        updateView();
+    });
+    bar.appendChild(allChip);
+
+    groups.forEach(group => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'img-filter-chip' + (appSettings.activeFilter === group ? ' active' : '');
+
+        const hasTodayEvent = getGroupHasTodayEvent(group);
+        if (hasTodayEvent && appSettings.activeFilter !== null && appSettings.activeFilter !== group) {
+            chip.innerHTML = escapeHTML(group) + ' <span class="focus-chip-badge" aria-label="本日イベントあり">💡</span>';
+        } else {
+            chip.textContent = group;
+        }
+
+        chip.addEventListener('click', () => {
+            appSettings.activeFilter = appSettings.activeFilter === group ? null : group;
+            saveSettingsSilently();
+            renderFocusFilterBar();
+            updateView();
+        });
+        bar.appendChild(chip);
+    });
 }
 
 function resetToTodayMedia() {
@@ -6265,16 +6416,27 @@ function renderOshiVirtualWindow(scrollTop) {
         const info = document.createElement('div');
         info.className = 'mobile-oshi-info';
 
+        const nameCol = document.createElement('div');
+        nameCol.className = 'mobile-oshi-name-col';
+
         const nameEl = document.createElement('span');
         nameEl.className = 'mobile-oshi-name';
         nameEl.textContent = oshi.name || '-';
-        info.appendChild(nameEl);
+        nameCol.appendChild(nameEl);
+
+        if (oshi.group) {
+            const groupEl = document.createElement('span');
+            groupEl.className = 'mobile-oshi-group';
+            groupEl.textContent = oshi.group;
+            nameCol.appendChild(groupEl);
+        }
+        info.appendChild(nameCol);
 
         const tags = oshi.tags || [];
         if (tags.length > 0) {
             const tagsEl = document.createElement('div');
             tagsEl.className = 'mobile-oshi-tags';
-            tags.slice(0, 3).forEach(tag => {
+            tags.slice(0, 6).forEach(tag => {
                 const pill = document.createElement('span');
                 pill.className = 'mobile-oshi-tag-pill';
                 pill.textContent = '#' + tag;

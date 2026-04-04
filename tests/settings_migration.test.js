@@ -29,6 +29,7 @@ const DEFAULT_SETTINGS = {
     localImageMeta: {},
     memorialDisplayMode: 'preferred',
     imageCompressMode: 'standard',
+    activeFilter: null,
 };
 
 const STORAGE_KEY = 'oshikoyo_settings';

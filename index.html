@@ -122,6 +122,7 @@
                         </button>
                     </div>
                 </div>
+                <div id="focusFilterBar" class="focus-filter-bar" style="display:none;"></div>
                 <main class="calendar-wrapper" id="calendarWrapper">
                     <!-- カレンダーの内容はJSによって注入されます -->
                 </main>
@@ -757,6 +758,7 @@
             <div class="settings-header">
                 <h2 class="settings-title">登録済みの推し一覧</h2>
                 <div class="oshi-manager-toolbar">
+                    <button type="button" id="btnOshiAddTop" class="btn-primary">＋ 新規追加</button>
                     <button type="button" id="btnOshiImport" class="btn-secondary" title="JSON または CSV ファイルから一括インポート">📥 インポート</button>
                     <input type="file" id="inputOshiImport" accept=".json,.csv" multiple style="display:none">
                     <button type="button" id="btnOshiCsvTemplate" class="btn-secondary" title="CSVテンプレートをダウンロード">テンプレート</button>
@@ -776,21 +778,25 @@
                 </div>
             </div>
             <div class="oshi-manager-content">
-                <div class="oshi-manager-scroll-area">
-                    <div id="oshiTableAddTopRow" class="oshi-table-add-top-row" style="display:none">
-                        <button type="button" id="btnOshiAddTop" class="btn-primary">＋ 新規追加</button>
-                    </div>
+                <!-- ヘッダーエリア（固定） -->
+                <div class="oshi-table-header-area">
                     <table class="oshi-table">
                         <thead>
                             <tr>
                                 <th class="oshi-th-handle"></th>
-                                <th></th>
+                                <th class="oshi-th-swatch"></th>
                                 <th>名前</th>
+                                <th class="oshi-th-group">グループ</th>
                                 <th>タグ</th>
                                 <th>直近の予定</th>
-                                <th></th>
+                                <th class="oshi-th-actions"></th>
                             </tr>
                         </thead>
+                    </table>
+                </div>
+                <!-- スクロールエリア（データ部のみ） -->
+                <div class="oshi-manager-scroll-area">
+                    <table class="oshi-table">
                         <tbody id="oshiTableBody">
                             <!-- Rows injected by JS -->
                         </tbody>
@@ -843,6 +849,13 @@
                     <button type="button" id="btnAddMemorialDate" class="btn-add-row">＋ 追加</button>
                     <datalist id="eventTypeDatalist"></datalist>
                     <p class="help-text" style="margin-top:4px">タイプ欄は既存から選ぶか新しい名前を入力。日付: M/D（毎年）または YYYY/M/D</p>
+                </div>
+                <div class="setting-group">
+                    <label>所属グループ</label>
+                    <input type="text" id="oshiEditGroup" list="groupDatalist"
+                           placeholder="例: グループA、ソロ活動（任意）" maxlength="30"
+                           class="text-input" autocomplete="off">
+                    <datalist id="groupDatalist"></datalist>
                 </div>
                 <div class="setting-group" id="oshiTagGroup">
                     <label>タグ</label>
