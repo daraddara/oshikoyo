@@ -20,7 +20,10 @@ node_modules/
 .agents/browser_data/
 .agents/browser_test/
 .jules/
+.Jules/
 .google-jules/
+*.jules-*
+test-validation.js
 
 # Playwright
 /test-results/
