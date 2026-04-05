@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://daraddara.github.io/oshikoyo/">
+  <a href="https://oshikoyo.pages.dev/">
     <img src="https://img.shields.io/badge/🚀%20今すぐ使ってみる-Oshikoyo-FF69B4?style=for-the-badge&logo=rocket" alt="Try Now">
   </a>
 </p>
@@ -84,7 +84,7 @@
 
 ## 📖 使い方 (Quick Start)
 
-1. **アプリを開く**: [デモサイト](https://daraddara.github.io/oshikoyo/)へアクセス。
+1. **アプリを開く**: [デモサイト](https://oshikoyo.pages.dev/)へアクセス。
 2. **自分好みに設定**: 右上の ⚙️ アイコンから、画像の表示方法やカレンダーをカスタマイズ。
 3. **記念日を登録**: あなただけの「推し事」スケジュールをカレンダーに反映。
 
