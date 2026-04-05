@@ -4242,6 +4242,8 @@ function loadSettings() {
             console.error('Failed to load or migrate settings:', e);
         }
     }
+    // Keep window.appSettings in sync after reassignment
+    window.appSettings = appSettings;
     // updateView(); // Removed to prevent double rendering on init
 }
 
