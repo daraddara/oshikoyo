@@ -150,4 +150,76 @@ test.describe('カレンダーコントロール', () => {
         );
         expect(saved.monthCount).toBe(1);
     });
+
+    // ----------------------------------------------------------
+    // 今日ボタン (#btnTodayLogo)
+    // ----------------------------------------------------------
+    test('今日ボタン: 別月に移動後にクリックすると今日の月に戻ること', async ({ page }) => {
+        // 翌月（2月）に移動
+        await page.locator('#btnNext').click();
+        await expect(page.locator('.month-title').first()).toContainText('2月');
+
+        // 今日ボタンをクリック → 1月に戻る
+        await page.locator('#btnTodayLogo').click();
+
+        await expect(page.locator('.month-title').first()).toContainText('1月');
+    });
+
+    test('今日ボタン: 複数月移動後でも今日の月に戻ること', async ({ page }) => {
+        // 3ヶ月先へ移動
+        await page.locator('#btnNext').click();
+        await page.locator('#btnNext').click();
+        await page.locator('#btnNext').click();
+        await expect(page.locator('.month-title').first()).toContainText('4月');
+
+        await page.locator('#btnTodayLogo').click();
+
+        await expect(page.locator('.month-title').first()).toContainText('1月');
+    });
+
+    // ----------------------------------------------------------
+    // 週の開始日切替 (startOfWeek)
+    // ----------------------------------------------------------
+    test('週の開始日: 月曜始まりに変更すると曜日ヘッダーの先頭が「月」になること', async ({ page }) => {
+        // デフォルト（日曜始まり）の確認
+        const firstHeader = page.locator('.weekday-header span').first();
+        await expect(firstHeader).toHaveText('日');
+
+        // 設定モーダルを開いて月曜始まりに変更
+        await page.locator('#btnSettings').click();
+        await expect(page.locator('#settingsModal')).toBeVisible();
+        await page.locator('input[name="startOfWeek"][value="1"]').click();
+
+        // モーダルを閉じてヘッダーを確認
+        await page.locator('#btnClose').click();
+        await expect(page.locator('.weekday-header span').first()).toHaveText('月');
+    });
+
+    test('週の開始日: 日曜→月曜→日曜と切り替えるとヘッダーが正しく戻ること', async ({ page }) => {
+        await page.locator('#btnSettings').click();
+        await expect(page.locator('#settingsModal')).toBeVisible();
+
+        // 月曜始まりに変更
+        await page.locator('input[name="startOfWeek"][value="1"]').click();
+        await page.locator('#btnClose').click();
+        await expect(page.locator('.weekday-header span').first()).toHaveText('月');
+
+        // 再び設定を開いて日曜始まりに戻す
+        await page.locator('#btnSettings').click();
+        await page.locator('input[name="startOfWeek"][value="0"]').click();
+        await page.locator('#btnClose').click();
+        await expect(page.locator('.weekday-header span').first()).toHaveText('日');
+    });
+
+    test('週の開始日: 月曜始まり設定がlocalStorageに保存されること', async ({ page }) => {
+        await page.locator('#btnSettings').click();
+        await expect(page.locator('#settingsModal')).toBeVisible();
+        await page.locator('input[name="startOfWeek"][value="1"]').click();
+        await page.locator('#btnClose').click();
+
+        const saved = await page.evaluate(() =>
+            JSON.parse(localStorage.getItem('oshikoyo_settings'))
+        );
+        expect(saved.startOfWeek).toBe(1);
+    });
 });

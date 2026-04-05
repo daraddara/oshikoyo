@@ -9,6 +9,16 @@
  */
 import { test, expect } from '@playwright/test';
 
+/** CSS アニメーション/トランジションがすべて完了するまで待機する（最大1500ms） */
+async function waitForAnimations(page) {
+    await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+    await page.waitForFunction(
+        () => document.getAnimations().filter(a => a.playState === 'running').length === 0,
+        null,
+        { timeout: 1500 }
+    ).catch(() => {}); // 永続アニメーション時はタイムアウトを無視して続行
+}
+
 const BASE_SETTINGS = {
     startOfWeek: 0,
     monthCount: 1,
@@ -72,7 +82,11 @@ async function injectMockPortraitImage(page) {
         window.appSettings.mediaPosition = 'left';
         window.updateView();
     });
-    await page.waitForTimeout(400);
+    // updateView() 完了後、mediaContainer が top:0 に配置されるまで待機
+    await page.waitForFunction(() => {
+        const mc = document.getElementById('mediaContainer');
+        return mc && mc.getBoundingClientRect().top === 0;
+    });
 }
 
 test.describe('ランドスケープレイアウト検証 (Galaxy S25: 702×360)', () => {
@@ -214,7 +228,7 @@ test.describe('ランドスケープレイアウト検証 (Galaxy S25: 702×360)
     test('TC-L-8: ランドスケープレイアウトの視覚的回帰テスト', async ({ page }) => {
         await injectMockPortraitImage(page);
         await page.waitForSelector('.media-main-img', { state: 'visible' });
-        await page.waitForTimeout(200);
+        await waitForAnimations(page);
 
         await expect(page).toHaveScreenshot('landscape-with-portrait-image.png');
     });
