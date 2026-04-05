@@ -29,7 +29,8 @@ async function handleClearAllOshis() {
     });
     if (ok) {
         appSettings.oshiList = [];
-        saveSettings();
+        saveSettingsSilently();
+        updateView();
         renderOshiTable();
         renderOshiList();
         if (isMobile()) renderMobileOshiPanel(true);
@@ -45,9 +46,9 @@ async function handleClearAllCustomEvents() {
     });
     if (ok) {
         appSettings.event_types = (appSettings.event_types || []).filter(t => t.id === 'bday' || t.id === 'debut');
-        saveSettings();
+        saveSettingsSilently();
+        updateView();
         renderEventTypeManager();
-        renderMobileEventTypeSection();
     }
 }
 

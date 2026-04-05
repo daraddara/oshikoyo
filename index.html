@@ -278,8 +278,8 @@
                         <button type="button" id="mobileOshiMenuImport" class="mobile-oshi-menu-item">📥 インポート</button>
                         <button type="button" id="mobileOshiMenuExport" class="mobile-oshi-menu-item">📤 エクスポート</button>
                         <button type="button" id="mobileOshiMenuTemplate" class="mobile-oshi-menu-item">CSVテンプレートをDL</button>
-                        <div class="mobile-oshi-menu-divider" style="height:1px; background:var(--border-color); margin:4px 0;"></div>
-                        <button type="button" id="mobileOshiMenuClearAll" class="mobile-oshi-menu-item" style="color:var(--danger-color);">🗑️ 全削除</button>
+                        <div class="mobile-oshi-menu-divider"></div>
+                        <button type="button" id="mobileOshiMenuClearAll" class="mobile-oshi-menu-item mobile-oshi-menu-item-danger" aria-label="すべての推しを削除">🗑️ 全削除</button>
                     </div>
                 </div>
             </div>
@@ -465,8 +465,8 @@
             </div>
             <div class="mobile-sub-panel-body">
                 <div class="setting-group">
-                    <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
-                        <button type="button" id="btnMobileClearAllEvents" class="btn-danger-outline btn-sm">全削除</button>
+                    <div class="et-clear-row">
+                        <button type="button" id="btnMobileClearAllEvents" class="btn-danger-outline btn-sm" aria-label="カスタムイベントを全削除">全削除</button>
                     </div>
                     <div id="mobileEventTypeList"></div>
                     <div class="et-add-row" id="mobileEtAddRow">
@@ -490,7 +490,7 @@
                 <div class="setting-group" style="margin-bottom: 2rem;">
                     <label class="setting-label">全データの初期化</label>
                     <p class="help-text" style="margin-bottom:10px">アプリの全データ（推し・画像・タグ・設定）を削除し、初期状態に戻します。この操作は取り消せません。</p>
-                    <button type="button" id="btnMobileFactoryReset" class="btn-danger-outline btn-sm">全データを初期化</button>
+                    <button type="button" id="btnMobileFactoryReset" class="btn-danger-outline btn-sm" aria-label="全データを初期化">全データを初期化</button>
                 </div>
                 <div class="setting-group">
                     <label class="setting-label">全データのバックアップと復元</label>
@@ -611,9 +611,9 @@
                     <!-- イベントパネル -->
                     <div id="tabPanelEvent" class="settings-tab-panel" data-panel="event" role="tabpanel" aria-labelledby="tabBtnEvent">
                         <div class="setting-group">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                <h3 class="settings-section-heading" style="margin-bottom: 0;">イベントタイプ</h3>
-                                <button type="button" id="btnSettingsClearAllEvents" class="btn-danger-outline btn-sm">全削除</button>
+                            <div class="et-clear-row et-clear-row--desktop">
+                                <h3 class="settings-section-heading">イベントタイプ</h3>
+                                <button type="button" id="btnSettingsClearAllEvents" class="btn-danger-outline btn-sm" aria-label="カスタムイベントを全削除">全削除</button>
                             </div>
                             <div id="settingsEventTypeList"></div>
                             <div class="et-add-row" id="etAddRow">
@@ -689,7 +689,7 @@
                         <div class="setting-group" style="margin-bottom: 2rem;">
                             <h3 class="settings-section-heading">全データの初期化</h3>
                             <p class="help-text" style="margin-bottom:10px">アプリの全データ（推し・画像・タグ・設定）を削除し、初期状態に戻します。この操作は取り消せません。</p>
-                            <button type="button" id="btnFactoryReset" class="btn-danger-outline btn-sm">全データを初期化</button>
+                            <button type="button" id="btnFactoryReset" class="btn-danger-outline btn-sm" aria-label="全データを初期化">全データを初期化</button>
                         </div>
 
                         <div class="setting-group">
@@ -802,7 +802,7 @@
                     <input type="file" id="inputOshiImport" accept=".json,.csv" multiple style="display:none">
                     <button type="button" id="btnOshiCsvTemplate" class="btn-secondary" title="CSVテンプレートをダウンロード">テンプレート</button>
                     <button type="button" id="btnOshiExport" class="btn-secondary">📤 エクスポート</button>
-                    <button type="button" id="btnOshiClearAll" class="btn-danger-outline btn-sm" style="margin-left: auto;">🗑️ 全削除</button>
+                    <button type="button" id="btnOshiClearAll" class="btn-danger-outline btn-sm ml-auto" aria-label="すべての推しを削除">🗑️ 全削除</button>
                 </div>
                 <div class="oshi-table-search-row">
                     <input type="search"
