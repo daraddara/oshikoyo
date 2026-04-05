@@ -305,7 +305,13 @@
             <div id="mobileOshiScrollBubble" class="mobile-oshi-scroll-bubble" aria-hidden="true"></div>
             <!-- 空の状態（未登録時のみ表示） -->
             <div id="mobileOshiEmpty" class="oshi-empty-state" style="display:none">
+                <p class="oshi-empty-state__privacy-badge">🔒 データはこのデバイスだけに保存されます</p>
                 <p class="oshi-empty-state__title">まだ推しが登録されていません</p>
+                <ol class="oshi-empty-state__steps">
+                    <li>CSVテンプレートをDLして一括追加、または「新規追加」で1人ずつ登録</li>
+                    <li>カラー・タグ・記念日を設定してカレンダーをカスタマイズ</li>
+                    <li>「設定 &gt; バックアップ」から定期的にエクスポートを推奨</li>
+                </ol>
                 <div class="oshi-empty-state__actions">
                     <button type="button" id="btnMobileOshiAddEmpty" class="btn-primary">＋ 新規追加</button>
                 </div>
@@ -711,6 +717,20 @@
                                 <button type="button" id="btnCheckUpdate" class="btn-check-update btn-secondary btn-sm">更新を確認</button>
                             </div>
                         </div>
+                        <div class="setting-divider"></div>
+                        <div class="setting-group">
+                            <h3 class="settings-section-heading">使い方</h3>
+                            <ul class="appinfo-howto-list">
+                                <li><strong>推しの登録：</strong>「推し管理」から新規追加、またはCSVで一括インポート</li>
+                                <li><strong>画像の登録：</strong>「ライブラリ」タブからファイル選択・URL貼り付け・ドラッグ&amp;ドロップ</li>
+                                <li><strong>記念日連動：</strong>推し設定の「記念日タグ」に画像タグを紐付けると、当日に優先表示</li>
+                                <li><strong>バックアップ：</strong>「設定 &gt; バックアップ」から定期エクスポートを推奨（データはこのデバイスのみ）</li>
+                            </ul>
+                            <div class="appinfo-howto-actions">
+                                <button type="button" id="btnAppInfoCsvTemplate" class="btn-secondary btn-sm">CSVフォーマットを確認</button>
+                            </div>
+                        </div>
+                        <div class="setting-divider"></div>
                         <div class="setting-group">
                             <h3 class="settings-section-heading">データとプライバシー</h3>
                             <p class="setting-description">登録した画像・設定データはすべてこのデバイスのブラウザ内（IndexedDB / localStorage）にのみ保存されます。サーバーへの送信は一切行いません。</p>
@@ -803,7 +823,13 @@
                         </tbody>
                     </table>
                     <div id="oshiTableEmpty" class="oshi-empty-state" style="display:none">
+                        <p class="oshi-empty-state__privacy-badge">🔒 データはこのデバイスだけに保存されます</p>
                         <p class="oshi-empty-state__title">まだ推しが登録されていません</p>
+                        <ol class="oshi-empty-state__steps">
+                            <li>CSVテンプレートをDLして一括追加、または「新規追加」で1人ずつ登録</li>
+                            <li>カラー・タグ・記念日を設定してカレンダーをカスタマイズ</li>
+                            <li>「設定 &gt; バックアップ」から定期的にエクスポートを推奨</li>
+                        </ol>
                         <div class="oshi-empty-state__actions">
                             <button type="button" id="btnOshiAddEmpty" class="btn-primary">＋ 新規追加</button>
                         </div>

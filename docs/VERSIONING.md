@@ -58,15 +58,17 @@
 
 1. `package.json` の `"version"` を更新する
 2. `src/script.js` の `APP_VERSION` を `'v<同じ値>'` に更新する
-3. `npm test` を実行し全テストのパスを確認する
-4. コミットメッセージに `chore: bump version to vX.Y.Z` を含める
+3. `sw.js` の `CACHE_NAME` を `'oshikoyo-v<同じ値>'` に更新する（既存PWAユーザーへの配信に必須）
+4. `npm test` を実行し全テストのパスを確認する
+5. コミットメッセージに `chore: bump version to vX.Y.Z` を含める
 
 ```bash
 # 例: 1.0.0 → 1.0.1
 # 1. package.json の "version": "1.0.0" を "1.0.1" に変更
 # 2. script.js の APP_VERSION = 'v1.0.0' を 'v1.0.1' に変更
-# 3. npm test
-# 4. git commit -m "chore: bump version to v1.0.1"
+# 3. sw.js の CACHE_NAME = 'oshikoyo-v1.0.0' を 'oshikoyo-v1.0.1' に変更
+# 4. npm test
+# 5. git commit -m "chore: bump version to v1.0.1"
 ```
 
 ---
@@ -75,6 +77,7 @@
 
 | バージョン | 変更概要 | 旧内部カウンタ |
 |-----------|---------|--------------|
+| `1.0.1` | 推し管理空リストのオンボーディング強化・アプリ情報タブに使い方追加。`CACHE_NAME` をセマンティックバージョン形式に統一 | — |
 | `1.0.0` | 正式リリース。全主要機能（PWA・バックアップ・タグ・モバイルUI・祝日同期）実装完了、テスト全件パス確認 | — |
 | `0.28.0` | モバイル設定UI階層化・バージョン管理体系整備 | v28 |
 | （以前） | 旧内部ビルドカウンタ方式（v1〜v27）でのリリース | v1〜v27 |

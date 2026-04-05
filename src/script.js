@@ -2,7 +2,7 @@
  * おしこよ (Oshikoyo) ロジック & アプリケーション
  */
 
-const APP_VERSION = 'v1.0.0';
+const APP_VERSION = 'v1.0.1';
 
 // --- Settings State ---
 const DEFAULT_SETTINGS = {
@@ -4004,6 +4004,7 @@ function initSettings() {
     document.getElementById('btnOshiAddEmpty').addEventListener('click', () => openOshiEditForm(-1));
     document.getElementById('btnOshiImportEmpty').addEventListener('click', () => inputOshiImport.click());
     document.getElementById('btnOshiCsvTemplateEmpty').addEventListener('click', downloadOshiCsvTemplate);
+    document.getElementById('btnAppInfoCsvTemplate').addEventListener('click', downloadOshiCsvTemplate);
 
     // --- Oshi Edit Form ---
     document.getElementById('btnOshiEditSave').addEventListener('click', saveOshiFromForm);
