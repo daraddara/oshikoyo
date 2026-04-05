@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oshikoyo-v34';
+const CACHE_NAME = 'oshikoyo-v1.0.1';
 const ASSETS = [
     './',
     './index.html',
