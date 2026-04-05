@@ -35,8 +35,8 @@
 
 | ファイル | 記述 | 役割 |
 |---------|------|------|
-| `package.json` の `"version"` | `"0.28.0"` | **唯一の正（Single Source of Truth）** |
-| `src/script.js` の `APP_VERSION` | `'v0.28.0'` | UI 表示用。package.json と常に一致させる |
+| `package.json` の `"version"` | `"1.0.0"` | **唯一の正（Single Source of Truth）** |
+| `src/script.js` の `APP_VERSION` | `'v1.0.0'` | UI 表示用。package.json と常に一致させる |
 
 > **規則:** `package.json` を先に更新し、`APP_VERSION` をそれに合わせて変更してください。
 > 二重管理によるバージョン不整合を防ぐため、`version-badge` の表示は JS が動的に挿入します（HTML への直書き禁止）。
@@ -62,11 +62,11 @@
 4. コミットメッセージに `chore: bump version to vX.Y.Z` を含める
 
 ```bash
-# 例: 0.28.0 → 0.29.0
-# 1. package.json の "version": "0.28.0" を "0.29.0" に変更
-# 2. script.js の APP_VERSION = 'v0.28.0' を 'v0.29.0' に変更
+# 例: 1.0.0 → 1.0.1
+# 1. package.json の "version": "1.0.0" を "1.0.1" に変更
+# 2. script.js の APP_VERSION = 'v1.0.0' を 'v1.0.1' に変更
 # 3. npm test
-# 4. git commit -m "chore: bump version to v0.29.0"
+# 4. git commit -m "chore: bump version to v1.0.1"
 ```
 
 ---
@@ -75,5 +75,6 @@
 
 | バージョン | 変更概要 | 旧内部カウンタ |
 |-----------|---------|--------------|
+| `1.0.0` | 正式リリース。全主要機能（PWA・バックアップ・タグ・モバイルUI・祝日同期）実装完了、テスト全件パス確認 | — |
 | `0.28.0` | モバイル設定UI階層化・バージョン管理体系整備 | v28 |
 | （以前） | 旧内部ビルドカウンタ方式（v1〜v27）でのリリース | v1〜v27 |
