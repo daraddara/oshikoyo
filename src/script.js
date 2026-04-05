@@ -4016,7 +4016,11 @@ function initSettings() {
     // アイコンピッカーをクリック外で閉じる
     document.addEventListener('click', () => {
         document.querySelectorAll('.icon-picker-popup.is-open').forEach(p => p.classList.remove('is-open'));
-        document.getElementById('mobileOshiMenu')?.classList.remove('is-open');
+        const menu = document.getElementById('mobileOshiMenu');
+        if (menu) {
+            menu.classList.remove('is-open');
+            document.getElementById('btnMobileOshiMenu')?.setAttribute('aria-expanded', 'false');
+        }
     });
 
     // カラーチップ ↔ Hexテキスト ↔ ネイティブピッカー 同期
@@ -4637,9 +4641,11 @@ function init() {
                     }
 
                     dropdown.classList.add('is-open');
+                    e.currentTarget.setAttribute('aria-expanded', 'true');
                     e.currentTarget.removeAttribute('title');
                 } else {
                     dropdown.classList.remove('is-open');
+                    e.currentTarget.setAttribute('aria-expanded', 'false');
                     if (e.currentTarget.hasAttribute('data-original-title')) {
                         e.currentTarget.setAttribute('title', e.currentTarget.getAttribute('data-original-title'));
                     }
@@ -4651,6 +4657,9 @@ function init() {
     const closeAllDropdowns = () => {
         document.querySelectorAll('.interval-dropdown.is-open').forEach(menu => {
             menu.classList.remove('is-open');
+            if (displayModeBtn) {
+                displayModeBtn.setAttribute('aria-expanded', 'false');
+            }
             // Check button title attribute restoration (the button is no longer a direct sibling due to body append)
             if (displayModeBtn && displayModeBtn.hasAttribute('data-original-title')) {
                 displayModeBtn.setAttribute('title', displayModeBtn.getAttribute('data-original-title'));
@@ -4992,25 +5001,33 @@ function setupImportMenu() {
                 dropdown.style.left = `${btnRect.left}px`;
             }
             dropdown.classList.add('is-open');
+            btn.setAttribute('aria-expanded', 'true');
         } else {
             dropdown.classList.remove('is-open');
+            btn.setAttribute('aria-expanded', 'false');
         }
     });
 
     document.getElementById('importMenuFiles')?.addEventListener('click', () => {
         dropdown.classList.remove('is-open');
+        btn.setAttribute('aria-expanded', 'false');
         document.getElementById('inputLocalFiles')?.click();
     });
     document.getElementById('importMenuFolder')?.addEventListener('click', () => {
         dropdown.classList.remove('is-open');
+        btn.setAttribute('aria-expanded', 'false');
         document.getElementById('inputLocalFolder')?.click();
     });
     document.getElementById('importMenuPaste')?.addEventListener('click', () => {
         dropdown.classList.remove('is-open');
+        btn.setAttribute('aria-expanded', 'false');
         pasteFromClipboard();
     });
 
-    document.addEventListener('click', () => dropdown.classList.remove('is-open'));
+    document.addEventListener('click', () => {
+        dropdown.classList.remove('is-open');
+        btn.setAttribute('aria-expanded', 'false');
+    });
 }
 
 function setupLayoutMenu() {
@@ -5040,8 +5057,10 @@ function setupLayoutMenu() {
                         layoutDropdown.style.left = `${btnRect.left}px`;
                     }
                     layoutDropdown.classList.add('is-open');
+                    layoutModeBtn.setAttribute('aria-expanded', 'true');
                 } else {
                     layoutDropdown.classList.remove('is-open');
+                    layoutModeBtn.setAttribute('aria-expanded', 'false');
                 }
             }
         });
@@ -5084,6 +5103,7 @@ function setupLayoutMenu() {
 
             if (layoutDropdown) {
                 layoutDropdown.classList.remove('is-open');
+                if (layoutModeBtn) layoutModeBtn.setAttribute('aria-expanded', 'false');
             }
         });
     });
@@ -5091,6 +5111,7 @@ function setupLayoutMenu() {
     document.addEventListener('click', (e) => {
         if (layoutDropdown && layoutDropdown.classList.contains('is-open') && !e.target.closest('.layout-mode-control') && !e.target.closest('.layout-dropdown')) {
             layoutDropdown.classList.remove('is-open');
+            if (layoutModeBtn) layoutModeBtn.setAttribute('aria-expanded', 'false');
         }
     });
 }
@@ -6186,7 +6207,7 @@ function setupMobileTabBar() {
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             <span>暦</span>
         </button>
-        <button type="button" class="mobile-tab-btn mobile-tab-add" data-tab="add" aria-label="追加">
+        <button type="button" class="mobile-tab-btn mobile-tab-add" data-tab="add" aria-label="追加" aria-haspopup="true" aria-expanded="false" aria-controls="mobileAddSubmenu">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
         <button type="button" class="mobile-tab-btn" data-tab="management" aria-label="管理">
@@ -6272,23 +6293,31 @@ function setupMobileTabBar() {
 
     bar.querySelector('[data-tab="add"]').addEventListener('click', (e) => {
         e.stopPropagation();
-        document.getElementById('mobileAddSubmenu')?.classList.toggle('is-open');
+        const submenu = document.getElementById('mobileAddSubmenu');
+        if (submenu) {
+            submenu.classList.toggle('is-open');
+            e.currentTarget.setAttribute('aria-expanded', submenu.classList.contains('is-open') ? 'true' : 'false');
+        }
     });
 
     bar.querySelector('[data-action="file"]').addEventListener('click', () => {
         document.getElementById('inputLocalFiles')?.click();
         document.getElementById('mobileAddSubmenu')?.classList.remove('is-open');
+        bar.querySelector('[data-tab="add"]')?.setAttribute('aria-expanded', 'false');
     });
     bar.querySelector('[data-action="folder"]').addEventListener('click', () => {
         document.getElementById('inputLocalFolder')?.click();
         document.getElementById('mobileAddSubmenu')?.classList.remove('is-open');
+        bar.querySelector('[data-tab="add"]')?.setAttribute('aria-expanded', 'false');
     });
     bar.querySelector('[data-action="paste"]').addEventListener('click', () => {
         pasteFromClipboard();
         document.getElementById('mobileAddSubmenu')?.classList.remove('is-open');
+        bar.querySelector('[data-tab="add"]')?.setAttribute('aria-expanded', 'false');
     });
     bar.querySelector('[data-action="gallery"]').addEventListener('click', () => {
         document.getElementById('mobileAddSubmenu')?.classList.remove('is-open');
+        bar.querySelector('[data-tab="add"]')?.setAttribute('aria-expanded', 'false');
         const grid = document.getElementById('mobileGridLibrary');
         if (!grid) return;
         renderMobileGridLibrary();
@@ -6301,6 +6330,7 @@ function setupMobileTabBar() {
             && !e.target.closest('[data-tab="add"]')
             && !e.target.closest('.mobile-add-submenu')) {
             submenu.classList.remove('is-open');
+            bar.querySelector('[data-tab="add"]')?.setAttribute('aria-expanded', 'false');
         }
         const pop = document.getElementById('mobilePlaybackPopover');
         if (pop?.classList.contains('is-visible')
@@ -6719,20 +6749,26 @@ function renderMobileOshiPanel(preserveScroll = false) {
         menuBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             menu.classList.toggle('is-open');
+            menuBtn.setAttribute('aria-expanded', menu.classList.contains('is-open') ? 'true' : 'false');
         });
         document.getElementById('mobileOshiMenuImport')?.addEventListener('click', () => {
             menu.classList.remove('is-open');
+            menuBtn.setAttribute('aria-expanded', 'false');
             document.getElementById('inputOshiImport').click();
         });
         document.getElementById('mobileOshiMenuExport')?.addEventListener('click', () => {
             menu.classList.remove('is-open');
+            menuBtn.setAttribute('aria-expanded', 'false');
             handleOshiExport();
         });
         document.getElementById('mobileOshiMenuTemplate')?.addEventListener('click', () => {
             menu.classList.remove('is-open');
+            menuBtn.setAttribute('aria-expanded', 'false');
             downloadOshiCsvTemplate();
         });
     }
+
+    // click outside for mobileOshiMenu is handled in another listener, so let's make sure it updates aria-expanded there as well
 }
 
 // --- 設定タブ: 設定パネル描画 ---
