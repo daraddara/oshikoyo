@@ -8,6 +8,16 @@
  */
 import { test, expect } from '@playwright/test';
 
+/** CSS アニメーション/トランジションがすべて完了するまで待機する（最大1500ms） */
+async function waitForAnimations(page) {
+    await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+    await page.waitForFunction(
+        () => document.getAnimations().filter(a => a.playState === 'running').length === 0,
+        null,
+        { timeout: 1500 }
+    ).catch(() => {}); // 永続アニメーション時はタイムアウトを無視して続行
+}
+
 const BASE_SETTINGS = {
     startOfWeek: 0,
     monthCount: 1,
@@ -33,6 +43,9 @@ async function swipeCalendar(page, direction) {
     const cy = box.y + box.height / 2;
     const dx = direction === 'left' ? -70 : 70; // ≥ SWIPE_MIN_PX(50px)
 
+    // スワイプ前の月タイトルを記録
+    const titleBefore = await page.locator('.month-title').first().textContent();
+
     await page.evaluate(({ sx, sy, ex, ey }) => {
         const el = document.getElementById('calendarWrapper');
         el.dispatchEvent(new TouchEvent('touchstart', {
@@ -48,7 +61,14 @@ async function swipeCalendar(page, direction) {
         }));
     }, { sx: cx, sy: cy, ex: cx + dx, ey: cy });
 
-    await page.waitForTimeout(100);
+    // 月タイトルが変化するまで待機（固定時間待ちを排除）
+    await page.waitForFunction(
+        (before) => {
+            const el = document.querySelector('.month-title');
+            return el && el.textContent !== before;
+        },
+        titleBefore
+    );
 }
 
 test.describe('ポートレートモバイルUI検証 (Galaxy S25: 360×780)', () => {
@@ -141,7 +161,6 @@ test.describe('ポートレートモバイルUI検証 (Galaxy S25: 360×780)', (
         await firstDay.scrollIntoViewIfNeeded();
         await expect(firstDay).toBeVisible();
         await firstDay.tap();
-        await page.waitForTimeout(200);
 
         await expect(sheet).toHaveClass(/is-open/, { timeout: 3000 });
         await expect(sheet).toHaveAttribute('aria-hidden', 'false');
@@ -219,7 +238,7 @@ test.describe('ポートレートモバイルUI検証 (Galaxy S25: 360×780)', (
     // TC-P-7: スクリーンショット回帰テスト（初期状態）
     // -------------------------------------------------------------------------
     test('TC-P-7: ポートレート初期状態の視覚的回帰テスト', async ({ page }) => {
-        await page.waitForTimeout(200);
+        await waitForAnimations(page);
         await expect(page).toHaveScreenshot('portrait-initial.png');
     });
 
@@ -229,7 +248,58 @@ test.describe('ポートレートモバイルUI検証 (Galaxy S25: 360×780)', (
     test('TC-P-7b: カレンダー展開後の視覚的回帰テスト', async ({ page }) => {
         await page.locator('.mobile-tab-btn[data-tab="calendar"]').tap();
         await expect(page.locator('.calendar-section')).toHaveClass(/is-expanded/);
-        await page.waitForTimeout(200);
+        await waitForAnimations(page);
         await expect(page).toHaveScreenshot('portrait-calendar-expanded.png');
+    });
+
+    // -------------------------------------------------------------------------
+    // TC-P-10: ホームタブポップオーバー（再生モード設定）
+    // -------------------------------------------------------------------------
+    test('TC-P-10: ホームタブタップで #mobilePlaybackPopover が開くこと', async ({ page }) => {
+        const pop = page.locator('#mobilePlaybackPopover');
+
+        // 初期状態: ポップオーバーは非表示
+        await expect(pop).not.toHaveClass(/is-visible/);
+
+        // ホームタブをタップ（初期タブがhomeなので、タップでポップオーバーが開く）
+        await page.locator('.mobile-tab-btn[data-tab="home"]').tap();
+
+        await expect(pop).toHaveClass(/is-visible/, { timeout: 3000 });
+    });
+
+    test('TC-P-11: ポップオーバーに表示モードボタンが表示されること', async ({ page }) => {
+        await page.locator('.mobile-tab-btn[data-tab="home"]').tap();
+        const pop = page.locator('#mobilePlaybackPopover');
+        await expect(pop).toHaveClass(/is-visible/);
+
+        // 手動・ランダム・サイクルのボタンが存在すること
+        await expect(pop.locator('[data-mode="single"]')).toBeVisible();
+        await expect(pop.locator('[data-mode="random"]')).toBeVisible();
+        await expect(pop.locator('[data-mode="cycle"]')).toBeVisible();
+    });
+
+    test('TC-P-12: ポップオーバーで表示モードを切り替えると設定が変わること', async ({ page }) => {
+        await page.locator('.mobile-tab-btn[data-tab="home"]').tap();
+        const pop = page.locator('#mobilePlaybackPopover');
+        await expect(pop).toHaveClass(/is-visible/);
+
+        // デフォルトは 'single'（手動）→ 'random' に切り替え
+        await pop.locator('[data-mode="random"]').tap();
+
+        // localStorageに保存されること
+        const saved = await page.evaluate(() =>
+            JSON.parse(localStorage.getItem('oshikoyo_settings'))
+        );
+        expect(saved.mediaMode).toBe('random');
+    });
+
+    test('TC-P-13: ポップオーバー外タップで閉じること', async ({ page }) => {
+        await page.locator('.mobile-tab-btn[data-tab="home"]').tap();
+        const pop = page.locator('#mobilePlaybackPopover');
+        await expect(pop).toHaveClass(/is-visible/);
+
+        // ポップオーバー外（カレンダータブ）をタップして閉じる
+        await page.locator('.mobile-tab-btn[data-tab="calendar"]').tap();
+        await expect(pop).not.toHaveClass(/is-visible/, { timeout: 3000 });
     });
 });

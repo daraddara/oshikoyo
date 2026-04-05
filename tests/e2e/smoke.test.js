@@ -1,5 +1,15 @@
 import { test, expect } from '@playwright/test';
 
+/** CSS アニメーション/トランジションがすべて完了するまで待機する（最大1500ms） */
+async function waitForAnimations(page) {
+    await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+    await page.waitForFunction(
+        () => document.getAnimations().filter(a => a.playState === 'running').length === 0,
+        null,
+        { timeout: 1500 }
+    ).catch(() => {}); // 永続アニメーション時はタイムアウトを無視して続行
+}
+
 const BASE_SETTINGS = {
     startOfWeek: 0,
     monthCount: 2,
@@ -44,29 +54,29 @@ test.describe('Smoke Test & Layout Verification', () => {
             // モバイルでは設定タブをタップしてモバイル設定パネルを確認
             await page.locator('.mobile-tab-btn[data-tab="settings"]').tap();
             await expect(page.locator('#mobileSettingsPanel')).toBeVisible({ timeout: 3000 });
-            await page.waitForTimeout(500);
+            await waitForAnimations(page);
             await expect(page).toHaveScreenshot('mobile_settings_top.png');
 
             // 全般パネル
             await page.locator('.settings-menu-item[data-panel="general"]').tap();
-            await page.waitForTimeout(500);
+            await expect(page.locator('#mobileSubPanel-general')).toHaveClass(/is-open/, { timeout: 3000 });
             await expect(page).toHaveScreenshot('mobile_settings_general.png');
             await page.locator('#mobileSubPanel-general .mobile-sub-panel-back').tap();
-            await page.waitForTimeout(400);
+            await expect(page.locator('#mobileSubPanel-general')).not.toHaveClass(/is-open/, { timeout: 3000 });
 
             // 画像とストレージパネル
             await page.locator('.settings-menu-item[data-panel="media"]').tap();
-            await page.waitForTimeout(500);
+            await expect(page.locator('#mobileSubPanel-media')).toHaveClass(/is-open/, { timeout: 3000 });
             await expect(page).toHaveScreenshot('mobile_settings_media.png');
             await page.locator('#mobileSubPanel-media .mobile-sub-panel-back').tap();
-            await page.waitForTimeout(400);
+            await expect(page.locator('#mobileSubPanel-media')).not.toHaveClass(/is-open/, { timeout: 3000 });
 
             // データパネル
             await page.locator('.settings-menu-item[data-panel="data"]').tap();
-            await page.waitForTimeout(500);
+            await expect(page.locator('#mobileSubPanel-data')).toHaveClass(/is-open/, { timeout: 3000 });
             await expect(page).toHaveScreenshot('mobile_settings_data.png');
             await page.locator('#mobileSubPanel-data .mobile-sub-panel-back').tap();
-            await page.waitForTimeout(400);
+            await expect(page.locator('#mobileSubPanel-data')).not.toHaveClass(/is-open/, { timeout: 3000 });
 
             // ホームタブに戻る
             await page.locator('.mobile-tab-btn[data-tab="home"]').tap();
@@ -75,7 +85,7 @@ test.describe('Smoke Test & Layout Verification', () => {
             await page.locator('#btnSettings').click();
             const settingsModal = page.locator('#settingsModal');
             await expect(settingsModal).toBeVisible();
-            await page.waitForTimeout(500);
+            await waitForAnimations(page);
 
             // 一般タブ（デフォルト）
             const scrollArea = settingsModal.locator('.settings-tab-panel.is-active');
@@ -86,13 +96,13 @@ test.describe('Smoke Test & Layout Verification', () => {
 
             // 画像タブ
             await page.locator('.settings-tab-btn[data-tab="media"]').click();
-            await page.waitForTimeout(300);
+            await waitForAnimations(page);
             await expect(page).toHaveScreenshot('settings_modal_media.png');
 
-            // データタブ
-            await page.locator('.settings-tab-btn[data-tab="data"]').click();
-            await page.waitForTimeout(300);
-            await expect(page).toHaveScreenshot('settings_modal_data.png');
+            // バックアップタブ（旧: データタブ）
+            await page.locator('.settings-tab-btn[data-tab="backup"]').click();
+            await waitForAnimations(page);
+            await expect(page).toHaveScreenshot('settings_modal_backup.png');
 
             // モーダルを閉じる
             await page.locator('#btnClose').click();
@@ -116,7 +126,7 @@ test.describe('Smoke Test & Layout Verification', () => {
             // モバイルでは管理タブで推し一覧を確認
             await page.locator('.mobile-tab-btn[data-tab="management"]').tap();
             await expect(page.locator('#mobileManagementPanel')).toBeVisible({ timeout: 3000 });
-            await page.waitForTimeout(300);
+            await waitForAnimations(page);
             await expect(page).toHaveScreenshot('oshi_management_modal.png');
             // ホームタブに戻る
             await page.locator('.mobile-tab-btn[data-tab="home"]').tap();
@@ -127,7 +137,7 @@ test.describe('Smoke Test & Layout Verification', () => {
 
             const oshiModal = page.locator('#oshiManagementModal');
             await expect(oshiModal).toBeVisible();
-            await page.waitForTimeout(300);
+            await waitForAnimations(page);
             await expect(page).toHaveScreenshot('oshi_management_modal.png');
 
             // 閉じる → 設定モーダルに戻ること
