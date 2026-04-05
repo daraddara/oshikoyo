@@ -2007,7 +2007,7 @@ function saveOshiFromForm() {
     const color = normalizeHex(document.getElementById('oshiEditColor').value) || '#3b82f6';
 
     if (!name) {
-        alert('名前を入力してください');
+        showToast('名前を入力してください');
         return;
     }
 
@@ -2124,7 +2124,7 @@ function showOshiExportDialog() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        showToast(`${count}件のデータをエクスポートしました`);
+        showToast(getDownloadToastMessage(`（${count}件）`), 5000);
     };
 
     dlg.querySelector('#oshiExportCsv').onclick = () => {
@@ -2194,9 +2194,9 @@ function exportOshiAsCsv() {
     URL.revokeObjectURL(url);
 
     if (truncatedCount > 0) {
-        showToast(`CSVエクスポート完了（${truncatedCount}件: カスタム記念日が4件以上のため一部省略）`, 4000);
+        showToast(getDownloadToastMessage(`（${truncatedCount}件: カスタム記念日が4件以上のため一部省略）`), 6000);
     } else {
-        showToast(`${appSettings.oshiList.length}件のデータをCSVでエクスポートしました`);
+        showToast(getDownloadToastMessage(), 5000);
     }
 }
 
@@ -2234,6 +2234,7 @@ function downloadOshiCsvTemplate() {
     a.download = 'oshi_template.csv';
     a.click();
     URL.revokeObjectURL(url);
+    showToast(getDownloadToastMessage(), 5000);
 }
 
 /**
@@ -2559,7 +2560,7 @@ function handleFileImport() {
                 }
             } catch (err) {
                 console.error('Failed to parse JSON', err);
-                alert(`${file.name} の読み込みに失敗しました: ${err.message}`);
+                showToast(`${file.name} の読み込みに失敗しました: ${err.message}`, 5000);
             } finally {
                 processedCount++;
                 if (processedCount === totalFiles) {
@@ -2567,10 +2568,10 @@ function handleFileImport() {
                     fileInput.value = ''; // Reset
 
                     let msg = `${totalFiles} ファイルのインポートが完了しました。`;
-                    if (addedCount > 0) msg += `\n(${addedCount}件追加)`;
-                    if (skippedCount > 0) msg += `\n(${skippedCount}件は重複のためスキップされました)`;
+                    if (addedCount > 0) msg += `（${addedCount}件追加）`;
+                    if (skippedCount > 0) msg += `（${skippedCount}件重複スキップ）`;
 
-                    alert(msg);
+                    showToast(msg);
                 }
             }
         };
@@ -2961,7 +2962,7 @@ async function handleExportFullBackup() {
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
     localStorage.setItem(BACKUP_KEY, Date.now().toString());
-    showToast('バックアップを保存しました（ファイルには登録画像が含まれます。取り扱いにご注意ください）');
+    showToast(getDownloadToastMessage(), 5000);
 }
 
 async function handleImportFullBackup(file) {
@@ -2977,7 +2978,7 @@ async function handleImportFullBackup(file) {
         const json = JSON.parse(await new Response(decompressed).text());
 
         if (json.type !== 'full_backup' || json.version !== 3) {
-            alert('全データバックアップ用のファイルではありません。');
+            showToast('全データバックアップ用のファイルではありません。');
             return;
         }
 
@@ -2994,11 +2995,11 @@ async function handleImportFullBackup(file) {
         appSettings = { ...DEFAULT_SETTINGS, ...json.settings };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
 
-        alert('復元が完了しました。画面を更新します。');
-        location.reload();
+        showToast('復元が完了しました。画面を更新します。');
+        setTimeout(() => location.reload(), 1500);
     } catch (e) {
         console.error(e);
-        alert('復元に失敗しました: ' + e.message);
+        showToast('復元に失敗しました: ' + e.message, 5000);
     }
 }
 
@@ -3048,7 +3049,7 @@ async function handleExportImageTagPackage() {
     a.download = `oshikoyo_images_${date}.json.gz`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
-    showToast('書き出しました');
+    showToast(getDownloadToastMessage(), 5000);
 }
 
 async function handleImportImageTagPackage(file) {
@@ -3057,7 +3058,7 @@ async function handleImportImageTagPackage(file) {
         const json = JSON.parse(await new Response(decompressed).text());
 
         if (json.type !== 'image_tag_package') {
-            alert('画像＋タグパッケージ用のファイルではありません。');
+            showToast('画像＋タグパッケージ用のファイルではありません。');
             return;
         }
 
@@ -3092,11 +3093,11 @@ async function handleImportImageTagPackage(file) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
         }
 
-        alert(`取り込み完了: 追加 ${added} 件 / スキップ ${skipped} 件`);
+        showToast(`取り込み完了: 追加 ${added} 件 / スキップ ${skipped} 件`);
         if (added > 0) { updateLocalMediaUI(); renderLocalImageManager(); }
     } catch (e) {
         console.error(e);
-        alert('取り込みに失敗しました: ' + e.message);
+        showToast('取り込みに失敗しました: ' + e.message, 5000);
     }
 }
 
@@ -5727,6 +5728,26 @@ function isMobile() {
     // navigator.maxTouchPoints > 0: タッチデバイス（スマホ・タブレット）
     // Playwright の hasTouch: true でも maxTouchPoints が設定されるため信頼性高い
     return (navigator.maxTouchPoints > 0) || window.innerWidth <= 768;
+}
+
+/**
+ * iOS（iPhone / iPad）かどうかを判定する。
+ * iPadOS 13+ は userAgent が MacIntel になるため maxTouchPoints で補完する。
+ */
+function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+/**
+ * ダウンロード開始トースト用メッセージを返す。
+ * iOS Safari はダウンロード後にユーザー操作が必要なため案内文を付加する。
+ * @param {string} [suffix] 件数などの補足情報（例: "（3件）"）
+ * @returns {string}
+ */
+function getDownloadToastMessage(suffix = '') {
+    const base = `ダウンロードを開始しました${suffix}。`;
+    return isIOS() ? base + 'ブラウザの指示に従いファイルを保存してください。' : base;
 }
 
 /**

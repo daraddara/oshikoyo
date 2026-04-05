@@ -34,33 +34,36 @@ const blobToBase64Code = extractCode(
 );
 
 // --- ファクトリ関数（依存注入） ---
+// テスト環境は非iOS（jsdom）のため iOS 案内文なしのメッセージを返す
+const testGetDownloadToastMessage = (suffix = '') => `ダウンロードを開始しました${suffix}。`;
+
 function makeHandleExportFullBackup(mockLocalImageDB, mockAppSettings, mockShowToast) {
     const getOrderedImageKeys = (keys) => keys;
     const BACKUP_KEY = 'oshikoyo_last_backup';
     return new Function(
-        'localImageDB', 'appSettings', 'showToast', 'getOrderedImageKeys', 'blobToBase64', 'BACKUP_KEY', 'localStorage',
+        'localImageDB', 'appSettings', 'showToast', 'getOrderedImageKeys', 'blobToBase64', 'BACKUP_KEY', 'localStorage', 'getDownloadToastMessage',
         `${blobToBase64Code}; ${exportFullBackupCode}; return handleExportFullBackup;`
-    )(mockLocalImageDB, mockAppSettings, mockShowToast, getOrderedImageKeys, null /* extracted */, BACKUP_KEY, globalThis.localStorage);
+    )(mockLocalImageDB, mockAppSettings, mockShowToast, getOrderedImageKeys, null /* extracted */, BACKUP_KEY, globalThis.localStorage, testGetDownloadToastMessage);
 }
 
 function makeHandleExportImageTagPackage(mockLocalImageDB, mockAppSettings, mockShowToast) {
     const getOrderedImageKeys = (keys) => keys;
     return new Function(
-        'localImageDB', 'appSettings', 'showToast', 'getOrderedImageKeys', 'blobToBase64',
+        'localImageDB', 'appSettings', 'showToast', 'getOrderedImageKeys', 'blobToBase64', 'getDownloadToastMessage',
         `${blobToBase64Code}; ${exportImageTagCode}; return handleExportImageTagPackage;`
-    )(mockLocalImageDB, mockAppSettings, mockShowToast, getOrderedImageKeys, null /* extracted */);
+    )(mockLocalImageDB, mockAppSettings, mockShowToast, getOrderedImageKeys, null /* extracted */, testGetDownloadToastMessage);
 }
 
 function makeHandleOshiExport(mockAppSettings, mockShowToast) {
-    return new Function('appSettings', 'showToast',
+    return new Function('appSettings', 'showToast', 'getDownloadToastMessage',
         `${exportOshiCode}; return handleOshiExport;`
-    )(mockAppSettings, mockShowToast);
+    )(mockAppSettings, mockShowToast, testGetDownloadToastMessage);
 }
 
 function makeExportOshiAsCsv(mockAppSettings, mockShowToast) {
-    return new Function('appSettings', 'showToast',
+    return new Function('appSettings', 'showToast', 'getDownloadToastMessage',
         `${exportOshiCode}; return exportOshiAsCsv;`
-    )(mockAppSettings, mockShowToast);
+    )(mockAppSettings, mockShowToast, testGetDownloadToastMessage);
 }
 
 // ===========================================================================
@@ -94,7 +97,7 @@ describe('handleExportFullBackup', () => {
         expect(URL.createObjectURL).toHaveBeenCalledOnce();
         expect(URL.revokeObjectURL).toHaveBeenCalledOnce();
         expect(clickSpy).toHaveBeenCalledOnce();
-        expect(mockShowToast).toHaveBeenLastCalledWith('バックアップを保存しました（ファイルには登録画像が含まれます。取り扱いにご注意ください）');
+        expect(mockShowToast).toHaveBeenLastCalledWith('ダウンロードを開始しました。', 5000);
     });
 
     it('画像が0件でもバックアップは実行される', async () => {
@@ -169,7 +172,7 @@ describe('handleExportImageTagPackage', () => {
 
         expect(URL.createObjectURL).toHaveBeenCalledOnce();
         expect(clickSpy).toHaveBeenCalledOnce();
-        expect(mockShowToast).toHaveBeenLastCalledWith('書き出しました');
+        expect(mockShowToast).toHaveBeenLastCalledWith('ダウンロードを開始しました。', 5000);
     });
 
     it('ファイル名が oshikoyo_images_YYYY-MM-DD.json.gz 形式である', async () => {
@@ -245,7 +248,7 @@ describe('handleOshiExport', () => {
         document.getElementById('oshiExportJson').onclick();
 
         expect(URL.createObjectURL).toHaveBeenCalledOnce();
-        expect(mockShowToast).toHaveBeenCalledWith('2件のデータをエクスポートしました');
+        expect(mockShowToast).toHaveBeenCalledWith('ダウンロードを開始しました（2件）。', 5000);
     });
 
     it('JSON形式のファイル名が oshi_list_YYYY-MM-DD.json 形式である', () => {
@@ -289,7 +292,7 @@ describe('exportOshiAsCsv', () => {
 
         expect(URL.createObjectURL).toHaveBeenCalledOnce();
         expect(clickSpy).toHaveBeenCalledOnce();
-        expect(mockShowToast).toHaveBeenCalledWith('1件のデータをCSVでエクスポートしました');
+        expect(mockShowToast).toHaveBeenCalledWith('ダウンロードを開始しました。', 5000);
     });
 
     it('ファイル名が oshi_list_YYYY-MM-DD.csv 形式である', () => {
