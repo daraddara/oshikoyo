@@ -2,7 +2,7 @@
  * おしこよ (Oshikoyo) ロジック & アプリケーション
  */
 
-const APP_VERSION = 'v0.28.0';
+const APP_VERSION = 'v1.0.0';
 
 // --- Settings State ---
 const DEFAULT_SETTINGS = {
