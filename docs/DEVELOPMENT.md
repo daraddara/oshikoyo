@@ -1,5 +1,17 @@
 # 開発ガイドライン (Development Guidelines)
 
+## 🌐 公開URL
+
+| 環境 | URL |
+|---|---|
+| 本番 (Cloudflare Pages) | https://oshikoyo.pages.dev/ |
+
+> [!NOTE]
+> リポジトリは private ですが、Cloudflare Pages によって静的ファイルが公開されています。
+> `main` ブランチへのマージが自動でデプロイに反映されます。
+
+---
+
 ## 🛠️ 技術スタック
 - **Core**: HTML5, CSS3 (Vanilla CSS), JavaScript (Vanilla JS / ES6+)
 - **Storage**: IndexedDB (画像データ用), localStorage (設定・状態用)
