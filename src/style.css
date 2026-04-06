@@ -5215,6 +5215,39 @@ textarea:focus-visible,
     margin-top: 12px;
 }
 
+.appinfo-license-list {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.appinfo-license-list li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.appinfo-license-name {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.appinfo-link {
+    font-size: 0.78rem;
+    color: var(--color-primary);
+    text-decoration: none;
+    opacity: 0.85;
+}
+
+.appinfo-link:hover {
+    text-decoration: underline;
+    opacity: 1;
+}
+
 /* ========== Mobile Smart Bottom Bar ========== */
 /* ===== モバイル5タブバー (デフォルト: 非表示) ===== */
 #mobile-bottom-bar.smart-bottom-bar {

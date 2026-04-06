@@ -112,4 +112,18 @@
 > [!TIP]
 > 開発環境の構築については [DEVELOPMENT.md](./docs/DEVELOPMENT.md) を、利用可能な共通関数については [COMMON_FUNCTIONS.md](./docs/COMMON_FUNCTIONS.md) を参照してください。
 
+---
+
+## ライセンス
+
+本プロジェクトは [MIT License](./LICENSE) のもとで公開されています。
+
+### サードパーティライセンス
+
+| リソース | ライセンス | 表記先 |
+| :--- | :--- | :--- |
+| M PLUS Rounded 1c, Noto Sans JP, Outfit (Google Fonts) | SIL Open Font License 1.1 | https://scripts.sil.org/OFL |
+| Lucide Icons | ISC License | https://lucide.dev/license |
+| Holidays JP API | MIT License | https://holidays-jp.github.io/ |
+
 
