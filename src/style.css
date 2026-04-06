@@ -2806,6 +2806,32 @@ body {
     margin-bottom: 14px;
 }
 
+/* Utility Classes */
+.ml-auto {
+    margin-left: auto;
+}
+.et-clear-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+}
+.et-clear-row--desktop {
+    justify-content: space-between;
+    align-items: center;
+}
+.et-clear-row--desktop .settings-section-heading {
+    margin-bottom: 0;
+}
+
+.mobile-oshi-menu-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 4px 0;
+}
+.mobile-oshi-menu-item-danger {
+    color: var(--danger-color);
+}
+
 .btn-data-action {
     flex: 1;
     min-width: 130px;

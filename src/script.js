@@ -4,6 +4,54 @@
 
 const APP_VERSION = 'v1.0.1';
 
+// --- Delete All Data Shared Handlers ---
+
+async function handleFactoryReset() {
+    const ok = await showConfirmDialog({
+        title: '全データを初期化しますか？',
+        sub: '登録済みの推し・画像・設定がすべて削除されます。この操作は取り消せません。',
+        confirmLabel: '初期化する',
+        danger: true,
+    });
+    if (ok) {
+        await localImageDB.clearAll();
+        localStorage.removeItem(STORAGE_KEY);
+        window.location.reload();
+    }
+}
+
+async function handleClearAllOshis() {
+    const ok = await showConfirmDialog({
+        title: 'すべての推しデータを削除しますか？',
+        sub: '登録されているすべての推しが削除されます。この操作は取り消せません。',
+        confirmLabel: 'すべて削除する',
+        danger: true,
+    });
+    if (ok) {
+        appSettings.oshiList = [];
+        saveSettingsSilently();
+        updateView();
+        renderOshiTable();
+        renderOshiList();
+        if (isMobile()) renderMobileOshiPanel(true);
+    }
+}
+
+async function handleClearAllCustomEvents() {
+    const ok = await showConfirmDialog({
+        title: 'カスタムイベントをすべて削除しますか？',
+        sub: 'ユーザーが追加したイベントタイプがすべて削除されます。この操作は取り消せません。',
+        confirmLabel: 'すべて削除する',
+        danger: true,
+    });
+    if (ok) {
+        appSettings.event_types = (appSettings.event_types || []).filter(t => t.id === 'bday' || t.id === 'debut');
+        saveSettingsSilently();
+        updateView();
+        renderEventTypeManager();
+    }
+}
+
 // --- Settings State ---
 const DEFAULT_SETTINGS = {
     startOfWeek: 0, // 0: Sun, 1: Mon
@@ -3924,9 +3972,12 @@ function initSettings() {
     // --- Oshi Management Toolbar ---
     document.getElementById('btnOshiAddTop').addEventListener('click', () => openOshiEditForm(-1));
     document.getElementById('btnOshiCsvTemplate').addEventListener('click', downloadOshiCsvTemplate);
+    document.getElementById('btnOshiClearAll').addEventListener('click', handleClearAllOshis);
 
     // --- Settings Event Type Manager ---
     renderEventTypeManager();
+    document.getElementById('btnSettingsClearAllEvents')?.addEventListener('click', handleClearAllCustomEvents);
+
     (function initSettingsEventTypeAdder() {
         const iconBtn = document.getElementById('settingsEtIconBtn');
         if (!iconBtn) return;
@@ -4144,6 +4195,9 @@ function initSettings() {
             renderLocalImageManager();
         }
     });
+
+    // Factory Reset
+    document.getElementById('btnFactoryReset').addEventListener('click', handleFactoryReset);
 
     // Full backup
     document.getElementById('btnExportFullBackup').addEventListener('click', handleExportFullBackup);
@@ -6732,6 +6786,10 @@ function renderMobileOshiPanel(preserveScroll = false) {
             menu.classList.remove('is-open');
             downloadOshiCsvTemplate();
         });
+        document.getElementById('mobileOshiMenuClearAll')?.addEventListener('click', () => {
+            menu.classList.remove('is-open');
+            handleClearAllOshis();
+        });
     }
 }
 
@@ -6967,6 +7025,8 @@ function initMobileEventsSubPanel() {
     const panel = document.getElementById('mobileSubPanel-events');
     if (!panel) return;
 
+    panel.querySelector('#btnMobileClearAllEvents')?.addEventListener('click', handleClearAllCustomEvents);
+
     const mobileEtIconBtn = panel.querySelector('#mobileEtIconBtn');
     if (!mobileEtIconBtn) return;
 
@@ -7024,6 +7084,9 @@ function initMobileEventsSubPanel() {
 function initMobileDataSubPanel() {
     const panel = document.getElementById('mobileSubPanel-data');
     if (!panel) return;
+
+    panel.querySelector('#btnMobileFactoryReset')?.addEventListener('click', handleFactoryReset);
+
     panel.querySelector('#btnMsExportFullBackup')?.addEventListener('click', handleExportFullBackup);
     panel.querySelector('#btnMsImportFullBackup')?.addEventListener('click', () => {
         document.getElementById('inputFullBackup')?.click();
