@@ -5248,6 +5248,17 @@ textarea:focus-visible,
     opacity: 1;
 }
 
+.appinfo-link-github {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.appinfo-github-icon {
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
 /* ========== Mobile Smart Bottom Bar ========== */
 /* ===== モバイル5タブバー (デフォルト: 非表示) ===== */
 #mobile-bottom-bar.smart-bottom-bar {
