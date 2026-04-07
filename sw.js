@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oshikoyo-v1.0.1';
+const CACHE_NAME = 'oshikoyo-v1.0.2';
 const ASSETS = [
     './',
     './index.html',
@@ -7,7 +7,9 @@ const ASSETS = [
     './manifest.json',
     './src/assets/default_image.png',
     './src/assets/icon-192.png',
-    './src/assets/icon-512.png'
+    './src/assets/icon-512.png',
+    './src/assets/default_landscape_demo.jpg',
+    './src/assets/default_portrait_demo.jpg',
 ];
 
 self.addEventListener('install', (event) => {
