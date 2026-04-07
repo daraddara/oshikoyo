@@ -4613,19 +4613,26 @@ async function seedDefaultImages() {
         { path: 'src/assets/default_portrait_demo.jpg',  name: 'default_portrait_demo.jpg',  type: 'image/jpeg' },
     ];
 
-    const files = await Promise.all(DEFAULT_IMAGES.map(async ({ path, name, type }) => {
-        const res = await fetch(path);
-        const blob = await res.blob();
-        return new File([blob], name, { type });
-    }));
+    const files = (await Promise.all(DEFAULT_IMAGES.map(async ({ path, name, type }) => {
+        try {
+            const res = await fetch(path);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const blob = await res.blob();
+            return new File([blob], name, { type });
+        } catch (e) {
+            console.warn(`[seedDefaultImages] Failed to fetch ${name}:`, e);
+            return null;
+        }
+    }))).filter(Boolean);
+
+    if (files.length === 0) return;
 
     const newKeys = await localImageDB.addImages(files);
     appSettings.localImageOrder = [...newKeys, ...appSettings.localImageOrder];
     saveSettingsSilently();
-    setupMediaTimer(true);
 }
 
-function init() {
+async function init() {
     loadSettings();
     loadState(); // Restore last state
     initSettings();
@@ -4846,11 +4853,11 @@ function init() {
         });
     }
 
+    // 初回起動時: 登録画像がなければデフォルト画像を追加（完了を待ってからタイマー起動）
+    await seedDefaultImages();
+
     // Cycle check (Refactored to dynamic timer)
     setupMediaTimer(true);
-
-    // 初回起動時: 登録画像がなければデフォルト画像を追加
-    seedDefaultImages();
 
     // センチネルキー書き込み（初回起動日時も記録）
     if (!localStorage.getItem(INIT_KEY)) {
