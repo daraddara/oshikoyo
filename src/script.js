@@ -6469,16 +6469,22 @@ function getKanaGroupLabel(name) {
  * 各要素には元のインデックスを示す _origIndex プロパティが付く。
  */
 function getFilteredSortedOshiList(search, sort) {
-    const base = (appSettings.oshiList || []).map((o, i) => ({ ...o, _origIndex: i }));
+    let list = [];
     const q = (search || '').trim().toLowerCase();
-    let list = q
-        ? base.filter(o =>
-              (o.name || '').toLowerCase().includes(q) ||
-              (o.tags || []).some(t => t.toLowerCase().includes(q))
-          )
-        : base;
+    const oshiList = appSettings.oshiList || [];
+
+    for (let i = 0; i < oshiList.length; i++) {
+        const o = oshiList[i];
+        if (q) {
+            const nameMatch = (o.name || '').toLowerCase().includes(q);
+            const tagMatch = (o.tags || []).some(t => t.toLowerCase().includes(q));
+            if (!nameMatch && !tagMatch) continue;
+        }
+        list.push({ ...o, _origIndex: i });
+    }
+
     if (sort === 'name') {
-        list = [...list].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ja'));
+        list.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ja'));
     } else if (sort === 'memorial') {
         const mappedList = list.map(oshi => {
             const nd = getNextMemorialDate(oshi);
