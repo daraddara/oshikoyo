@@ -695,8 +695,7 @@ function parseDateString(str) {
 
     parseDateString.cache = parseDateString.cache || new Map();
     if (parseDateString.cache.has(str)) {
-        const cached = parseDateString.cache.get(str);
-        return cached ? { ...cached } : null;
+        return parseDateString.cache.get(str);
     }
 
     let result = null;
@@ -725,10 +724,12 @@ function parseDateString(str) {
         }
     }
 
+    if (result) Object.freeze(result);
+
     if (parseDateString.cache.size > 1000) parseDateString.cache.clear();
     parseDateString.cache.set(str, result);
 
-    return result ? { ...result } : null;
+    return result;
 }
 
 // --- Holiday Logic ---
@@ -1059,9 +1060,15 @@ function renderCalendar(container, year, month) {
 
     // Pre-calculate parsed memorial dates and styles for each oshi
     const activeFilter = appSettings.activeFilter;
-    const oshiEventDates = (appSettings.oshiList || []).map(oshi => {
+    const oshiList = appSettings.oshiList || [];
+    const oshiEventDates = [];
+
+    // ⚡ Bolt: Use a single for-loop instead of .map().filter() chain to avoid intermediate array allocations
+    // Impact: Reduces GC overhead during high-frequency calendar rendering
+    for (let i = 0; i < oshiList.length; i++) {
+        const oshi = oshiList[i];
         // フォーカスモード: 対象外グループは非表示
-        if (activeFilter !== null && (oshi.group || '') !== activeFilter) return null;
+        if (activeFilter !== null && (oshi.group || '') !== activeFilter) continue;
 
         const textColor = oshi.color ? getContrastColor(oshi.color) : '#333';
         const textShadow = textColor === '#ffffff' ? '0 0 1px rgba(0,0,0,0.3)' : 'none';
@@ -1071,19 +1078,26 @@ function renderCalendar(container, year, month) {
         const isDarkIcon = textColor === '#1a1a1a';
         const escapedName = escapeHTML(oshi.name || '');
 
-        return {
+        const memDates = oshi.memorial_dates || [];
+        const parsedMemorialDates = [];
+        for (let j = 0; j < memDates.length; j++) {
+            const md = memDates[j];
+            parsedMemorialDates.push({
+                ...md,
+                parsed: parseDateString(md.date)
+            });
+        }
+
+        oshiEventDates.push({
             ...oshi,
             textColor,
             textShadow,
             baseStyle,
             isDarkIcon,
             escapedName,
-            parsedMemorialDates: (oshi.memorial_dates || []).map(md => ({
-                ...md,
-                parsed: parseDateString(md.date)
-            }))
-        };
-    }).filter(Boolean);
+            parsedMemorialDates
+        });
+    }
 
     // Optimization: Group events by day to avoid O(Days * Oshis) nested loop bottleneck
     const eventTypesMap = new Map((appSettings.event_types || []).map(t => [t.id, t]));
