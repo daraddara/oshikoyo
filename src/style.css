@@ -82,6 +82,10 @@
     padding: 0;
 }
 
+html {
+    height: 100%;
+}
+
 body {
     font-family: var(--font-en), var(--font-jp);
     background: var(--bg-color);
@@ -90,14 +94,19 @@ body {
         radial-gradient(at 100% 0%, rgba(239, 68, 68, 0.15) 0px, transparent 50%);
     background-attachment: fixed;
     color: var(--text-primary);
-    min-height: 100vh;
+    height: 100%;
     padding: 20px;
     box-sizing: border-box;
     transition: background 0.3s ease, color 0.3s ease;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
 }
 
 /* App Container */
 .app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     width: fit-content;
     min-width: 100%;
     margin: 0 auto;
@@ -247,9 +256,10 @@ body {
     /* Center horizontally in column mode */
     /* justify-content: center; REMOVED to prevent top clipping in vertical mode */
     width: 100%;
-    min-height: calc(100vh - 40px);
+    flex: 1;
+    min-height: 0;
     /* Viewport height minus body padding */
-    padding-bottom: 40px;
+    padding-bottom: 20px;
     /* Ensure bottom scroll clearance */
     overflow-y: visible;
     overflow-x: hidden;
@@ -5275,6 +5285,7 @@ textarea:focus-visible,
 .ticker-bar {
     display: block;
     height: 28px;
+    flex: 0 0 auto;
     background: rgba(0, 0, 0, 0.30);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -5562,6 +5573,7 @@ body.is-mobile-ui .mobile-oshi-search {
     color: var(--text-primary);
     outline: none;
     -webkit-appearance: none;
+    appearance: none;
 }
 body.is-mobile-ui .mobile-oshi-search::placeholder { color: var(--text-secondary); opacity: 0.55; }
 body.is-mobile-ui .mobile-oshi-search:focus { border-color: var(--accent-color); }
@@ -5576,6 +5588,7 @@ body.is-mobile-ui .mobile-oshi-sort {
     padding: 0 6px;
     cursor: pointer;
     outline: none;
+    appearance: none;
 }
 
 /* 仮想スクロール本体 */

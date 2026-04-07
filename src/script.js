@@ -2900,7 +2900,8 @@ async function renderLocalImageManager() {
             if (list && list.children.length === 0) {
                 list.innerHTML = '<p style="grid-column: 1/-1; color:#888;">画像がありません</p>';
             }
-            await updateLocalImageCount();
+            await updateLocalMediaUI();
+            await updateMobileLocalMediaUI();
             updateStorageIndicator();
         }, item.id));
 
