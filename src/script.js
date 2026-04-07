@@ -6467,8 +6467,6 @@ function getKanaGroupLabel(name) {
  * appSettings.oshiList をフィルタ・ソートした配列を返す。
  * 各要素には元のインデックスを示す _origIndex プロパティが付く。
  */
-// ⚡ Bolt: Single-pass filter loop to prevent unnecessary GC
-// Impact: O(N) redundant object allocations skipped for filtered items
 function getFilteredSortedOshiList(search, sort) {
     let list = [];
     const q = (search || '').trim().toLowerCase();
