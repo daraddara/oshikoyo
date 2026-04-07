@@ -1781,9 +1781,13 @@ function updateGroupDatalist() {
 }
 
 // --- Tag UI ---
-function createTagInputUI(initialTags, onChange) {
+function createTagInputUI(initialTags, onChange, labelId = null) {
     const area = document.createElement('div');
     area.className = 'tag-input-area';
+    if (labelId) {
+        area.setAttribute('role', 'group');
+        area.setAttribute('aria-labelledby', labelId);
+    }
     let tags = [...initialTags];
 
     function commitInput(input) {
@@ -2030,7 +2034,7 @@ function openOshiEditForm(index = -1) {
     const currentOshiTags = (index >= 0 ? appSettings.oshiList[index]?.tags : null) || [];
     const existingTagArea = document.getElementById('oshiTagInputArea');
     if (existingTagArea) {
-        const tagUI = createTagInputUI(currentOshiTags, () => {});
+        const tagUI = createTagInputUI(currentOshiTags, () => {}, 'oshiTagLabel');
         tagUI.id = 'oshiTagInputArea';
         existingTagArea.replaceWith(tagUI);
     }
@@ -3674,7 +3678,7 @@ async function handleFiles(files) {
             const refreshUI = () => {
                 const tagUI = createTagInputUI([...currentTags], (newTags) => {
                     currentTags = newTags;
-                });
+                }, 'previewTagLabel');
                 tagUI.id = 'previewTagInputArea';
                 // 既存の要素を置換（初回およびチップクリック時）
                 const currentArea = document.getElementById('previewTagInputArea');
