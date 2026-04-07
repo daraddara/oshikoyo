@@ -2478,6 +2478,40 @@ body {
     -webkit-text-fill-color: var(--text-primary);
 }
 
+/* タグ履歴サジェスト */
+.tag-suggestions-area {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    font-size: 0.78rem;
+}
+.suggest-label {
+    color: var(--text-secondary, #6b7280);
+    font-size: 0.72rem;
+}
+.suggest-chip {
+    padding: 2px 8px;
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 4px;
+    color: var(--accent-color, #3b82f6);
+    cursor: pointer;
+    font-size: 0.72rem;
+    transition: all 0.2s;
+}
+.suggest-chip:hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: var(--accent-color, #3b82f6);
+}
+@media (prefers-color-scheme: dark) {
+    .suggest-chip {
+        background: rgba(59, 130, 246, 0.2);
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+}
+
 /* ライトボックス内タグセクション */
 .img-lightbox-tags {
     margin-top: 8px;

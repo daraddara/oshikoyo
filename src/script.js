@@ -3666,11 +3666,44 @@ async function handleFiles(files) {
         renderPreview();
         updateTagDatalist();
         const tagArea = document.getElementById('previewTagInputArea');
-        if (tagArea) {
-            const defaultTags = appState.lastMediaKey ? getImageTags(appState.lastMediaKey) : [];
-            const tagUI = createTagInputUI([...defaultTags], () => {});
-            tagUI.id = 'previewTagInputArea';
-            tagArea.replaceWith(tagUI);
+        const suggestArea = document.getElementById('previewTagSuggestions');
+
+        if (tagArea && suggestArea) {
+            let currentTags = []; // 初期値は空にする
+
+            const refreshUI = () => {
+                const tagUI = createTagInputUI([...currentTags], (newTags) => {
+                    currentTags = newTags;
+                });
+                tagUI.id = 'previewTagInputArea';
+                // 既存の要素を置換（初回およびチップクリック時）
+                const currentArea = document.getElementById('previewTagInputArea');
+                if (currentArea) currentArea.replaceWith(tagUI);
+            };
+
+            const lastTags = appState.lastMediaKey ? getImageTags(appState.lastMediaKey) : [];
+            suggestArea.innerHTML = '';
+            if (lastTags.length > 0) {
+                const label = document.createElement('span');
+                label.className = 'suggest-label';
+                label.textContent = '前回のタグ: ';
+                suggestArea.appendChild(label);
+
+                lastTags.forEach(tag => {
+                    const chip = document.createElement('button');
+                    chip.type = 'button';
+                    chip.className = 'suggest-chip';
+                    chip.textContent = tag;
+                    chip.addEventListener('click', () => {
+                        if (!currentTags.includes(tag)) {
+                            currentTags.push(tag);
+                            refreshUI();
+                        }
+                    });
+                    suggestArea.appendChild(chip);
+                });
+            }
+            refreshUI();
         }
         document.getElementById('previewModal').showModal();
     }
