@@ -7015,9 +7015,6 @@ function initMobileMediaSubPanel() {
     panel.querySelector('#btnMsCompressExisting')?.addEventListener('click', () => {
         document.getElementById('btnCompressExisting')?.click();
     });
-    panel.querySelector('#btnMsLocalFolder')?.addEventListener('click', () => {
-        document.getElementById('inputLocalFolder')?.click();
-    });
     panel.querySelector('#btnMsLocalFiles')?.addEventListener('click', () => {
         document.getElementById('inputLocalFiles')?.click();
     });
