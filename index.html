@@ -827,8 +827,8 @@
             </div>
             <div class="preview-modal-content">
                 <div class="setting-group" id="previewTagGroup">
-                    <label>タグ（任意）</label>
-                    <div id="previewTagInputArea" class="tag-input-area"></div>
+                    <label id="previewTagLabel">タグ（任意）</label>
+                    <div id="previewTagInputArea" class="tag-input-area" role="group" aria-labelledby="previewTagLabel"></div>
                     <div id="previewTagSuggestions" class="tag-suggestions-area"></div>
                 </div>
                 <div class="settings-scroll-area">
@@ -958,8 +958,8 @@
                     <datalist id="groupDatalist"></datalist>
                 </div>
                 <div class="setting-group" id="oshiTagGroup">
-                    <label>タグ</label>
-                    <div id="oshiTagInputArea" class="tag-input-area"></div>
+                    <label id="oshiTagLabel">タグ</label>
+                    <div id="oshiTagInputArea" class="tag-input-area" role="group" aria-labelledby="oshiTagLabel"></div>
                     <datalist id="tagDatalist"></datalist>
                 </div>
             </div>
