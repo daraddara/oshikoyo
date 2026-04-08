@@ -21,6 +21,7 @@ export default defineConfig({
         trace: 'on-first-retry',
         actionTimeout: TEST_CONFIG.timeouts.short,
         navigationTimeout: TEST_CONFIG.timeouts.nav,
+        serviceWorkers: 'block',
     },
     projects: [
         {
