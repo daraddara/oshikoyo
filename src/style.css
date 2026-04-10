@@ -4542,6 +4542,10 @@ body.is-immersive .controls {
     display: none;
 }
 
+body.is-immersive .focus-filter-bar {
+    display: none !important;
+}
+
 /* Simplify month header */
 body.is-immersive .month-header {
     font-size: 1.1rem;
@@ -4673,6 +4677,10 @@ body.is-immersive.show-overlay .calendar-section {
 body.is-immersive.show-overlay .controls {
     display: flex;
     max-width: 550px !important;
+}
+
+body.is-immersive.show-overlay .focus-filter-bar {
+    display: flex !important;
 }
 
 body.is-immersive.show-overlay .calendar-month:not(:first-child) {
@@ -5400,6 +5408,22 @@ textarea:focus-visible,
 body.is-mobile-ui .focus-filter-bar {
     padding: 4px 8px 4px;
     justify-content: flex-start;
+}
+
+.filter-expand-btn {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px dashed var(--accent-color, #888);
+    background: transparent;
+    color: var(--accent-color, #888);
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+}
+
+.filter-expand-btn:hover {
+    opacity: 1;
 }
 
 @keyframes ticker-scroll {

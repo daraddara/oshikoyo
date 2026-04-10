@@ -6203,6 +6203,8 @@ function updateTickerBar() {
 
 // --- Focus Filter Bar ---
 
+let filterBarExpanded = false;
+
 function renderFocusFilterBar() {
     const bar = document.getElementById('focusFilterBar');
     if (!bar) return;
@@ -6220,12 +6222,24 @@ function renderFocusFilterBar() {
     bar.style.display = 'flex';
     bar.innerHTML = '';
 
+    const threshold = document.body.classList.contains('is-mobile-ui') ? 3 : 5;
+    const needsTruncation = groups.length > threshold;
+
+    // アクティブフィルターが閾値圏外にある場合は強制展開
+    if (needsTruncation && appSettings.activeFilter !== null) {
+        const activeIndex = groups.indexOf(appSettings.activeFilter);
+        if (activeIndex >= threshold) {
+            filterBarExpanded = true;
+        }
+    }
+
     const allChip = document.createElement('button');
     allChip.type = 'button';
     allChip.className = 'img-filter-chip' + (appSettings.activeFilter === null ? ' active' : '');
     allChip.textContent = 'すべて';
     allChip.addEventListener('click', () => {
         appSettings.activeFilter = null;
+        filterBarExpanded = false;
         saveSettingsSilently();
         renderFocusFilterBar();
         updateView();
@@ -6237,7 +6251,9 @@ function renderFocusFilterBar() {
     const todayOshis = getTodayMemorialOshis();
     const groupsWithTodayEvents = new Set(todayOshis.map(o => o.group));
 
-    groups.forEach(group => {
+    const visibleGroups = (needsTruncation && !filterBarExpanded) ? groups.slice(0, threshold) : groups;
+
+    visibleGroups.forEach(group => {
         const chip = document.createElement('button');
         chip.type = 'button';
         chip.className = 'img-filter-chip' + (appSettings.activeFilter === group ? ' active' : '');
@@ -6257,6 +6273,29 @@ function renderFocusFilterBar() {
         });
         bar.appendChild(chip);
     });
+
+    if (needsTruncation) {
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'filter-expand-btn';
+        if (filterBarExpanded) {
+            toggleBtn.textContent = '▲';
+            toggleBtn.setAttribute('aria-label', '折りたたむ');
+            toggleBtn.addEventListener('click', () => {
+                filterBarExpanded = false;
+                renderFocusFilterBar();
+            });
+        } else {
+            const hiddenCount = groups.length - threshold;
+            toggleBtn.textContent = `+${hiddenCount} ▼`;
+            toggleBtn.setAttribute('aria-label', `他${hiddenCount}件を表示`);
+            toggleBtn.addEventListener('click', () => {
+                filterBarExpanded = true;
+                renderFocusFilterBar();
+            });
+        }
+        bar.appendChild(toggleBtn);
+    }
 }
 
 function resetToTodayMedia() {
