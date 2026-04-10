@@ -134,6 +134,24 @@ describe('convertCsvRowsToOshiItems', () => {
         const { items } = convertCsvRowsToOshiItems(rows, 'test.csv');
         expect(items[0].memorial_dates).toHaveLength(0);
     });
+
+    it('所属グループを正しく変換できる', () => {
+        const rows = [{ '名前': '推しA', 'カラー': '', '誕生日': '', 'デビュー記念日': '', '所属グループ': 'グループA', 'タグ': '', 'イベント1_種別': '', 'イベント1_日付': '', 'イベント2_種別': '', 'イベント2_日付': '', 'イベント3_種別': '', 'イベント3_日付': '' }];
+        const { items } = convertCsvRowsToOshiItems(rows, 'test.csv');
+        expect(items[0].group).toBe('グループA');
+    });
+
+    it('所属グループが空のとき空文字になる', () => {
+        const rows = [{ '名前': '推しB', 'カラー': '', '誕生日': '', 'デビュー記念日': '', '所属グループ': '', 'タグ': '', 'イベント1_種別': '', 'イベント1_日付': '', 'イベント2_種別': '', 'イベント2_日付': '', 'イベント3_種別': '', 'イベント3_日付': '' }];
+        const { items } = convertCsvRowsToOshiItems(rows, 'test.csv');
+        expect(items[0].group).toBe('');
+    });
+
+    it('所属グループ列がない旧形式CSVでもエラーにならない', () => {
+        const rows = [{ '名前': '推しA', 'カラー': '', '誕生日': '', 'デビュー記念日': '', 'タグ': '', 'イベント1_種別': '', 'イベント1_日付': '', 'イベント2_種別': '', 'イベント2_日付': '', 'イベント3_種別': '', 'イベント3_日付': '' }];
+        const { items } = convertCsvRowsToOshiItems(rows, 'test.csv');
+        expect(items[0].group).toBe('');
+    });
 });
 
 // ─── テンプレートヘッダー定義 ─────────────────────────────────
@@ -144,6 +162,7 @@ describe('OSHI_CSV_TEMPLATE_HEADERS', () => {
         expect(OSHI_CSV_TEMPLATE_HEADERS).toContain('カラー');
         expect(OSHI_CSV_TEMPLATE_HEADERS).toContain('誕生日');
         expect(OSHI_CSV_TEMPLATE_HEADERS).toContain('タグ');
+        expect(OSHI_CSV_TEMPLATE_HEADERS).toContain('所属グループ');
         expect(OSHI_CSV_TEMPLATE_HEADERS.filter(h => h.includes('イベント'))).toHaveLength(6); // 3組×2
     });
 });
