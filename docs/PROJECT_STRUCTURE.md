@@ -24,11 +24,15 @@
 │   ├── oshikoyo_mobile_spec.md       # モバイルUI仕様メモ
 │   ├── tag-feature-plan.md           # タグ機能設計ドキュメント
 │   └── tag-feature-review.md         # タグ機能レビューメモ
+├── sample/                 # サンプルデータ・デモ素材
+│   ├── demo/               # デモ・機能紹介用素材（アプリには組み込まれない）
+│   │   └── default_portrait_demo.jpg  # 自動レイアウト紹介用縦長デモ画像
+│   ├── image/              # oshi-sample.csv とセットで使うサンプル画像
+│   └── oshi-sample.csv     # サンプルデータCSV
 ├── src/                    # アプリケーションソース
 │   ├── assets/             # アプリ実行時に使用する静的アセット
 │   │   ├── default_image.png           # デフォルト画像（プレースホルダー）
-│   │   ├── default_landscape_demo.jpg  # 初回デフォルト登録画像（横長）
-│   │   ├── default_portrait_demo.jpg   # 初回デフォルト登録画像（縦長）
+│   │   ├── default_landscape_demo.jpg  # 初回デフォルト登録画像
 │   │   ├── icon-192.png    # PWAアイコン
 │   │   └── icon-512.png    # PWAアイコン（大）
 │   ├── script.js           # メインロジック（全機能を含む単一ファイル）

@@ -4610,7 +4610,6 @@ async function seedDefaultImages() {
 
     const DEFAULT_IMAGES = [
         { path: 'src/assets/default_landscape_demo.jpg', name: 'default_landscape_demo.jpg', type: 'image/jpeg' },
-        { path: 'src/assets/default_portrait_demo.jpg',  name: 'default_portrait_demo.jpg',  type: 'image/jpeg' },
     ];
 
     const files = (await Promise.all(DEFAULT_IMAGES.map(async ({ path, name, type }) => {

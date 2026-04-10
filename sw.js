@@ -9,7 +9,6 @@ const ASSETS = [
     './src/assets/icon-192.png',
     './src/assets/icon-512.png',
     './src/assets/default_landscape_demo.jpg',
-    './src/assets/default_portrait_demo.jpg',
 ];
 
 self.addEventListener('install', (event) => {
