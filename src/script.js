@@ -882,7 +882,7 @@ async function syncHolidays(silent = false) {
 
 // --- Calendar Generation ---
 
-const TODAY = new Date();
+let TODAY = new Date();
 let currentRefDate = new Date();
 
 // Generate Weekday Header HTML based on startOfWeek
@@ -4653,10 +4653,28 @@ async function init() {
     setupMobileTabBar();
     if (isMobile()) setupTickerBar();
 
+    // 日付変更をチェックして必要なら TODAY を更新・再描画する
+    const checkDateChange = () => {
+        const now = new Date();
+        if (now.toDateString() === TODAY.toDateString()) return;
+        TODAY = now;
+        if (dateDisplay) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            dateDisplay.textContent = TODAY.toLocaleDateString('ja-JP', options);
+        }
+        updateView();
+    };
+
     // フォアグラウンド復帰時にクリップボードの画像を検知（Android Chrome のみ動作、iOS は無音スキップ）
+    // スリープ復帰・タブ切り替え時の日付変更も検知する
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') checkClipboardOnFocus();
+        if (document.visibilityState !== 'visible') return;
+        checkClipboardOnFocus();
+        checkDateChange();
     });
+
+    // macOS 等で最小化 → 復元時に visibilitychange が発火しない環境への対策
+    window.addEventListener('focus', checkDateChange);
 
     const dateDisplay = document.getElementById('currentDateDisplay');
     const resetToToday = () => {
@@ -4691,6 +4709,17 @@ async function init() {
     }
 
     updateView();
+
+    // 日付変更検知: 深夜0時に TODAY を更新してカレンダーを再描画
+    const scheduleMidnightRefresh = () => {
+        const now = new Date();
+        const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+        setTimeout(() => {
+            checkDateChange();
+            scheduleMidnightRefresh(); // 翌日のタイマーを再設定
+        }, nextMidnight - now);
+    };
+    scheduleMidnightRefresh();
 
     document.getElementById('btnPrev').addEventListener('click', () => {
         currentRefDate.setMonth(currentRefDate.getMonth() - 1);
