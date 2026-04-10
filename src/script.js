@@ -16,6 +16,7 @@ async function handleFactoryReset() {
     if (ok) {
         await localImageDB.clearAll();
         localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(SEEDED_KEY);
         window.location.reload();
     }
 }
@@ -381,6 +382,7 @@ const localImageDB = new LocalImageDB();
 let appSettings = { ...DEFAULT_SETTINGS };
 const STORAGE_KEY = 'oshikoyo_settings';
 const INIT_KEY = 'oshikoyo_initialized';   // センチネルキー（データ存在確認用）
+const SEEDED_KEY = 'oshikoyo_seeded';      // デフォルト画像の初回投入済みフラグ
 const BACKUP_KEY = 'oshikoyo_last_backup'; // 最終バックアップ日時（Unix ms）
 let storageWasCleared = false; // 起動時にlocalStorage消失を検知したらtrue
 
@@ -4227,6 +4229,7 @@ function initSettings() {
             updateLocalMediaUI();
             updateStorageIndicator();
             renderLocalImageManager();
+            await updateMediaArea();
         }
     });
 
@@ -4606,7 +4609,7 @@ async function checkSharedImage() {
 
 async function seedDefaultImages() {
     const keys = await localImageDB.getAllKeys();
-    if (keys.length > 0) return;
+    if (keys.length > 0 || localStorage.getItem(SEEDED_KEY)) return;
 
     const DEFAULT_IMAGES = [
         { path: 'src/assets/default_landscape_demo.jpg', name: 'default_landscape_demo.jpg', type: 'image/jpeg' },
@@ -4629,6 +4632,7 @@ async function seedDefaultImages() {
     const newKeys = await localImageDB.addImages(files);
     appSettings.localImageOrder = [...newKeys, ...appSettings.localImageOrder];
     saveSettingsSilently();
+    localStorage.setItem(SEEDED_KEY, '1');
 }
 
 async function init() {
@@ -5545,29 +5549,26 @@ function determineTargetMediaKey(keys, mode) {
 }
 
 /**
- * デフォルトの画像を描画する（縦横交互デモ）
+ * 画像未登録時の空状態プレースホルダーを描画する
  * @param {HTMLElement} displayArea ディスプレイエリア
  */
 function renderDefaultMedia(displayArea) {
     displayArea.innerHTML = '';
 
-    const backdrop = document.createElement('img');
-    backdrop.className = 'media-backdrop';
-    backdrop.alt = '';
-    backdrop.setAttribute('aria-hidden', 'true');
-    backdrop.src = 'src/assets/default_image.png';
+    const emptyState = document.createElement('div');
+    emptyState.className = 'media-empty-state';
 
-    const defaultImg = document.createElement('img');
-    defaultImg.className = 'media-main-img';
-    defaultImg.alt = "Default Image";
+    const mainText = document.createElement('p');
+    mainText.className = 'media-empty-state__main';
+    mainText.textContent = '画像が登録されていません';
 
-    defaultImg.onload = () => {
-        applyAutoLayout(defaultImg);
-    };
-    defaultImg.src = 'src/assets/default_image.png';
+    const subText = document.createElement('p');
+    subText.className = 'media-empty-state__sub';
+    subText.textContent = '設定から画像を追加できます';
 
-    displayArea.appendChild(backdrop);
-    displayArea.appendChild(defaultImg);
+    emptyState.appendChild(mainText);
+    emptyState.appendChild(subText);
+    displayArea.appendChild(emptyState);
 }
 
 /**

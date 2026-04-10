@@ -77,7 +77,7 @@ describe('updateMediaArea ロジック (メディア表示更新)', () => {
         await updateMediaArea('advance');
 
         const contentLayer = mockContainer.appendChild.mock.calls.find(call => call[0].className === 'media-content-layer')[0];
-        expect(contentLayer.innerHTML).toContain('assets/default_image.png');
+        expect(contentLayer.innerHTML).toContain('media-empty-state');
     });
 });
 
