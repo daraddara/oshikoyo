@@ -2763,37 +2763,44 @@ let imageTagFilter = new Set(); // タグフィルター状態（セッション
 let showUntaggedOnly = false;   // タグなし画像のみ表示フィルター（imageTagFilter と排他）
 
 async function renderLocalImageManager() {
-    const list = document.getElementById('localImageList');
-    if (!list) return;
+    const lists = Array.from(document.querySelectorAll('.local-image-manager'));
+    if (lists.length === 0) return;
 
     // Check keys first to avoid unnecessary loading state
     const keys = await localImageDB.getAllKeys();
     if (keys.length === 0) {
-        // ⚡ Bolt: Free memory from old blob URLs before removing elements
-        // Impact: Prevents massive memory leaks when re-rendering local image grid
-        list.querySelectorAll('img').forEach(img => URL.revokeObjectURL(img.src));
-        list.innerHTML = '<p style="grid-column: 1/-1; color:#888;">画像がありません</p>';
+        lists.forEach(list => {
+            // ⚡ Bolt: Free memory from old blob URLs before removing elements
+            // Impact: Prevents massive memory leaks when re-rendering local image grid
+            list.querySelectorAll('img').forEach(img => URL.revokeObjectURL(img.src));
+            list.innerHTML = '<p style="grid-column: 1/-1; color:#888;">画像がありません</p>';
+            const staleFilter = list.parentElement.querySelector('.img-filter-bar');
+            if (staleFilter) staleFilter.remove();
+        });
         return;
     }
 
     // Simple clear & loading
     // ⚡ Bolt: Free memory from old blob URLs before removing elements
     // Impact: Prevents massive memory leaks when re-rendering local image grid
-    list.querySelectorAll('img').forEach(img => URL.revokeObjectURL(img.src));
-    list.innerHTML = '<p style="grid-column: 1/-1;">読み込み中...</p>';
+    lists.forEach(list => {
+        list.querySelectorAll('img').forEach(img => URL.revokeObjectURL(img.src));
+        list.innerHTML = '<p style="grid-column: 1/-1;">読み込み中...</p>';
+    });
 
     // Get all keys (lighter than getting all blobs)
-    // To show thumbnails, we actually need blobs. 
+    // To show thumbnails, we actually need blobs.
     // If there are many, we should implement pagination.
     // For now, let's limit to recent 50 or just show all if < 100.
     // Let's grab all data for now (assuming users won't upload 1000s immediately).
 
     const allImages = await localImageDB.getAllImages();
-    list.innerHTML = '';
 
     if (allImages.length === 0) {
         // Should be covered by keys check, but safety net
-        list.innerHTML = '<p style="grid-column: 1/-1; color:#888;">画像がありません</p>';
+        lists.forEach(list => {
+            list.innerHTML = '<p style="grid-column: 1/-1; color:#888;">画像がありません</p>';
+        });
         return;
     }
 
@@ -2802,7 +2809,7 @@ async function renderLocalImageManager() {
     const orderedIds = getOrderedImageKeys(allImages.map(item => item.id));
     const sortedImages = orderedIds.map(id => idToImage.get(id)).filter(Boolean);
 
-    // --- Filter bar ---
+    // --- Filter bar data (shared state) ---
     const allTagsSet = new Set();
     sortedImages.forEach(item => getImageTags(item.id).forEach(t => allTagsSet.add(t)));
 
@@ -2814,53 +2821,7 @@ async function renderLocalImageManager() {
     // showUntaggedOnly をリセット（タグなし画像が0件になった場合）
     if (untaggedCount === 0) showUntaggedOnly = false;
 
-    const filterContainer = list.parentElement.querySelector('.img-filter-bar');
-    if (filterContainer) filterContainer.remove();
-
-    if (allTagsSet.size > 0) {
-        const filterBar = document.createElement('div');
-        filterBar.className = 'img-filter-bar';
-
-        const allChip = document.createElement('button');
-        allChip.className = 'img-filter-chip' + (!showUntaggedOnly && imageTagFilter.size === 0 ? ' active' : '');
-        allChip.textContent = 'すべて';
-        allChip.type = 'button';
-        allChip.onclick = () => { imageTagFilter.clear(); showUntaggedOnly = false; renderLocalImageManager(); };
-        filterBar.appendChild(allChip);
-
-        [...allTagsSet].sort().forEach(tag => {
-            const chip = document.createElement('button');
-            chip.className = 'img-filter-chip' + (imageTagFilter.has(tag) ? ' active' : '');
-            chip.textContent = tag;
-            chip.type = 'button';
-            chip.onclick = () => {
-                showUntaggedOnly = false;
-                if (imageTagFilter.has(tag)) imageTagFilter.delete(tag);
-                else imageTagFilter.add(tag);
-                renderLocalImageManager();
-            };
-            filterBar.appendChild(chip);
-        });
-
-        // 「タグなし」チップ：タグなし画像が存在する場合のみ表示
-        if (untaggedCount > 0) {
-            const untaggedChip = document.createElement('button');
-            untaggedChip.className = 'img-filter-chip img-filter-chip--untagged' + (showUntaggedOnly ? ' active' : '');
-            untaggedChip.textContent = `タグなし (${untaggedCount})`;
-            untaggedChip.type = 'button';
-            untaggedChip.title = 'タグが設定されていない画像のみ表示';
-            untaggedChip.onclick = () => {
-                showUntaggedOnly = !showUntaggedOnly;
-                imageTagFilter.clear();
-                renderLocalImageManager();
-            };
-            filterBar.appendChild(untaggedChip);
-        }
-
-        list.insertAdjacentElement('beforebegin', filterBar);
-    }
-
-    // Filter images
+    // Filter images (shared)
     let displayImages;
     if (showUntaggedOnly) {
         displayImages = sortedImages.filter(item => getImageTags(item.id).length === 0);
@@ -2872,121 +2833,172 @@ async function renderLocalImageManager() {
         );
     }
 
-    const fragment = document.createDocumentFragment();
+    // Render to each container
+    lists.forEach(list => {
+        list.innerHTML = '';
 
-    displayImages.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'local-image-item';
-        div.dataset.imgId = item.id;
+        // --- Filter bar (per container) ---
+        const filterContainer = list.parentElement.querySelector('.img-filter-bar');
+        if (filterContainer) filterContainer.remove();
 
-        const blobUrl = URL.createObjectURL(item.file);
+        if (allTagsSet.size > 0) {
+            const filterBar = document.createElement('div');
+            filterBar.className = 'img-filter-bar';
 
-        const bgImg = document.createElement('img');
-        bgImg.className = 'local-img-blur-bg';
-        bgImg.src = blobUrl;
-        bgImg.alt = '';
-        bgImg.setAttribute('aria-hidden', 'true');
+            const allChip = document.createElement('button');
+            allChip.className = 'img-filter-chip' + (!showUntaggedOnly && imageTagFilter.size === 0 ? ' active' : '');
+            allChip.textContent = 'すべて';
+            allChip.type = 'button';
+            allChip.onclick = () => { imageTagFilter.clear(); showUntaggedOnly = false; renderLocalImageManager(); };
+            filterBar.appendChild(allChip);
 
-        const img = document.createElement('img');
-        img.src = blobUrl;
-        img.alt = item.file.name || '';
-        img.style.cursor = 'zoom-in';
-        img.addEventListener('click', () => openImageLightbox(img.src, async () => {
-            await localImageDB.deleteImage(item.id);
-            appSettings.localImageOrder = (appSettings.localImageOrder || []).filter(id => id !== item.id);
-            if (appSettings.localImageMeta) delete appSettings.localImageMeta[item.id];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
-            URL.revokeObjectURL(img.src);
-            div.remove();
-            const list = document.getElementById('localImageList');
-            if (list && list.children.length === 0) {
-                list.innerHTML = '<p style="grid-column: 1/-1; color:#888;">画像がありません</p>';
+            [...allTagsSet].sort().forEach(tag => {
+                const chip = document.createElement('button');
+                chip.className = 'img-filter-chip' + (imageTagFilter.has(tag) ? ' active' : '');
+                chip.textContent = tag;
+                chip.type = 'button';
+                chip.onclick = () => {
+                    showUntaggedOnly = false;
+                    if (imageTagFilter.has(tag)) imageTagFilter.delete(tag);
+                    else imageTagFilter.add(tag);
+                    renderLocalImageManager();
+                };
+                filterBar.appendChild(chip);
+            });
+
+            // 「タグなし」チップ：タグなし画像が存在する場合のみ表示
+            if (untaggedCount > 0) {
+                const untaggedChip = document.createElement('button');
+                untaggedChip.className = 'img-filter-chip img-filter-chip--untagged' + (showUntaggedOnly ? ' active' : '');
+                untaggedChip.textContent = `タグなし (${untaggedCount})`;
+                untaggedChip.type = 'button';
+                untaggedChip.title = 'タグが設定されていない画像のみ表示';
+                untaggedChip.onclick = () => {
+                    showUntaggedOnly = !showUntaggedOnly;
+                    imageTagFilter.clear();
+                    renderLocalImageManager();
+                };
+                filterBar.appendChild(untaggedChip);
             }
-            await updateLocalMediaUI();
-            await updateMobileLocalMediaUI();
-            updateStorageIndicator();
-        }, item.id));
 
-        const handle = document.createElement('div');
-        handle.className = 'img-drag-handle';
-        handle.title = '並び替え';
-        handle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="2"/><circle cx="15" cy="5" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="19" r="2"/><circle cx="15" cy="19" r="2"/></svg>`;
-        handle.addEventListener('mousedown', () => { div.draggable = true; });
+            list.insertAdjacentElement('beforebegin', filterBar);
+        }
 
-        const btnDel = document.createElement('button');
-        btnDel.type = 'button';
-        btnDel.className = 'btn-img-delete';
-        btnDel.title = '削除';
-        btnDel.setAttribute('aria-label', '画像を削除');
-        btnDel.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+        // --- Image items (new DOM elements per container) ---
+        const fragment = document.createDocumentFragment();
 
-        btnDel.onclick = async (e) => {
-            // Check if overlay already exists
-            if (div.querySelector('.delete-confirm-overlay')) return;
+        displayImages.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'local-image-item';
+            div.dataset.imgId = item.id;
 
-            // Add Visual State
-            div.classList.add('is-deleting');
+            const blobUrl = URL.createObjectURL(item.file);
 
-            // Create Overlay
-            const overlay = document.createElement('div');
-            overlay.className = 'delete-confirm-overlay';
+            const bgImg = document.createElement('img');
+            bgImg.className = 'local-img-blur-bg';
+            bgImg.src = blobUrl;
+            bgImg.alt = '';
+            bgImg.setAttribute('aria-hidden', 'true');
 
-            overlay.innerHTML = `
-                <div class="delete-confirm-text">削除?</div>
-                <div class="delete-confirm-actions">
-                    <button class="btn-confirm-delete" type="button">はい</button>
-                    <button class="btn-cancel-delete" type="button">いいえ</button>
-                </div>
-            `;
-
-            // stopPropagation to prevent other clicks if any
-            overlay.addEventListener('click', (ev) => ev.stopPropagation());
-
-            // Handle Yes
-            const btnYes = overlay.querySelector('.btn-confirm-delete');
-            btnYes.addEventListener('click', async (ev) => {
-                ev.stopPropagation(); // Prevent bubbling
+            const img = document.createElement('img');
+            img.src = blobUrl;
+            img.alt = item.file.name || '';
+            img.style.cursor = 'zoom-in';
+            img.addEventListener('click', () => openImageLightbox(img.src, async () => {
                 await localImageDB.deleteImage(item.id);
                 appSettings.localImageOrder = (appSettings.localImageOrder || []).filter(id => id !== item.id);
                 if (appSettings.localImageMeta) delete appSettings.localImageMeta[item.id];
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
                 URL.revokeObjectURL(img.src);
-                renderLocalImageManager();
-                updateLocalMediaUI();
+                await renderLocalImageManager();
+                await updateLocalMediaUI();
+                await updateMobileLocalMediaUI();
                 updateStorageIndicator();
-            });
+            }, item.id));
 
-            // Handle No
-            const btnNo = overlay.querySelector('.btn-cancel-delete');
-            btnNo.addEventListener('click', (ev) => {
-                ev.stopPropagation();
-                div.removeChild(overlay);
-                div.classList.remove('is-deleting');
-            });
+            const handle = document.createElement('div');
+            handle.className = 'img-drag-handle';
+            handle.title = '並び替え';
+            handle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="2"/><circle cx="15" cy="5" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="19" r="2"/><circle cx="15" cy="19" r="2"/></svg>`;
+            handle.addEventListener('mousedown', () => { div.draggable = true; });
 
-            div.appendChild(overlay);
-        };
+            const btnDel = document.createElement('button');
+            btnDel.type = 'button';
+            btnDel.className = 'btn-img-delete';
+            btnDel.title = '削除';
+            btnDel.setAttribute('aria-label', '画像を削除');
+            btnDel.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
 
-        div.appendChild(bgImg);
-        div.appendChild(img);
-        div.appendChild(handle);
-        div.appendChild(btnDel);
-        const imageTags = getImageTags(item.id);
-        if (imageTags.length > 0) {
-            const dot = document.createElement('div');
-            dot.className = 'img-tag-indicator';
-            dot.title = imageTags.join(', ');
-            dot.textContent = imageTags.length;
-            div.appendChild(dot);
+            btnDel.onclick = async (e) => {
+                // Check if overlay already exists
+                if (div.querySelector('.delete-confirm-overlay')) return;
+
+                // Add Visual State
+                div.classList.add('is-deleting');
+
+                // Create Overlay
+                const overlay = document.createElement('div');
+                overlay.className = 'delete-confirm-overlay';
+
+                overlay.innerHTML = `
+                    <div class="delete-confirm-text">削除?</div>
+                    <div class="delete-confirm-actions">
+                        <button class="btn-confirm-delete" type="button">はい</button>
+                        <button class="btn-cancel-delete" type="button">いいえ</button>
+                    </div>
+                `;
+
+                // stopPropagation to prevent other clicks if any
+                overlay.addEventListener('click', (ev) => ev.stopPropagation());
+
+                // Handle Yes
+                const btnYes = overlay.querySelector('.btn-confirm-delete');
+                btnYes.addEventListener('click', async (ev) => {
+                    ev.stopPropagation(); // Prevent bubbling
+                    await localImageDB.deleteImage(item.id);
+                    appSettings.localImageOrder = (appSettings.localImageOrder || []).filter(id => id !== item.id);
+                    if (appSettings.localImageMeta) delete appSettings.localImageMeta[item.id];
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+                    URL.revokeObjectURL(img.src);
+                    renderLocalImageManager();
+                    updateLocalMediaUI();
+                    updateStorageIndicator();
+                });
+
+                // Handle No
+                const btnNo = overlay.querySelector('.btn-cancel-delete');
+                btnNo.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    div.removeChild(overlay);
+                    div.classList.remove('is-deleting');
+                });
+
+                div.appendChild(overlay);
+            };
+
+            div.appendChild(bgImg);
+            div.appendChild(img);
+            div.appendChild(handle);
+            div.appendChild(btnDel);
+            const imageTags = getImageTags(item.id);
+            if (imageTags.length > 0) {
+                const dot = document.createElement('div');
+                dot.className = 'img-tag-indicator';
+                dot.title = imageTags.join(', ');
+                dot.textContent = imageTags.length;
+                div.appendChild(dot);
+            }
+            fragment.appendChild(div);
+        });
+
+        list.appendChild(fragment);
+
+        // DnD はデスクトップ用コンテナ（#localImageList）のみセットアップ
+        if (list.id === 'localImageList' && !list.dataset.dndReady) {
+            list.dataset.dndReady = '1';
+            setupImageGridDnD(list);
         }
-        fragment.appendChild(div);
     });
-
-    list.appendChild(fragment);
-    if (!list.dataset.dndReady) {
-        list.dataset.dndReady = '1';
-        setupImageGridDnD(list);
-    }
 }
 
 
