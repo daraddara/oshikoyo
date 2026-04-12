@@ -7009,6 +7009,7 @@ function openMobileSubPanel(panelId) {
         panel.dataset.initialized = '1';
     }
     panel.classList.add('is-open');
+    if (panelId === 'media') renderLocalImageManager();
 }
 
 function closeMobileSubPanel(panelId) {
