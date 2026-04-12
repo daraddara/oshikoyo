@@ -27,7 +27,15 @@ export default defineConfig({
         {
             name: 'chromium',
             use: { ...devices['Desktop Chrome'] },
-            testIgnore: ['**/mobile_portrait.test.js', '**/mobile_landscape.test.js'],
+            testIgnore: ['**/mobile_portrait.test.js', '**/mobile_landscape.test.js', '**/pwa.test.js'],
+        },
+        {
+            name: 'chromium-pwa',
+            use: {
+                ...devices['Desktop Chrome'],
+                serviceWorkers: 'allow',
+            },
+            testMatch: '**/pwa.test.js',
         },
         {
             name: 'Mobile Chrome',
