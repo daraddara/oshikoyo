@@ -2059,6 +2059,8 @@ function openOshiEditForm(index = -1) {
                     appSettings.oshiList.splice(index, 1);
                     renderOshiTable();
                     renderOshiList();
+                    renderMobileOshiPanel();
+                    saveSettingsSilently();
                 }
             });
         }
@@ -2135,6 +2137,8 @@ function saveOshiFromForm() {
     renderOshiTable();
     renderOshiList();
     if (isMobile()) renderMobileOshiPanel(true);
+    saveSettingsSilently();
+    updateView();
 }
 
 // --- Oshi Export ---
