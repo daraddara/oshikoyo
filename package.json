@@ -15,7 +15,8 @@
         "e2e": "cross-env NODE_ENV=test playwright test",
         "e2e:ui": "cross-env NODE_ENV=test playwright test --ui",
         "bump": "node scripts/bump-version.js",
-        "check-version": "node scripts/check-version.js"
+        "check-version": "node scripts/check-version.js",
+        "gen-panels": "node scripts/gen-panel-structure.js"
     },
     "devDependencies": {
         "@playwright/test": "^1.58.2",
