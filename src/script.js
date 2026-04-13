@@ -3977,6 +3977,9 @@ function initSettings() {
                     r.checked = (r.value === (appSettings.imageCompressMode || 'standard'));
                 });
             }
+            if (btn.dataset.tab === 'appinfo' && typeof updateSettingsInstallSection === 'function') {
+                updateSettingsInstallSection();
+            }
         });
     });
 
@@ -7220,6 +7223,9 @@ function initMobileDataSubPanel() {
 function initMobileAppInfoSubPanel() {
     // バージョンバッジはinitSettings()のquerySelectorAllで既に設定済み
     // 更新ボタンはinitSettings()のquerySelectorAllで既に登録済み
+    if (typeof updateSettingsInstallSection === 'function') {
+        updateSettingsInstallSection();
+    }
 }
 
 /** モバイル設定タブのイベントタイプリストを再描画 */
@@ -7692,11 +7698,50 @@ if (typeof window !== 'undefined') {
         el.addEventListener('transitionend', () => el.remove(), { once: true });
     }
 
+    function updateSettingsInstallSection() {
+        const group = document.getElementById('settingGroupInstall');
+        const desc  = document.getElementById('settingInstallDesc');
+        const btn   = document.getElementById('btnInstallApp');
+        if (!group || !desc || !btn) return;
+
+        if (_isStandaloneMode()) {
+            group.style.display = '';
+            desc.textContent = 'このアプリはすでにホーム画面にインストールされています。';
+            btn.textContent  = 'インストール済み';
+            btn.style.display = '';
+            btn.disabled     = true;
+            btn.onclick      = null;
+        } else if (_debugInstallPromptEvent) {
+            group.style.display = '';
+            desc.textContent = 'ホーム画面にインストールするとブラウザなしで直接起動できます。';
+            btn.textContent  = 'インストール';
+            btn.style.display = '';
+            btn.disabled     = false;
+            btn.onclick      = async () => {
+                _debugInstallPromptEvent.prompt();
+                const result = await _debugInstallPromptEvent.userChoice;
+                _debugInstallPromptEvent = null;
+                _debugInstallPromptCaptured = false;
+                if (result.outcome === 'accepted') {
+                    _hideInstallBanner();
+                }
+                updateSettingsInstallSection();
+            };
+        } else if (_isIOS()) {
+            group.style.display = '';
+            desc.textContent = '画面下の「共有」→「ホーム画面に追加」からインストールできます。';
+            btn.style.display = 'none';
+        } else {
+            group.style.display = 'none';
+        }
+    }
+
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault(); // ブラウザのミニ情報バーを抑制してアプリ側で制御
         _debugInstallPromptCaptured = true;
         _debugInstallPromptEvent = e;
         _showInstallBanner(false);
+        updateSettingsInstallSection();
     });
 
     // iOS: standalone でない場合にバナー表示
