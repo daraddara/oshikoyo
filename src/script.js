@@ -7259,15 +7259,15 @@ async function renderMobileGridLibrary() {
         const allKeys = [...orderedKeys, ...remaining];
 
         for (const key of allKeys) {
-            const record = await localImageDB.getImage(key);
-            if (!record || !record.file) continue;
-            const url = URL.createObjectURL(record.file);
+            const file = await localImageDB.getImage(key);
+            if (!file) continue;
+            const url = URL.createObjectURL(file);
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'mobile-grid-thumb';
             const img = document.createElement('img');
             img.src = url;
-            img.alt = record.file.name || 'Image preview';
+            img.alt = file.name || 'Image preview';
             img.loading = 'lazy';
             btn.appendChild(img);
             btn.addEventListener('click', () => {
