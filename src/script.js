@@ -7691,7 +7691,7 @@ if (typeof window !== 'undefined') {
                 _debugInstallPromptEvent = null;
                 _debugInstallPromptCaptured = false;
                 if (result.outcome === 'accepted') {
-                    _hideInstallBanner();
+                    _showInstalledBanner();
                 }
             });
         }
@@ -7707,6 +7707,25 @@ if (typeof window !== 'undefined') {
         if (!el) return;
         el.classList.remove('is-visible');
         el.addEventListener('transitionend', () => el.remove(), { once: true });
+    }
+    function _showInstalledBanner() {
+        // 既存のインストールバナーを差し替えてインストール完了メッセージを表示
+        const existing = document.getElementById('pwa-install-banner');
+        if (existing) existing.remove();
+        const banner = document.createElement('div');
+        banner.id = 'pwa-install-banner';
+        banner.className = 'pwa-install-banner';
+        banner.innerHTML =
+            '<div class="pwa-install-banner-body">' +
+            '<span class="pwa-install-banner-text">✅ インストール完了！<br>' +
+            '<small>開いたアプリウィンドウからご利用ください</small></span>' +
+            '<button class="pwa-install-banner-close" aria-label="閉じる">✕</button>' +
+            '</div>';
+        banner.querySelector('.pwa-install-banner-close').addEventListener('click', () => {
+            _hideInstallBanner();
+        });
+        document.body.appendChild(banner);
+        requestAnimationFrame(() => banner.classList.add('is-visible'));
     }
 
     function _applyInstallSectionState(group, desc, btn) {
@@ -7730,7 +7749,7 @@ if (typeof window !== 'undefined') {
                 _debugInstallPromptEvent = null;
                 _debugInstallPromptCaptured = false;
                 if (result.outcome === 'accepted') {
-                    _hideInstallBanner();
+                    _showInstalledBanner();
                 }
                 updateSettingsInstallSection();
             };
@@ -7912,7 +7931,7 @@ if (typeof window !== 'undefined') {
             _debugInstallPromptEvent = null;
             _debugInstallPromptCaptured = false;
             if (result.outcome === 'accepted') {
-                _hideInstallBanner();
+                _showInstalledBanner();
             }
             refreshPwaDebugPanel();
         });
