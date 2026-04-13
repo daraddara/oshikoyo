@@ -6108,6 +6108,7 @@ function switchMobileTab(tabName) {
     document.getElementById('mobileAddSubmenu')?.classList.remove('is-open');
     document.getElementById('mobilePlaybackPopover')?.classList.remove('is-visible');
     document.getElementById('mobileGridLibrary')?.classList.remove('is-visible');
+    document.body.classList.remove('mobile-gallery-open');
 
     const prevTab = mobileActiveTab;
     mobileActiveTab = tabName;
@@ -6407,6 +6408,11 @@ function setupMobileTabBar() {
     homeBtn.addEventListener('pointercancel', () => { clearTimeout(homeHoldTimer); homeHoldFired = false; });
     homeBtn.addEventListener('click', () => {
         if (homeHoldFired) { homeHoldFired = false; return; }
+        const gallery = document.getElementById('mobileGridLibrary');
+        if (gallery?.classList.contains('is-visible')) {
+            closeMobileGridLibrary();
+            return;
+        }
         if (mobileActiveTab === 'home') {
             const pop = document.getElementById('mobilePlaybackPopover');
             if (!pop) return;
@@ -6458,6 +6464,7 @@ function setupMobileTabBar() {
         document.getElementById('mobileAddSubmenu')?.classList.remove('is-open');
         const grid = document.getElementById('mobileGridLibrary');
         if (!grid) return;
+        document.body.classList.add('mobile-gallery-open');
         renderMobileGridLibrary();
         grid.classList.add('is-visible');
     });
@@ -7243,17 +7250,31 @@ function renderMobileEventTypeSection() {
 
 // --- ホームタブ: グリッドライブラリ ---
 async function renderMobileGridLibrary() {
-    const grid = document.getElementById('mobileGridLibrary');
-    if (!grid) return;
-    grid.innerHTML = '<p class="mobile-grid-loading">読み込み中...</p>';
+    const container = document.getElementById('mobileGridLibrary');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="mobile-gallery-header">
+            <span class="mobile-gallery-title">画像を選択</span>
+            <button type="button" class="mobile-gallery-close" aria-label="閉じる">✕</button>
+        </div>
+        <div class="mobile-gallery-grid">
+            <p class="mobile-grid-loading">読み込み中...</p>
+        </div>
+    `;
+    container.querySelector('.mobile-gallery-close').addEventListener('click', () => {
+        closeMobileGridLibrary();
+    });
+
+    const innerGrid = container.querySelector('.mobile-gallery-grid');
 
     try {
         const keys = await localImageDB.getAllKeys();
         if (!keys || keys.length === 0) {
-            grid.innerHTML = '<p class="mobile-grid-empty">画像がありません</p>';
+            innerGrid.innerHTML = '<p class="mobile-grid-empty">画像がありません</p>';
             return;
         }
-        grid.innerHTML = '';
+        innerGrid.innerHTML = '';
         const orderedKeys = (appSettings.localImageOrder || []).filter(k => keys.includes(k));
         const remaining = keys.filter(k => !orderedKeys.includes(k));
         const allKeys = [...orderedKeys, ...remaining];
@@ -7274,14 +7295,12 @@ async function renderMobileGridLibrary() {
                 if (typeof appState !== 'undefined') appState.lastMediaKey = key;
                 saveSettings();
                 updateMediaArea('restore');
-                revokeMobileGridURLs();
-                grid.classList.remove('is-visible');
-                switchMobileTab('home');
+                closeMobileGridLibrary();
             });
-            grid.appendChild(btn);
+            innerGrid.appendChild(btn);
         }
     } catch (e) {
-        grid.innerHTML = '<p class="mobile-grid-empty">読み込みに失敗しました</p>';
+        innerGrid.innerHTML = '<p class="mobile-grid-empty">読み込みに失敗しました</p>';
     }
 }
 
@@ -7291,6 +7310,15 @@ function revokeMobileGridURLs() {
     grid.querySelectorAll('img').forEach(img => {
         if (img.src && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
     });
+}
+
+function closeMobileGridLibrary() {
+    const grid = document.getElementById('mobileGridLibrary');
+    if (!grid) return;
+    revokeMobileGridURLs();
+    grid.classList.remove('is-visible');
+    document.body.classList.remove('mobile-gallery-open');
+    showMobileBar(mobileActiveTab === 'home');
 }
 
 // --- ホームタブ: 再生設定ポップオーバー ---
@@ -7370,9 +7398,10 @@ function showMobileBar(resetTimer = true) {
     clearTimeout(mobileAutoHideTimer);
     if (resetTimer && mobileActiveTab === 'home') {
         mobileAutoHideTimer = setTimeout(() => {
-            // サブメニュー・ポップオーバーが開いていれば隠さない
+            // サブメニュー・ポップオーバー・ギャラリーが開いていれば隠さない
             if (document.getElementById('mobileAddSubmenu')?.classList.contains('is-open')) return;
             if (document.getElementById('mobilePlaybackPopover')?.classList.contains('is-visible')) return;
+            if (document.getElementById('mobileGridLibrary')?.classList.contains('is-visible')) return;
             bar.classList.add('is-hidden');
         }, MOBILE_AUTOHIDE_DELAY);
     }

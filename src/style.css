@@ -5481,6 +5481,11 @@ body.is-mobile-ui.mobile-tab-settings   #tickerBar {
     opacity: 0;
     pointer-events: none;
 }
+/* ギャラリーモーダル表示中もテロップを非表示 */
+body.is-mobile-ui.mobile-gallery-open .ticker-bar {
+    opacity: 0;
+    pointer-events: none;
+}
 /* モバイル固有の上書きはなし（デスクトップ共通スタイルを継承） */
 
 /* オートハイド */
@@ -6127,17 +6132,50 @@ body.is-mobile-ui .mobile-home-dot.is-visible { display: block; }
 
 /* ===== グリッドライブラリ ===== */
 body.is-mobile-ui .mobile-grid-library.is-visible {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    inset: 0;
+    z-index: 2100;
+    background: rgba(0, 0, 0, 0.9);
+}
+body.is-mobile-ui .mobile-gallery-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    height: 48px;
+    padding: 0 16px;
+    padding-top: env(safe-area-inset-top, 0px);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+body.is-mobile-ui .mobile-gallery-title {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 15px;
+    font-weight: 500;
+}
+body.is-mobile-ui .mobile-gallery-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 18px;
+    line-height: 1;
+    padding: 8px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+body.is-mobile-ui .mobile-gallery-grid {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 2px;
-    position: fixed;
-    inset: 0;
-    z-index: 1900;
-    background: rgba(0, 0, 0, 0.9);
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
     align-content: start;
+    padding-bottom: env(safe-area-inset-bottom, 16px);
 }
 body.is-mobile-ui .mobile-grid-thumb {
     aspect-ratio: 1;
