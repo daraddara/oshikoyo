@@ -2,7 +2,7 @@
  * おしこよ (Oshikoyo) ロジック & アプリケーション
  */
 
-const APP_VERSION = 'v1.0.4';
+const APP_VERSION = 'v1.1.0';
 
 // --- Delete All Data Shared Handlers ---
 
@@ -3977,6 +3977,9 @@ function initSettings() {
                     r.checked = (r.value === (appSettings.imageCompressMode || 'standard'));
                 });
             }
+            if (btn.dataset.tab === 'appinfo' && typeof updateSettingsInstallSection === 'function') {
+                updateSettingsInstallSection();
+            }
         });
     });
 
@@ -7220,6 +7223,9 @@ function initMobileDataSubPanel() {
 function initMobileAppInfoSubPanel() {
     // バージョンバッジはinitSettings()のquerySelectorAllで既に設定済み
     // 更新ボタンはinitSettings()のquerySelectorAllで既に登録済み
+    if (typeof updateSettingsInstallSection === 'function') {
+        updateSettingsInstallSection();
+    }
 }
 
 /** モバイル設定タブのイベントタイプリストを再描画 */
@@ -7637,11 +7643,151 @@ if (typeof module !== 'undefined' && module.exports) {
 if (typeof window !== 'undefined') {
     let _debugInstallPromptCaptured = false;
     let _debugInstallPromptEvent = null;
+    let _pwaInstallSupported = false; // beforeinstallprompt が一度でも発火した（このブラウザはPWA対応）
+
+    // --- PWA インストールバナー ---
+    function _isStandaloneMode() {
+        return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+            || window.navigator.standalone === true;
+    }
+    function _isIOS() {
+        // iOS 13+ の iPad は UA が Macintosh になるため maxTouchPoints で判定
+        return /iPad|iPhone|iPod/.test(navigator.userAgent)
+            || (navigator.maxTouchPoints > 1
+                && /Safari\//.test(navigator.userAgent)
+                && !/Chrome\/|CriOS\/|FxiOS\/|EdgA\//.test(navigator.userAgent));
+    }
+    function _isIOSSafari() {
+        // iOS Safari のみ（Chrome on iOS = CriOS、Firefox on iOS = FxiOS を除外）
+        return _isIOS() && !/CriOS\/|FxiOS\/|EdgA\/|OPiOS\//.test(navigator.userAgent);
+    }
+    function _showInstallBanner(isIOS) {
+        if (_isStandaloneMode()) return;
+        if (localStorage.getItem('pwa-install-dismissed') === '1') return;
+        if (document.getElementById('pwa-install-banner')) return;
+        const banner = document.createElement('div');
+        banner.id = 'pwa-install-banner';
+        banner.className = 'pwa-install-banner';
+        if (isIOS) {
+            const iosText = _isIOSSafari()
+                ? '📲 ホーム画面に追加できます<br><small>「共有」(□↑) →「ホーム画面に追加」をタップ</small>'
+                : '📲 Safari で開くとインストールできます<br><small>Safari の「共有」(□↑) → 「ホーム画面に追加」をタップ</small>';
+            banner.innerHTML =
+                '<div class="pwa-install-banner-body">' +
+                '<span class="pwa-install-banner-text">' + iosText + '</span>' +
+                '<button class="pwa-install-banner-close" aria-label="閉じる">✕</button>' +
+                '</div>';
+        } else {
+            banner.innerHTML =
+                '<div class="pwa-install-banner-body">' +
+                '<span class="pwa-install-banner-text">📲 アプリとしてインストールできます</span>' +
+                '<button class="pwa-install-banner-btn">インストール</button>' +
+                '<button class="pwa-install-banner-close" aria-label="閉じる">✕</button>' +
+                '</div>';
+            banner.querySelector('.pwa-install-banner-btn').addEventListener('click', async () => {
+                if (!_debugInstallPromptEvent) return;
+                _debugInstallPromptEvent.prompt();
+                const result = await _debugInstallPromptEvent.userChoice;
+                _debugInstallPromptEvent = null;
+                _debugInstallPromptCaptured = false;
+                if (result.outcome === 'accepted') {
+                    _hideInstallBanner();
+                }
+            });
+        }
+        banner.querySelector('.pwa-install-banner-close').addEventListener('click', () => {
+            localStorage.setItem('pwa-install-dismissed', '1');
+            _hideInstallBanner();
+        });
+        document.body.appendChild(banner);
+        requestAnimationFrame(() => banner.classList.add('is-visible'));
+    }
+    function _hideInstallBanner() {
+        const el = document.getElementById('pwa-install-banner');
+        if (!el) return;
+        el.classList.remove('is-visible');
+        el.addEventListener('transitionend', () => el.remove(), { once: true });
+    }
+
+    function _applyInstallSectionState(group, desc, btn) {
+        if (!group || !desc || !btn) return;
+        if (_isStandaloneMode()) {
+            group.style.display = '';
+            desc.textContent = 'このアプリはすでにホーム画面にインストールされています。';
+            btn.textContent  = 'インストール済み';
+            btn.style.display = '';
+            btn.disabled     = true;
+            btn.onclick      = null;
+        } else if (_debugInstallPromptEvent) {
+            group.style.display = '';
+            desc.textContent = 'ホーム画面にインストールするとブラウザなしで直接起動できます。';
+            btn.textContent  = 'インストール';
+            btn.style.display = '';
+            btn.disabled     = false;
+            btn.onclick      = async () => {
+                _debugInstallPromptEvent.prompt();
+                const result = await _debugInstallPromptEvent.userChoice;
+                _debugInstallPromptEvent = null;
+                _debugInstallPromptCaptured = false;
+                if (result.outcome === 'accepted') {
+                    _hideInstallBanner();
+                }
+                updateSettingsInstallSection();
+            };
+        } else if (_isIOS()) {
+            group.style.display = '';
+            desc.textContent = _isIOSSafari()
+                ? '「共有」(□↑) →「ホーム画面に追加」からインストールできます。'
+                : 'Safari でこのサイトを開き、「共有」(□↑) →「ホーム画面に追加」でインストールできます。';
+            btn.style.display = 'none';
+        } else if (_pwaInstallSupported) {
+            group.style.display = '';
+            desc.textContent = 'ブラウザのアドレスバーまたはメニューの「アプリをインストール」からインストールできます。';
+            btn.style.display = 'none';
+        } else {
+            group.style.display = 'none';
+        }
+    }
+    function updateSettingsInstallSection() {
+        // デスクトップ（#tabPanelAppInfo）
+        _applyInstallSectionState(
+            document.getElementById('settingGroupInstall'),
+            document.getElementById('settingInstallDesc'),
+            document.getElementById('btnInstallApp')
+        );
+        // モバイル（#mobileSubPanel-appinfo）
+        _applyInstallSectionState(
+            document.getElementById('mobileSettingGroupInstall'),
+            document.getElementById('mobileSettingInstallDesc'),
+            document.getElementById('mobileBtnInstallApp')
+        );
+    }
 
     window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault(); // ブラウザのミニ情報バーを抑制してアプリ側で制御
+        _pwaInstallSupported = true; // このブラウザはPWAインストール対応と確定
         _debugInstallPromptCaptured = true;
         _debugInstallPromptEvent = e;
+        _showInstallBanner(false);
+        updateSettingsInstallSection();
     });
+
+    // iOS: standalone でない場合にバナー表示
+    if (_isIOS() && !_isStandaloneMode()
+            && localStorage.getItem('pwa-install-dismissed') !== '1') {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => _showInstallBanner(true));
+        } else {
+            _showInstallBanner(true);
+        }
+    }
+
+    // standalone に切り替わったらバナーを非表示
+    if (window.matchMedia) {
+        window.matchMedia('(display-mode: standalone)').addEventListener('change', (evt) => {
+            if (evt.matches) _hideInstallBanner();
+        });
+    }
 
     async function collectPwaDebugInfo() {
         const info = {};
@@ -7762,9 +7908,12 @@ if (typeof window !== 'undefined') {
         panel.querySelector('#pwa-debug-install').addEventListener('click', async () => {
             if (!_debugInstallPromptEvent) return;
             _debugInstallPromptEvent.prompt();
-            await _debugInstallPromptEvent.userChoice;
+            const result = await _debugInstallPromptEvent.userChoice;
             _debugInstallPromptEvent = null;
             _debugInstallPromptCaptured = false;
+            if (result.outcome === 'accepted') {
+                _hideInstallBanner();
+            }
             refreshPwaDebugPanel();
         });
         refreshPwaDebugPanel();

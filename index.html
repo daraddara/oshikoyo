@@ -525,6 +525,11 @@
                         <button type="button" id="btnMsCheckUpdate" class="btn-check-update btn-secondary btn-sm">更新を確認</button>
                     </div>
                 </div>
+                <div class="setting-group" id="mobileSettingGroupInstall" style="display:none">
+                    <label class="setting-label">このアプリをインストール</label>
+                    <p class="setting-description" id="mobileSettingInstallDesc"></p>
+                    <button type="button" id="mobileBtnInstallApp" class="btn-secondary btn-sm"></button>
+                </div>
                 <div class="setting-group">
                     <label class="setting-label">データとプライバシー</label>
                     <p class="setting-description">登録した画像・設定データはすべてこのデバイスのブラウザ内にのみ保存されます。サーバーへの送信は一切行いません。</p>
@@ -763,6 +768,12 @@
                                 <span class="version-badge"></span>
                                 <button type="button" id="btnCheckUpdate" class="btn-check-update btn-secondary btn-sm">更新を確認</button>
                             </div>
+                        </div>
+                        <div class="setting-divider"></div>
+                        <div class="setting-group" id="settingGroupInstall" style="display:none">
+                            <h3 class="settings-section-heading">このアプリをインストール</h3>
+                            <p class="setting-description" id="settingInstallDesc"></p>
+                            <button type="button" id="btnInstallApp" class="btn-secondary btn-sm"></button>
                         </div>
                         <div class="setting-divider"></div>
                         <div class="setting-group">
