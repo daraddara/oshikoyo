@@ -44,7 +44,19 @@ export default defineConfig({
         },
         {
             name: 'Mobile Safari',
-            use: { ...devices['iPhone 12'] },
+            use: {
+                ...devices['iPhone 12'],
+                // iPhone 12 UA は _isIOS()=true を引き起こし PWA インストールバナーが
+                // 画面下部に固定表示されてモバイルタブバーを覆い tap() がタイムアウトする。
+                // storageState で pwa-install-dismissed=1 を事前設定してバナーを抑制する。
+                storageState: {
+                    cookies: [],
+                    origins: [{
+                        origin: 'http://localhost:8081',
+                        localStorage: [{ name: 'pwa-install-dismissed', value: '1' }],
+                    }],
+                },
+            },
             testIgnore: ['**/mobile_portrait.test.js', '**/mobile_landscape.test.js'],
         },
         {
