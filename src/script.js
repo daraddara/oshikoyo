@@ -2,7 +2,7 @@
  * おしこよ (Oshikoyo) ロジック & アプリケーション
  */
 
-const APP_VERSION = 'v1.0.4';
+const APP_VERSION = 'v1.1.0';
 
 // --- Delete All Data Shared Handlers ---
 
