@@ -128,11 +128,6 @@ test.describe('推し管理', () => {
         await page.locator('#btnClose').click();
         await expect(page.locator('#settingsModal')).not.toBeVisible();
 
-        // 月ナビゲーションで updateView() をトリガーしてカレンダーを再描画
-        // （saveOshiFromForm は updateView を呼ばないため）
-        await page.locator('#btnNext').click();
-        await page.locator('#btnPrev').click();
-
         // カレンダーに記念日セルが表示されていること
         await expect(page.locator('.day-cell.is-oshi-date')).toBeVisible({ timeout: 3000 });
 
@@ -155,10 +150,6 @@ test.describe('推し管理', () => {
 
         await page.locator('#btnCloseOshiManager').click();
         await page.locator('#btnClose').click();
-
-        // 月ナビゲーションでカレンダーを再描画
-        await page.locator('#btnNext').click();
-        await page.locator('#btnPrev').click();
 
         // is-oshi-date セルが存在し、かつ other-month ではないこと
         const oshiCell = page.locator('.day-cell.is-oshi-date:not(.is-other-month)');
