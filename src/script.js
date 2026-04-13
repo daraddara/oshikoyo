@@ -7703,12 +7703,8 @@ if (typeof window !== 'undefined') {
         el.addEventListener('transitionend', () => el.remove(), { once: true });
     }
 
-    function updateSettingsInstallSection() {
-        const group = document.getElementById('settingGroupInstall');
-        const desc  = document.getElementById('settingInstallDesc');
-        const btn   = document.getElementById('btnInstallApp');
+    function _applyInstallSectionState(group, desc, btn) {
         if (!group || !desc || !btn) return;
-
         if (_isStandaloneMode()) {
             group.style.display = '';
             desc.textContent = 'このアプリはすでにホーム画面にインストールされています。';
@@ -7737,13 +7733,26 @@ if (typeof window !== 'undefined') {
             desc.textContent = '画面下の「共有」→「ホーム画面に追加」からインストールできます。';
             btn.style.display = 'none';
         } else if (_pwaInstallSupported) {
-            // beforeinstallprompt は発火済みだがイベントは消費済み／冷却中
             group.style.display = '';
             desc.textContent = 'ブラウザのアドレスバーまたはメニューの「アプリをインストール」からインストールできます。';
             btn.style.display = 'none';
         } else {
             group.style.display = 'none';
         }
+    }
+    function updateSettingsInstallSection() {
+        // デスクトップ（#tabPanelAppInfo）
+        _applyInstallSectionState(
+            document.getElementById('settingGroupInstall'),
+            document.getElementById('settingInstallDesc'),
+            document.getElementById('btnInstallApp')
+        );
+        // モバイル（#mobileSubPanel-appinfo）
+        _applyInstallSectionState(
+            document.getElementById('mobileSettingGroupInstall'),
+            document.getElementById('mobileSettingInstallDesc'),
+            document.getElementById('mobileBtnInstallApp')
+        );
     }
 
     window.addEventListener('beforeinstallprompt', (e) => {
