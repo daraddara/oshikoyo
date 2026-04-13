@@ -52,6 +52,7 @@ npm run tunnel    # cloudflaredで外部公開（PWA実機確認用）
 | 既知課題・機能要望 | [docs/ISSUES.md](./docs/ISSUES.md) |
 | バージョン管理規定 | [docs/VERSIONING.md](./docs/VERSIONING.md) |
 | 実装済み機能カタログ | [docs/FEATURES.md](./docs/FEATURES.md) |
+| **設定パネル構造（デスクトップ/モバイル対応表・ID一覧）** | [docs/PANEL_STRUCTURE.md](./docs/PANEL_STRUCTURE.md) |
 
 ---
 
@@ -71,6 +72,12 @@ npm run tunnel    # cloudflaredで外部公開（PWA実機確認用）
 
 ### 一時ファイル
 - 作業中に生成するログや検証ファイルは `/tmp/` に置いてください。プロジェクトルートに作成しないでください。
+
+### 設定パネルの変更時
+- デスクトップ（`#tabPanel*`）とモバイル（`#mobileSubPanel-*`）は独立した HTML 要素です。
+- どちらかに要素を追加・変更したら、必ず対応するパネルも確認してください。
+- 対応関係は [docs/PANEL_STRUCTURE.md](./docs/PANEL_STRUCTURE.md) を参照してください。
+- 変更後は `npm run gen-panels` を実行してドキュメントを最新化してください。
 
 ### コミット・マージ
 - コミット前に `npm test` を実行し、全テストパスを確認してください。
