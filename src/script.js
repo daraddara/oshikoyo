@@ -7670,8 +7670,8 @@ if (typeof window !== 'undefined') {
         banner.className = 'pwa-install-banner';
         if (isIOS) {
             const iosText = _isIOSSafari()
-                ? '📲 ホーム画面に追加できます<br><small>画面下の「共有」→「ホーム画面に追加」をタップ</small>'
-                : '📲 Safari で開くとインストールできます<br><small>Safari の「共有」→「ホーム画面に追加」をタップ</small>';
+                ? '📲 ホーム画面に追加できます<br><small>「共有」(□↑) →「ホーム画面に追加」をタップ</small>'
+                : '📲 Safari で開くとインストールできます<br><small>Safari の「共有」(□↑) → 「ホーム画面に追加」をタップ</small>';
             banner.innerHTML =
                 '<div class="pwa-install-banner-body">' +
                 '<span class="pwa-install-banner-text">' + iosText + '</span>' +
@@ -7737,8 +7737,8 @@ if (typeof window !== 'undefined') {
         } else if (_isIOS()) {
             group.style.display = '';
             desc.textContent = _isIOSSafari()
-                ? '画面下の「共有」→「ホーム画面に追加」からインストールできます。'
-                : 'Safari でこのサイトを開き、「共有」→「ホーム画面に追加」でインストールできます。';
+                ? '「共有」(□↑) →「ホーム画面に追加」からインストールできます。'
+                : 'Safari でこのサイトを開き、「共有」(□↑) →「ホーム画面に追加」でインストールできます。';
             btn.style.display = 'none';
         } else if (_pwaInstallSupported) {
             group.style.display = '';
