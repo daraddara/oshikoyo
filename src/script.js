@@ -7643,6 +7643,7 @@ if (typeof module !== 'undefined' && module.exports) {
 if (typeof window !== 'undefined') {
     let _debugInstallPromptCaptured = false;
     let _debugInstallPromptEvent = null;
+    let _pwaInstallSupported = false; // beforeinstallprompt が一度でも発火した（このブラウザはPWA対応）
 
     // --- PWA インストールバナー ---
     function _isStandaloneMode() {
@@ -7650,7 +7651,11 @@ if (typeof window !== 'undefined') {
             || window.navigator.standalone === true;
     }
     function _isIOS() {
-        return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        // iOS 13+ の iPad は UA が Macintosh になるため maxTouchPoints で判定
+        return /iPad|iPhone|iPod/.test(navigator.userAgent)
+            || (navigator.maxTouchPoints > 1
+                && /Safari\//.test(navigator.userAgent)
+                && !/Chrome\/|CriOS\/|FxiOS\/|EdgA\//.test(navigator.userAgent));
     }
     function _showInstallBanner(isIOS) {
         if (_isStandaloneMode()) return;
@@ -7731,6 +7736,11 @@ if (typeof window !== 'undefined') {
             group.style.display = '';
             desc.textContent = '画面下の「共有」→「ホーム画面に追加」からインストールできます。';
             btn.style.display = 'none';
+        } else if (_pwaInstallSupported) {
+            // beforeinstallprompt は発火済みだがイベントは消費済み／冷却中
+            group.style.display = '';
+            desc.textContent = 'ブラウザのアドレスバーまたはメニューの「アプリをインストール」からインストールできます。';
+            btn.style.display = 'none';
         } else {
             group.style.display = 'none';
         }
@@ -7738,6 +7748,7 @@ if (typeof window !== 'undefined') {
 
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault(); // ブラウザのミニ情報バーを抑制してアプリ側で制御
+        _pwaInstallSupported = true; // このブラウザはPWAインストール対応と確定
         _debugInstallPromptCaptured = true;
         _debugInstallPromptEvent = e;
         _showInstallBanner(false);
