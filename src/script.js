@@ -7657,6 +7657,10 @@ if (typeof window !== 'undefined') {
                 && /Safari\//.test(navigator.userAgent)
                 && !/Chrome\/|CriOS\/|FxiOS\/|EdgA\//.test(navigator.userAgent));
     }
+    function _isIOSSafari() {
+        // iOS Safari のみ（Chrome on iOS = CriOS、Firefox on iOS = FxiOS を除外）
+        return _isIOS() && !/CriOS\/|FxiOS\/|EdgA\/|OPiOS\//.test(navigator.userAgent);
+    }
     function _showInstallBanner(isIOS) {
         if (_isStandaloneMode()) return;
         if (localStorage.getItem('pwa-install-dismissed') === '1') return;
@@ -7665,10 +7669,12 @@ if (typeof window !== 'undefined') {
         banner.id = 'pwa-install-banner';
         banner.className = 'pwa-install-banner';
         if (isIOS) {
+            const iosText = _isIOSSafari()
+                ? '📲 ホーム画面に追加できます<br><small>画面下の「共有」→「ホーム画面に追加」をタップ</small>'
+                : '📲 Safari で開くとインストールできます<br><small>Safari の「共有」→「ホーム画面に追加」をタップ</small>';
             banner.innerHTML =
                 '<div class="pwa-install-banner-body">' +
-                '<span class="pwa-install-banner-text">📲 ホーム画面に追加できます<br>' +
-                '<small>「共有」→「ホーム画面に追加」をタップ</small></span>' +
+                '<span class="pwa-install-banner-text">' + iosText + '</span>' +
                 '<button class="pwa-install-banner-close" aria-label="閉じる">✕</button>' +
                 '</div>';
         } else {
@@ -7730,7 +7736,9 @@ if (typeof window !== 'undefined') {
             };
         } else if (_isIOS()) {
             group.style.display = '';
-            desc.textContent = '画面下の「共有」→「ホーム画面に追加」からインストールできます。';
+            desc.textContent = _isIOSSafari()
+                ? '画面下の「共有」→「ホーム画面に追加」からインストールできます。'
+                : 'Safari でこのサイトを開き、「共有」→「ホーム画面に追加」でインストールできます。';
             btn.style.display = 'none';
         } else if (_pwaInstallSupported) {
             group.style.display = '';
