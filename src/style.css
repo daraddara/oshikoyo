@@ -2571,17 +2571,21 @@ body {
     opacity: 1;
 }
 
-/* タッチデバイスではホバーがないためハンドル・削除ボタンを常時表示・サイズ拡大 */
+/* タッチデバイスではホバーがないためハンドルを常時表示・サイズ拡大 */
 body.is-mobile-ui .img-drag-handle {
     opacity: 0.75;
     width: 28px;
     height: 28px;
 }
 
+/* モバイルではグリッド上の削除ボタンを非表示（ライトボックス内から削除） */
 body.is-mobile-ui .local-image-item .btn-img-delete {
-    opacity: 0.75;
-    width: 30px;
-    height: 30px;
+    display: none;
+}
+
+/* モバイルでは削除確認オーバーレイも非表示 */
+body.is-mobile-ui .delete-confirm-overlay {
+    display: none;
 }
 
 .img-drag-handle:active {
