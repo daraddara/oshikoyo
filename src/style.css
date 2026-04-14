@@ -2272,6 +2272,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 2;
     opacity: 0;
     transition: opacity 0.15s, background 0.15s;
 }
@@ -2568,6 +2569,23 @@ body {
 
 .local-image-item:hover .img-drag-handle {
     opacity: 1;
+}
+
+/* タッチデバイスではホバーがないためハンドルを常時表示・サイズ拡大 */
+body.is-mobile-ui .img-drag-handle {
+    opacity: 0.75;
+    width: 28px;
+    height: 28px;
+}
+
+/* モバイルではグリッド上の削除ボタンを非表示（ライトボックス内から削除） */
+body.is-mobile-ui .local-image-item .btn-img-delete {
+    display: none;
+}
+
+/* モバイルでは削除確認オーバーレイも非表示 */
+body.is-mobile-ui .delete-confirm-overlay {
+    display: none;
 }
 
 .img-drag-handle:active {
