@@ -3002,6 +3002,11 @@ async function renderLocalImageManager() {
             list.dataset.dndReady = '1';
             setupImageGridDnD(list);
         }
+        // タッチDnD はモバイル用コンテナ（#mobileLocalImageList）のみセットアップ
+        if (list.id === 'mobileLocalImageList' && !list.dataset.touchDndReady) {
+            list.dataset.touchDndReady = '1';
+            setupImageGridTouchDnD(list);
+        }
     });
 }
 
@@ -3324,6 +3329,110 @@ function setupImageGridDnD(list) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
         renderLocalImageManager();
     });
+}
+
+function setupImageGridTouchDnD(list) {
+    let dragSrcItem = null;
+    let ghost = null;
+    let ghostOffsetX = 0;
+    let ghostOffsetY = 0;
+
+    function cleanup() {
+        if (ghost) { ghost.remove(); ghost = null; }
+        if (dragSrcItem) {
+            dragSrcItem.classList.remove('is-img-dragging');
+            dragSrcItem = null;
+        }
+        list.querySelectorAll('.drag-over-left, .drag-over-right')
+            .forEach(el => el.classList.remove('drag-over-left', 'drag-over-right'));
+    }
+
+    list.addEventListener('touchstart', (e) => {
+        const handle = e.target.closest('.img-drag-handle');
+        if (!handle) return;
+        dragSrcItem = handle.closest('.local-image-item');
+        if (!dragSrcItem) return;
+
+        // ライトボックスが開かないよう後続 click を抑制
+        e.preventDefault();
+        e.stopPropagation();
+
+        const touch = e.touches[0];
+        const rect = dragSrcItem.getBoundingClientRect();
+
+        ghost = dragSrcItem.cloneNode(true);
+        ghost.style.cssText = `position:fixed;width:${rect.width}px;height:${rect.height}px;top:${rect.top}px;left:${rect.left}px;opacity:0.7;pointer-events:none;z-index:9999;transition:none;`;
+        document.body.appendChild(ghost);
+
+        ghostOffsetX = touch.clientX - rect.left;
+        ghostOffsetY = touch.clientY - rect.top;
+        dragSrcItem.classList.add('is-img-dragging');
+    }, { passive: false });
+
+    list.addEventListener('touchmove', (e) => {
+        if (!dragSrcItem) return;
+        e.preventDefault();
+
+        const touch = e.touches[0];
+        if (ghost) {
+            ghost.style.left = `${touch.clientX - ghostOffsetX}px`;
+            ghost.style.top = `${touch.clientY - ghostOffsetY}px`;
+        }
+
+        if (ghost) ghost.style.display = 'none';
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (ghost) ghost.style.display = '';
+
+        list.querySelectorAll('.drag-over-left, .drag-over-right')
+            .forEach(el => el.classList.remove('drag-over-left', 'drag-over-right'));
+
+        const targetItem = elementBelow?.closest('.local-image-item');
+        if (targetItem && targetItem !== dragSrcItem) {
+            const tRect = targetItem.getBoundingClientRect();
+            const insertBefore = touch.clientX < tRect.left + tRect.width / 2;
+            targetItem.classList.add(insertBefore ? 'drag-over-left' : 'drag-over-right');
+        }
+    }, { passive: false });
+
+    list.addEventListener('touchend', (e) => {
+        if (!dragSrcItem) return;
+
+        const touch = e.changedTouches[0];
+        const savedSrcItem = dragSrcItem;
+
+        cleanup();
+
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const targetItem = elementBelow?.closest('.local-image-item');
+
+        if (targetItem && targetItem !== savedSrcItem) {
+            const tRect = targetItem.getBoundingClientRect();
+            const insertBefore = touch.clientX < tRect.left + tRect.width / 2;
+
+            const items = [...list.querySelectorAll('.local-image-item')];
+            const srcId = Number(savedSrcItem.dataset.imgId);
+            const tgtId = Number(targetItem.dataset.imgId);
+
+            const order = [...(appSettings.localImageOrder.length > 0
+                ? appSettings.localImageOrder
+                : items.map(el => Number(el.dataset.imgId)))];
+
+            const srcPos = order.indexOf(srcId);
+            if (srcPos === -1) return;
+            order.splice(srcPos, 1);
+
+            const tgtPos = order.indexOf(tgtId);
+            if (tgtPos === -1) return;
+            order.splice(insertBefore ? tgtPos : tgtPos + 1, 0, srcId);
+
+            appSettings.localImageOrder = order;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
+            renderLocalImageManager();
+        }
+    }, { passive: true });
+
+    // 電話着信等でタッチが中断された場合もゴーストを確実に削除
+    list.addEventListener('touchcancel', cleanup, { passive: true });
 }
 
 // --- Drag & Drop / Paste Logic ---
