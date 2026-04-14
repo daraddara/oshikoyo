@@ -2570,11 +2570,17 @@ body {
     opacity: 1;
 }
 
-/* タッチデバイスではホバーがないためハンドルを常時表示・サイズ拡大 */
+/* タッチデバイスではホバーがないためハンドル・削除ボタンを常時表示・サイズ拡大 */
 body.is-mobile-ui .img-drag-handle {
     opacity: 0.75;
     width: 28px;
     height: 28px;
+}
+
+body.is-mobile-ui .local-image-item .btn-img-delete {
+    opacity: 0.75;
+    width: 30px;
+    height: 30px;
 }
 
 .img-drag-handle:active {
