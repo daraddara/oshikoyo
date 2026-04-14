@@ -3908,7 +3908,8 @@ function setupPreviewModal() {
             updateLocalMediaUI();
             updateStorageIndicator();
 
-            if (document.getElementById('settingsModal').open) {
+            if (document.getElementById('settingsModal').open ||
+                document.getElementById('mobileSubPanel-media')?.classList.contains('is-open')) {
                 renderLocalImageManager();
             }
 

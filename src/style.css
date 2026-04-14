@@ -2571,7 +2571,7 @@ body {
 }
 
 /* タッチデバイスではホバーがないためハンドルを常時表示・サイズ拡大 */
-body.is-touch-device .img-drag-handle {
+body.is-mobile-ui .img-drag-handle {
     opacity: 0.75;
     width: 28px;
     height: 28px;
