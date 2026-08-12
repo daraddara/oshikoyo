@@ -7,6 +7,7 @@ import { extractCode, setupTestEnvironment } from './test-utils.js';
 setupTestEnvironment();
 
 const settingsCode = extractCode('function loadSettings()', '\nfunction showToast(');
+const themeCode    = extractCode('// --- Theme Logic ---', '// --- Memorial Tag Logic ---');
 
 const DEFAULT_SETTINGS = {
     startOfWeek: 0,
@@ -30,6 +31,9 @@ const DEFAULT_SETTINGS = {
     memorialDisplayMode: 'preferred',
     imageCompressMode: 'standard',
     activeFilter: null,
+    themes: [],
+    activeThemeId: null,
+    themesMigratedFromGroups: false,
 };
 
 const STORAGE_KEY = 'oshikoyo_settings';
@@ -46,6 +50,7 @@ function makeLoadSettings(savedData) {
         const DEFAULT_SETTINGS = ${JSON.stringify(DEFAULT_SETTINGS)};
         let appSettings = { ...DEFAULT_SETTINGS };
         const localStorage = mockLS;
+        ${themeCode}
         ${settingsCode}
         return { loadSettings, getAppSettings: () => appSettings };
     `;

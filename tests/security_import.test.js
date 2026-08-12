@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { extractCode, loadModule } from './test-utils.js';
 
 const codeBlocks = [
+    // validateImportedSettings は ensureOshiIds / normalizeThemes に依存する
+    extractCode('// --- Theme Logic ---', '// --- Memorial Tag Logic ---'),
     extractCode('// Helper: Validate Imported Settings', '// --- Validation Logic End ---')
 ];
 
@@ -95,7 +97,52 @@ describe('Security: Import Settings Validation', () => {
             ]
         };
         const result = validateImportedSettings(input);
-        expect(result).toEqual(input);
+        // id は復元時に自動採番されるため、生成値を除いて比較する
+        const { id, ...oshiWithoutId } = result.oshiList[0];
+        expect(id).toMatch(/^os_/);
+        expect(oshiWithoutId).toEqual({
+            ...input.oshiList[0],
+            group: '',
+            avatar: null,
+        });
+        const { oshiList, themes, activeThemeId, themesMigratedFromGroups, ...rest } = result;
+        expect(rest).toEqual({
+            startOfWeek: input.startOfWeek,
+            monthCount: input.monthCount,
+            layoutDirection: input.layoutDirection,
+            mediaMode: input.mediaMode,
+            mediaPosition: input.mediaPosition,
+            mediaSize: input.mediaSize,
+            mediaIntervalPreset: input.mediaIntervalPreset,
+            layoutMode: input.layoutMode,
+        });
+        expect(themes).toEqual([]);
+        expect(activeThemeId).toBeNull();
+        expect(themesMigratedFromGroups).toBe(false);
+    });
+
+    it('themes の存在しない推しID参照を除去する', () => {
+        const input = {
+            oshiList: [{ id: 'os1', name: 'A', color: '#ff0000', memorial_dates: [], tags: [] }],
+            themes: [
+                { id: 'th1', name: 'テーマ1', color: '#f472b6', oshiIds: ['os1', 'os_missing'] },
+                { id: 'th2', name: '', color: '#f472b6', oshiIds: [] },  // 名前なしは除去
+            ],
+            activeThemeId: 'th1',
+        };
+        const result = validateImportedSettings(input);
+        expect(result.themes).toHaveLength(1);
+        expect(result.themes[0].oshiIds).toEqual(['os1']);
+        expect(result.activeThemeId).toBe('th1');
+    });
+
+    it('存在しないテーマを指す activeThemeId は null に落とす', () => {
+        const result = validateImportedSettings({
+            oshiList: [],
+            themes: [],
+            activeThemeId: 'th_missing',
+        });
+        expect(result.activeThemeId).toBeNull();
     });
 
     it('should strip deprecated fanArtTag and emit tags array', () => {
