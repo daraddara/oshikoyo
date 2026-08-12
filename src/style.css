@@ -6600,7 +6600,8 @@ body.is-mobile-ui .mobile-event-empty {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 4px 0;
+    /* 行がカード状のため、モーダル端に密着しないよう左右に余白を取る */
+    padding: 8px 20px;
 }
 
 .theme-list {
@@ -6711,6 +6712,7 @@ body.is-mobile-ui .mobile-event-empty {
     flex-direction: column;
     gap: 16px;
     overflow-y: auto;
+    padding: 8px 20px;
 }
 
 body.is-mobile-ui .theme-row {
