@@ -357,6 +357,15 @@
                 </div>
                 <div class="setting-divider"></div>
                 <div class="setting-group">
+                    <label class="setting-label">テーマ</label>
+                    <div class="oshi-summary-bar">
+                        <span class="oshi-summary-count">登録数: <strong id="msThemeCount">0</strong> 件</span>
+                        <button type="button" id="btnMsOpenThemeManager" class="btn-secondary btn-sm">テーマを管理</button>
+                    </div>
+                    <p class="help-text">推しをまとめたテーマを作成すると、カレンダー上部のバーで表示を切り替えられます。テーマ単位での書き出し・読み込みも可能です。</p>
+                </div>
+                <div class="setting-divider"></div>
+                <div class="setting-group">
                     <label class="setting-label">祝日設定</label>
                     <div class="holiday-sync-row">
                         <span class="last-sync-label" id="msHolidayLastSync">最終同期: 未取得</span>
@@ -627,6 +636,17 @@
                             </div>
                             <p class="help-text">追加・編集・インポート・エクスポートは「一覧を管理」から行えます。</p>
                         </div>
+
+                        <div class="setting-divider"></div>
+
+                        <div class="setting-group">
+                            <h3 class="settings-section-heading">テーマ</h3>
+                            <div class="oshi-summary-bar">
+                                <span class="oshi-summary-count">登録数: <strong id="themeCount">0</strong> 件</span>
+                                <button type="button" id="btnOpenThemeManagerSettings" class="btn-secondary">テーマを管理</button>
+                            </div>
+                            <p class="help-text">推しをまとめたテーマを作成すると、カレンダー上部のバーで表示を切り替えられます。テーマ単位での書き出し・読み込みも可能です。</p>
+                        </div>
                     </div>
 
                     <!-- カレンダーパネル -->
@@ -871,6 +891,7 @@
                     <input type="file" id="inputOshiImport" accept=".json,.csv" multiple style="display:none">
                     <button type="button" id="btnOshiCsvTemplate" class="btn-secondary" title="CSVテンプレートをダウンロード">テンプレート</button>
                     <button type="button" id="btnOshiExport" class="btn-secondary">📤 エクスポート</button>
+                    <button type="button" id="btnOpenThemeManager" class="btn-secondary" title="推しをまとめたテーマを管理">🎨 テーマ</button>
                     <button type="button" id="btnOshiClearAll" class="btn-danger-outline btn-sm ml-auto" aria-label="すべての推しを削除">🗑️ 全削除</button>
                 </div>
                 <div class="oshi-table-search-row">
@@ -973,6 +994,13 @@
                            class="text-input" autocomplete="off">
                     <datalist id="groupDatalist"></datalist>
                 </div>
+                <div class="setting-group" id="oshiEditThemeGroup">
+                    <label>所属テーマ</label>
+                    <div id="oshiEditThemes" class="theme-check-list"></div>
+                    <p class="help-text" id="oshiEditThemesEmpty" style="display:none">
+                        テーマがまだありません。「推し一覧 &gt; 🎨 テーマ」から作成できます。
+                    </p>
+                </div>
                 <div class="setting-group" id="oshiTagGroup">
                     <label>タグ</label>
                     <div id="oshiTagInputArea" class="tag-input-area"></div>
@@ -983,6 +1011,76 @@
                 <button type="button" id="btnOshiEditDelete" class="btn-danger-outline" style="display:none; margin-right:auto;">削除</button>
                 <button type="button" id="btnOshiEditCancel" class="btn-cancel">キャンセル</button>
                 <button type="button" id="btnOshiEditSave" class="btn-primary">保存</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Theme Manager -->
+    <dialog id="themeManagerModal" class="settings-modal theme-manager-modal">
+        <form method="dialog" class="settings-form">
+            <div class="settings-header">
+                <h2 class="settings-title">テーマ管理</h2>
+                <p class="setting-description">
+                    推しをまとめた「テーマ」を作成すると、カレンダー上部のバーで表示を切り替えられます。
+                    テーマ単位でのファイル書き出し・読み込みにも対応しています。
+                </p>
+                <div class="oshi-manager-toolbar">
+                    <button type="button" id="btnThemeCreate" class="btn-primary">＋ 新規作成</button>
+                    <button type="button" id="btnThemeImport" class="btn-secondary" title="テーマパッケージ（.json / .json.gz）を読み込む">📥 インポート</button>
+                    <input type="file" id="inputThemeImport" accept=".json,.gz" style="display:none">
+                </div>
+            </div>
+            <div class="theme-manager-content">
+                <div id="themeManagerList" class="theme-list"></div>
+                <div id="themeManagerEmpty" class="oshi-empty-state" style="display:none">
+                    <p class="oshi-empty-state__title">まだテーマがありません</p>
+                    <ol class="oshi-empty-state__steps">
+                        <li>「新規作成」でテーマ名を決める</li>
+                        <li>そのテーマに含める推しを選ぶ</li>
+                        <li>カレンダー上部のバーで表示を切り替える</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" id="btnCloseThemeManager" class="btn-cancel">閉じる</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Theme Edit -->
+    <dialog id="themeEditModal" class="settings-modal theme-edit-modal">
+        <form method="dialog" class="settings-form">
+            <div class="settings-header">
+                <h2 class="settings-title" id="themeEditTitle">テーマを新規作成</h2>
+            </div>
+            <div class="theme-edit-content">
+                <input type="hidden" id="themeEditId" value="">
+                <div class="setting-group">
+                    <label for="themeEditName">テーマ名 <span class="required-mark">*</span></label>
+                    <input type="text" id="themeEditName" class="text-input"
+                           placeholder="例: 2026春ツアー、声優グループ" maxlength="30" autocomplete="off">
+                </div>
+                <div class="setting-group">
+                    <label for="themeEditColor">テーマカラー</label>
+                    <div class="color-input-group">
+                        <span class="color-chip" id="themeColorChip">
+                            <input type="color" id="themeColorPicker" tabindex="-1" aria-label="カラーピッカーを開く">
+                        </span>
+                        <input type="text" id="themeEditColor" class="hex-input" value="#f472b6"
+                            placeholder="#rrggbb" maxlength="7" spellcheck="false" autocomplete="off">
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <label>このテーマに含める推し</label>
+                    <div id="themeEditOshiList" class="theme-check-list theme-check-list--scroll"></div>
+                    <p class="help-text" id="themeEditOshiEmpty" style="display:none">
+                        推しがまだ登録されていません。先に推しを追加してください。
+                    </p>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" id="btnThemeEditCancel" class="btn-cancel">キャンセル</button>
+                <button type="button" id="btnThemeEditSave" class="btn-primary">保存</button>
             </div>
         </form>
     </dialog>

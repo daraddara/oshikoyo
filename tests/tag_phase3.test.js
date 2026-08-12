@@ -7,6 +7,7 @@ setupTestEnvironment();
 const parseDateCode  = extractCode('function parseDateString(', '\nfunction ');
 const memorialCode   = extractCode('// --- Memorial Tag Logic ---', '// --- Tag Logic ---');
 const tagLogicCode   = extractCode('// --- Tag Logic ---', '// --- Tag UI ---');
+const themeCode      = extractCode('// --- Theme Logic ---', '// --- Memorial Tag Logic ---');
 
 /**
  * getTodayMemorialOshis / getEffectiveImagePool をテスト用に生成する
@@ -17,6 +18,7 @@ function makePhase3(mockAppSettings, fakeToday) {
     const code = `
         ${parseDateCode}
         ${tagLogicCode}
+        ${themeCode}
         ${memorialCode}
         return { getTodayMemorialOshis, getEffectiveImagePool };
     `;

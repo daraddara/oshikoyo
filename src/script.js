@@ -2,7 +2,7 @@
  * おしこよ (Oshikoyo) ロジック & アプリケーション
  */
 
-const APP_VERSION = 'v1.2.0';
+const APP_VERSION = 'v1.3.0';
 
 // --- Delete All Data Shared Handlers ---
 
@@ -30,6 +30,8 @@ async function handleClearAllOshis() {
     });
     if (ok) {
         appSettings.oshiList = [];
+        // 推しが全て消えるため、全テーマの所属リストも空にする
+        (appSettings.themes || []).forEach(theme => { theme.oshiIds = []; });
         saveSettingsSilently();
         updateView();
         renderOshiTable();
@@ -81,8 +83,12 @@ const DEFAULT_SETTINGS = {
     // Holiday API Settings
     externalHolidays: {},              // { "YYYY-MM-DD": "祝日名" }
     lastHolidayUpdate: null,           // Timestamp
-    // Focus Mode
+    // Focus Mode（レガシー: テーマ機能へ移行済み。マイグレーション用に保持）
     activeFilter: null,                // string | null — 選択中グループ名
+    // Theme（推しをまとめたデータセット）
+    themes: [],                        // [{ id, name, color, oshiIds: string[] }]
+    activeThemeId: null,               // string | null — 選択中テーマID
+    themesMigratedFromGroups: false,   // 旧グループからのテーマ自動生成を実施済みか
 };
 
 // --- IndexedDB Management ---
@@ -241,6 +247,45 @@ class LocalImageDB {
             const store = tx.objectStore(this.storeName);
             const request = store.delete(key);
             request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    /**
+     * Deletes multiple images in a single transaction.
+     * @param {number[]} keys - The keys of the images to delete.
+     * @returns {Promise<void>}
+     */
+    async deleteImages(keys) {
+        if (!keys || keys.length === 0) return;
+        await this.open();
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+            tx.onabort = () => reject(new Error('Transaction aborted'));
+            keys.forEach(key => store.delete(key));
+        });
+    }
+
+    /**
+     * Retrieves the byte size of every stored image without loading its contents.
+     * @returns {Promise<Map<number, number>>} A map of image key to byte size.
+     */
+    async getAllSizes() {
+        await this.open();
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(this.storeName, 'readonly');
+            const store = tx.objectStore(this.storeName);
+            const request = store.openCursor();
+            const sizes = new Map();
+            request.onsuccess = (e) => {
+                const cursor = e.target.result;
+                if (!cursor) { resolve(sizes); return; }
+                sizes.set(cursor.key, cursor.value?.size ?? 0);
+                cursor.continue();
+            };
             request.onerror = () => reject(request.error);
         });
     }
@@ -1060,10 +1105,10 @@ function renderCalendar(container, year, month) {
     }
 
     // Pre-calculate parsed memorial dates and styles for each oshi
-    const activeFilter = appSettings.activeFilter;
+    const activeTheme = getActiveTheme();
     const oshiEventDates = (appSettings.oshiList || []).map(oshi => {
-        // フォーカスモード: 対象外グループは非表示
-        if (activeFilter !== null && (oshi.group || '') !== activeFilter) return null;
+        // テーマ選択中: 所属していない推しは非表示
+        if (!isOshiInTheme(oshi, activeTheme)) return null;
 
         const textColor = oshi.color ? getContrastColor(oshi.color) : '#333';
         const textShadow = textColor === '#ffffff' ? '0 0 1px rgba(0,0,0,0.3)' : 'none';
@@ -1297,7 +1342,7 @@ function updateView() {
 
     updateMediaArea('layout');
     updateTickerBar();
-    renderFocusFilterBar();
+    renderThemeBar();
 }
 
 // --- Media Logic ---
@@ -1309,6 +1354,16 @@ function renderOshiList() {
     if (countEl) {
         countEl.textContent = (appSettings.oshiList || []).length;
     }
+    renderThemeCount();
+}
+
+/** 設定画面（デスクトップ／モバイル）のテーマ登録数表示を更新する */
+function renderThemeCount() {
+    const count = getThemes().length;
+    ['themeCount', 'msThemeCount'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = count;
+    });
 }
 
 function openOshiManager() {
@@ -1341,6 +1396,265 @@ function getOrderedImageKeys(dbKeys) {
         if (!inOrder.has(k)) ordered.push(k);
     }
     return ordered;
+}
+
+// --- Theme Logic ---
+// テーマ = 推しをまとめたデータセット。カレンダーの記念日表示と画像プールを
+// テーマ単位で絞り込み、インポート／エクスポートの単位としても利用する。
+
+/** テーマ名の最大文字数 */
+const THEME_NAME_MAX = 30;
+/** テーマの既定カラー */
+const THEME_DEFAULT_COLOR = '#f472b6';
+
+/**
+ * 衝突しにくい一意な ID を生成する。
+ * @param {string} prefix - ID の接頭辞（'th' | 'os'）
+ * @returns {string} 生成された ID
+ */
+function generateEntityId(prefix) {
+    return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+}
+
+/**
+ * 推しリストの全要素に一意な id を付与する（既存 id が重複・欠損している場合は再採番）。
+ * @param {Array<Object>} oshiList - 推しリスト
+ * @returns {Array<Object>} id を保証した推しリスト（新しい配列）
+ */
+function ensureOshiIds(oshiList) {
+    const seen = new Set();
+    return (oshiList || []).map(oshi => {
+        if (!oshi || typeof oshi !== 'object') return oshi;
+        let id = typeof oshi.id === 'string' && oshi.id ? oshi.id : '';
+        if (!id || seen.has(id)) id = generateEntityId('os');
+        seen.add(id);
+        return oshi.id === id ? oshi : { ...oshi, id };
+    });
+}
+
+/**
+ * テーマ配列を正規化する。不正な要素を除去し、存在しない推し ID の参照も取り除く。
+ * @param {Array<Object>} themes - 検証対象のテーマ配列
+ * @param {Array<Object>} oshiList - 参照先の推しリスト
+ * @returns {Array<Object>} 正規化されたテーマ配列
+ */
+function normalizeThemes(themes, oshiList) {
+    if (!Array.isArray(themes)) return [];
+    const validOshiIds = new Set((oshiList || []).map(o => o && o.id).filter(Boolean));
+    const seenIds = new Set();
+    return themes.reduce((acc, t) => {
+        if (!t || typeof t !== 'object') return acc;
+        const name = typeof t.name === 'string' ? t.name.trim().slice(0, THEME_NAME_MAX) : '';
+        if (!name) return acc;
+        let id = typeof t.id === 'string' && t.id ? t.id : '';
+        if (!id || seenIds.has(id)) id = generateEntityId('th');
+        seenIds.add(id);
+        const color = (typeof t.color === 'string' && /^#[0-9a-fA-F]{6}$/.test(t.color))
+            ? t.color.toLowerCase() : THEME_DEFAULT_COLOR;
+        const oshiIds = Array.isArray(t.oshiIds)
+            ? [...new Set(t.oshiIds.filter(id2 => typeof id2 === 'string' && validOshiIds.has(id2)))]
+            : [];
+        acc.push({ id, name, color, oshiIds });
+        return acc;
+    }, []);
+}
+
+/**
+ * 登録済みテーマの一覧を返す。
+ * @returns {Array<Object>} テーマ配列
+ */
+function getThemes() {
+    return Array.isArray(appSettings.themes) ? appSettings.themes : [];
+}
+
+/**
+ * 現在選択中のテーマを返す。未選択（すべて表示）の場合は null。
+ * @returns {Object|null} アクティブなテーマ
+ */
+function getActiveTheme() {
+    const id = appSettings.activeThemeId;
+    if (!id) return null;
+    return getThemes().find(t => t.id === id) || null;
+}
+
+/**
+ * 指定した推しがテーマに所属しているか判定する。
+ * @param {Object} oshi - 判定対象の推し
+ * @param {Object|null} theme - テーマ（null の場合は常に true）
+ * @returns {boolean} 所属していれば true
+ */
+function isOshiInTheme(oshi, theme) {
+    if (!theme) return true;
+    if (!oshi || !oshi.id) return false;
+    return theme.oshiIds.includes(oshi.id);
+}
+
+/**
+ * テーマに所属する推しオブジェクトの配列を返す。
+ * @param {Object|null} theme - 対象テーマ
+ * @returns {Array<Object>} 所属する推しの配列
+ */
+function getThemeOshis(theme) {
+    if (!theme) return appSettings.oshiList || [];
+    return (appSettings.oshiList || []).filter(o => isOshiInTheme(o, theme));
+}
+
+/**
+ * テーマに紐づく画像照合用の文字列集合（推し名＋推しタグ）を返す。
+ * @param {Object|null} theme - 対象テーマ
+ * @returns {Set<string>} 照合用タグ集合
+ */
+function getThemeTagSet(theme) {
+    return new Set(
+        getThemeOshis(theme).flatMap(o => [o.name, ...(o.tags || [])].filter(Boolean))
+    );
+}
+
+/**
+ * アクティブテーマを適用した表示対象の推し一覧を返す。
+ * @returns {Array<Object>} 表示対象の推し配列
+ */
+function getVisibleOshiList() {
+    return getThemeOshis(getActiveTheme());
+}
+
+/**
+ * 指定した推しが所属するテーマ ID の配列を返す。
+ * @param {string} oshiId - 推しの ID
+ * @returns {Array<string>} 所属テーマ ID の配列
+ */
+function getThemeIdsForOshi(oshiId) {
+    if (!oshiId) return [];
+    return getThemes().filter(t => t.oshiIds.includes(oshiId)).map(t => t.id);
+}
+
+/**
+ * 指定した推しの所属テーマを与えられた ID 集合で置き換える。
+ * @param {string} oshiId - 推しの ID
+ * @param {Array<string>} themeIds - 所属させるテーマ ID の配列
+ * @returns {void}
+ */
+function setThemesForOshi(oshiId, themeIds) {
+    if (!oshiId) return;
+    const target = new Set(themeIds || []);
+    getThemes().forEach(theme => {
+        const has = theme.oshiIds.includes(oshiId);
+        if (target.has(theme.id) && !has) {
+            theme.oshiIds.push(oshiId);
+        } else if (!target.has(theme.id) && has) {
+            theme.oshiIds = theme.oshiIds.filter(id => id !== oshiId);
+        }
+    });
+}
+
+/**
+ * 各テーマが参照する画像の枚数・容量を集計する。
+ *
+ * 画像はタグ経由の間接参照のため、複数テーマに一致する画像は「共有」、
+ * 単一テーマにしか一致しない画像は「専有」として区別する。
+ * 端末から降ろせる（削除しても他テーマに影響しない）のは専有画像のみ。
+ *
+ * @param {Object} theme - 集計対象のテーマ
+ * @param {Map<number, number>} sizeMap - 画像キー → バイト数のマップ
+ * @param {Array<string>} imageKeys - 集計対象の画像キー一覧
+ * @returns {{imageCount: number, totalBytes: number, exclusiveKeys: Array<number>, exclusiveBytes: number}} 集計結果
+ */
+function computeThemeStorage(theme, sizeMap, imageKeys) {
+    const targetTags = getThemeTagSet(theme);
+    const otherTagSets = getThemes()
+        .filter(t => t.id !== theme.id)
+        .map(t => getThemeTagSet(t));
+
+    let totalBytes = 0, exclusiveBytes = 0, imageCount = 0;
+    const exclusiveKeys = [];
+
+    imageKeys.forEach(key => {
+        const tags = getImageTags(key);
+        if (!tags.some(t => targetTags.has(t))) return;
+
+        const size = sizeMap.get(key) ?? 0;
+        imageCount++;
+        totalBytes += size;
+
+        const sharedWithOther = otherTagSets.some(set => tags.some(t => set.has(t)));
+        if (!sharedWithOther) {
+            exclusiveKeys.push(key);
+            exclusiveBytes += size;
+        }
+    });
+
+    return { imageCount, totalBytes, exclusiveKeys, exclusiveBytes };
+}
+
+/**
+ * バイト数を人間が読みやすい単位の文字列に変換する。
+ * @param {number} bytes - バイト数
+ * @returns {string} 例: "12.3 MB"
+ */
+function formatBytes(bytes) {
+    if (!bytes) return '0 MB';
+    const mb = bytes / 1024 / 1024;
+    if (mb < 0.1) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${mb.toFixed(1)} MB`;
+}
+
+/**
+ * 削除された推しの ID を全テーマの所属リストから取り除く。
+ * @param {string} oshiId - 削除された推しの ID
+ * @returns {void}
+ */
+function removeOshiFromThemes(oshiId) {
+    if (!oshiId) return;
+    getThemes().forEach(theme => {
+        theme.oshiIds = theme.oshiIds.filter(id => id !== oshiId);
+    });
+}
+
+/**
+ * 既存テーマと重複しない名前を返す（重複時は末尾に連番を付与）。
+ * @param {string} baseName - 希望する名前
+ * @param {Array<Object>} [themes] - 比較対象のテーマ配列
+ * @returns {string} 一意なテーマ名
+ */
+function getUniqueThemeName(baseName, themes = getThemes()) {
+    const existing = new Set(themes.map(t => t.name));
+    if (!existing.has(baseName)) return baseName;
+    for (let i = 2; i < 1000; i++) {
+        const candidate = `${baseName} (${i})`.slice(0, THEME_NAME_MAX);
+        if (!existing.has(candidate)) return candidate;
+    }
+    return baseName;
+}
+
+/**
+ * 既存の「所属グループ」からテーマを自動生成する（初回マイグレーション用）。
+ * 一度実行するとフラグが立ち、以降はテーマを削除しても再生成しない。
+ * @param {Object} settings - マイグレーション対象の設定オブジェクト
+ * @returns {void}
+ */
+function migrateGroupsToThemes(settings) {
+    if (settings.themesMigratedFromGroups) return;
+    settings.themesMigratedFromGroups = true;
+    if (!Array.isArray(settings.themes) || settings.themes.length > 0) return;
+    const groupOrder = [];
+    const byGroup = new Map();
+    (settings.oshiList || []).forEach(oshi => {
+        const group = (oshi.group || '').trim();
+        if (!group) return;
+        if (!byGroup.has(group)) { byGroup.set(group, []); groupOrder.push(group); }
+        byGroup.get(group).push(oshi.id);
+    });
+    settings.themes = groupOrder.map(name => ({
+        id: generateEntityId('th'),
+        name: name.slice(0, THEME_NAME_MAX),
+        color: THEME_DEFAULT_COLOR,
+        oshiIds: byGroup.get(name),
+    }));
+    // 旧フォーカスモードの選択状態を引き継ぐ
+    if (typeof settings.activeFilter === 'string' && settings.activeFilter) {
+        const matched = settings.themes.find(t => t.name === settings.activeFilter);
+        if (matched) settings.activeThemeId = matched.id;
+    }
 }
 
 // --- Memorial Tag Logic ---
@@ -1379,16 +1693,13 @@ function getEffectiveImagePool(orderedKeys) {
         }
     }
 
-    // Step 2: groupフィルター（セカンダリ）
-    const activeFilter = appSettings.activeFilter;
-    if (activeFilter) {
-        const groupOshis = (appSettings.oshiList || []).filter(o => o.group === activeFilter);
-        const groupTags = new Set(
-            groupOshis.flatMap(o => [o.name, ...(o.tags || [])].filter(Boolean))
-        );
-        const filtered = pool.filter(id => getImageTags(id).some(t => groupTags.has(t)));
+    // Step 2: テーマフィルター（セカンダリ）
+    const activeTheme = getActiveTheme();
+    if (activeTheme) {
+        const themeTags = getThemeTagSet(activeTheme);
+        const filtered = pool.filter(id => getImageTags(id).some(t => themeTags.has(t)));
         if (filtered.length > 0) return filtered;
-        // マッチなしはフォールバック（groupフィルター無視）
+        // マッチなしはフォールバック（テーマフィルター無視）
     }
 
     return pool;
@@ -1594,7 +1905,8 @@ function renderOshiTable() {
                 danger: true,
             });
             if (ok) {
-                appSettings.oshiList.splice(index, 1);
+                const [removed] = appSettings.oshiList.splice(index, 1);
+                removeOshiFromThemes(removed?.id);
                 renderOshiTable();
                 renderOshiList();
             }
@@ -2027,6 +2339,9 @@ function openOshiEditForm(index = -1) {
         groupEl.value = (index >= 0 ? appSettings.oshiList[index]?.group : '') || '';
     }
 
+    // 所属テーマのチェックボックスを描画
+    renderOshiEditThemes(index >= 0 ? appSettings.oshiList[index]?.id : null);
+
     // タグ入力UIを初期化
     updateTagDatalist();
     const currentOshiTags = (index >= 0 ? appSettings.oshiList[index]?.tags : null) || [];
@@ -2056,7 +2371,8 @@ function openOshiEditForm(index = -1) {
                 });
                 if (ok) {
                     document.getElementById('oshiEditModal').close();
-                    appSettings.oshiList.splice(index, 1);
+                    const [removed] = appSettings.oshiList.splice(index, 1);
+                    removeOshiFromThemes(removed?.id);
                     renderOshiTable();
                     renderOshiList();
                     renderMobileOshiPanel();
@@ -2117,6 +2433,7 @@ function saveOshiFromForm() {
     const group = groupEl ? groupEl.value.trim() : '';
 
     const oshiData = {
+        id: index >= 0 ? (appSettings.oshiList[index].id || generateEntityId('os')) : generateEntityId('os'),
         name,
         color,
         memorial_dates,
@@ -2133,12 +2450,698 @@ function saveOshiFromForm() {
         appSettings.oshiList.push(oshiData);
     }
 
+    // 所属テーマのチェック状態を反映
+    const themeChecks = [...document.querySelectorAll('#oshiEditThemes input[type="checkbox"]')];
+    if (themeChecks.length > 0) {
+        setThemesForOshi(oshiData.id, themeChecks.filter(c => c.checked).map(c => c.value));
+    }
+
     document.getElementById('oshiEditModal').close();
     renderOshiTable();
     renderOshiList();
     if (isMobile()) renderMobileOshiPanel(true);
     saveSettingsSilently();
     updateView();
+}
+
+// --- Theme UI ---
+
+/**
+ * 推し編集モーダル内の「所属テーマ」チェックボックス群を描画する。
+ * @param {string|null} oshiId - 編集中の推しの ID（新規追加時は null）
+ * @returns {void}
+ */
+function renderOshiEditThemes(oshiId) {
+    const wrap = document.getElementById('oshiEditThemes');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+
+    const themes = getThemes();
+    const emptyEl = document.getElementById('oshiEditThemesEmpty');
+    if (emptyEl) emptyEl.style.display = themes.length === 0 ? '' : 'none';
+    if (themes.length === 0) return;
+
+    const belongs = new Set(oshiId ? getThemeIdsForOshi(oshiId) : []);
+    themes.forEach(theme => {
+        const label = document.createElement('label');
+        label.className = 'theme-check';
+        label.style.setProperty('--theme-chip-color', theme.color || THEME_DEFAULT_COLOR);
+
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = theme.id;
+        input.checked = belongs.has(theme.id);
+
+        const span = document.createElement('span');
+        span.textContent = theme.name;
+
+        label.append(input, span);
+        wrap.appendChild(label);
+    });
+}
+
+/**
+ * テーマ管理モーダルを開く。
+ * @returns {void}
+ */
+function openThemeManager() {
+    const modal = document.getElementById('themeManagerModal');
+    if (!modal) return;
+    renderThemeManagerList();
+    if (!modal.open) modal.showModal();
+}
+
+/**
+ * テーマ一覧の各行に画像使用量を非同期で反映する。
+ * 一覧の描画をブロックしないよう、集計完了後に後追いで書き込む。
+ * @returns {Promise<void>}
+ */
+async function updateThemeStorageLabels() {
+    const list = document.getElementById('themeManagerList');
+    if (!list || getThemes().length === 0) return;
+
+    try {
+        const sizeMap = await localImageDB.getAllSizes();
+        const imageKeys = [...sizeMap.keys()];
+
+        getThemes().forEach(theme => {
+            const row = list.querySelector(`[data-theme-id="${theme.id}"]`);
+            if (!row) return;
+            const stat = computeThemeStorage(theme, sizeMap, imageKeys);
+            const labelEl = row.querySelector('.theme-row__storage');
+            if (labelEl) {
+                labelEl.textContent = stat.imageCount === 0
+                    ? '画像なし'
+                    : `画像${stat.imageCount}枚 · ${formatBytes(stat.totalBytes)}`
+                      + (stat.exclusiveKeys.length > 0 ? `（専有 ${formatBytes(stat.exclusiveBytes)}）` : '（すべて共有）');
+            }
+            // 専有画像がなければ降ろせるものがないため無効化
+            const detachBtn = row.querySelector('.theme-row__detach');
+            if (detachBtn) {
+                detachBtn.disabled = stat.exclusiveKeys.length === 0;
+                detachBtn.title = stat.exclusiveKeys.length === 0
+                    ? '端末から降ろせる専有画像がありません（他テーマと共有中の画像は削除しません）'
+                    : `${stat.exclusiveKeys.length}枚（${formatBytes(stat.exclusiveBytes)}）を書き出して端末から削除します`;
+            }
+        });
+    } catch (e) {
+        console.error('テーマ使用量の集計に失敗しました', e);
+    }
+}
+
+/**
+ * テーマ管理モーダル内のテーマ一覧を描画する。
+ * @returns {void}
+ */
+function renderThemeManagerList() {
+    const list = document.getElementById('themeManagerList');
+    const empty = document.getElementById('themeManagerEmpty');
+    if (!list) return;
+    list.innerHTML = '';
+
+    const themes = getThemes();
+    if (empty) empty.style.display = themes.length === 0 ? '' : 'none';
+
+    themes.forEach(theme => {
+        const row = document.createElement('div');
+        row.className = 'theme-row';
+        row.dataset.themeId = theme.id;
+        row.style.setProperty('--theme-chip-color', theme.color || THEME_DEFAULT_COLOR);
+
+        const info = document.createElement('div');
+        info.className = 'theme-row__info';
+        const nameEl = document.createElement('span');
+        nameEl.className = 'theme-row__name';
+        nameEl.textContent = theme.name;
+        const countEl = document.createElement('span');
+        countEl.className = 'theme-row__count';
+        countEl.textContent = `${theme.oshiIds.length}人`;
+        const storageEl = document.createElement('span');
+        storageEl.className = 'theme-row__storage';
+        storageEl.textContent = '集計中...';
+        info.append(nameEl, countEl, storageEl);
+
+        const actions = document.createElement('div');
+        actions.className = 'theme-row__actions';
+
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'btn-secondary btn-sm';
+        editBtn.textContent = '編集';
+        editBtn.addEventListener('click', () => openThemeEditForm(theme.id));
+
+        const exportBtn = document.createElement('button');
+        exportBtn.type = 'button';
+        exportBtn.className = 'btn-secondary btn-sm';
+        exportBtn.textContent = '📤 書き出し';
+        exportBtn.addEventListener('click', () => showThemeExportDialog(theme.id));
+
+        const detachBtn = document.createElement('button');
+        detachBtn.type = 'button';
+        detachBtn.className = 'btn-secondary btn-sm theme-row__detach';
+        detachBtn.textContent = '📦 降ろす';
+        detachBtn.disabled = true;  // 集計完了後に有効化
+        detachBtn.addEventListener('click', () => detachTheme(theme.id));
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'btn-danger-outline btn-sm';
+        delBtn.textContent = '🗑️';
+        delBtn.setAttribute('aria-label', `テーマ「${theme.name}」を削除`);
+        delBtn.addEventListener('click', () => deleteThemeById(theme.id));
+
+        actions.append(editBtn, exportBtn, detachBtn, delBtn);
+        row.append(info, actions);
+        list.appendChild(row);
+    });
+
+    updateThemeStorageLabels();
+}
+
+/**
+ * テーマ編集モーダルを開く。
+ * @param {string|null} themeId - 編集対象のテーマ ID（新規作成時は null）
+ * @returns {void}
+ */
+function openThemeEditForm(themeId = null) {
+    const modal = document.getElementById('themeEditModal');
+    if (!modal) return;
+    const theme = themeId ? getThemes().find(t => t.id === themeId) : null;
+
+    document.getElementById('themeEditId').value = theme ? theme.id : '';
+    document.getElementById('themeEditTitle').textContent = theme ? 'テーマを編集' : 'テーマを新規作成';
+    document.getElementById('themeEditName').value = theme ? theme.name : '';
+    const color = theme ? (theme.color || THEME_DEFAULT_COLOR) : THEME_DEFAULT_COLOR;
+    document.getElementById('themeEditColor').value = color;
+    const chipEl = document.getElementById('themeColorChip');
+    const pickerEl = document.getElementById('themeColorPicker');
+    if (chipEl) chipEl.style.backgroundColor = color;
+    if (pickerEl) pickerEl.value = color;
+
+    // 所属推しの選択リスト
+    const listEl = document.getElementById('themeEditOshiList');
+    const emptyEl = document.getElementById('themeEditOshiEmpty');
+    listEl.innerHTML = '';
+    const oshiList = appSettings.oshiList || [];
+    if (emptyEl) emptyEl.style.display = oshiList.length === 0 ? '' : 'none';
+
+    const belongs = new Set(theme ? theme.oshiIds : []);
+    oshiList.forEach(oshi => {
+        const label = document.createElement('label');
+        label.className = 'theme-check';
+        label.style.setProperty('--theme-chip-color', oshi.color || '#3b82f6');
+
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = oshi.id;
+        input.checked = belongs.has(oshi.id);
+
+        const span = document.createElement('span');
+        span.textContent = oshi.name || '（名称未設定）';
+
+        label.append(input, span);
+        listEl.appendChild(label);
+    });
+
+    if (!modal.open) modal.showModal();
+}
+
+/**
+ * テーマ編集フォームの内容を保存する。
+ * @returns {void}
+ */
+function saveThemeFromForm() {
+    const id = document.getElementById('themeEditId').value;
+    const name = document.getElementById('themeEditName').value.trim().slice(0, THEME_NAME_MAX);
+    const color = normalizeHex(document.getElementById('themeEditColor').value) || THEME_DEFAULT_COLOR;
+
+    if (!name) {
+        showToast('テーマ名を入力してください');
+        return;
+    }
+
+    const oshiIds = [...document.querySelectorAll('#themeEditOshiList input[type="checkbox"]')]
+        .filter(c => c.checked).map(c => c.value);
+
+    if (!Array.isArray(appSettings.themes)) appSettings.themes = [];
+    const existing = id ? appSettings.themes.find(t => t.id === id) : null;
+
+    // 同名テーマの重複を防ぐ（自分自身は除く）
+    const others = appSettings.themes.filter(t => t !== existing);
+    if (others.some(t => t.name === name)) {
+        showToast('同じ名前のテーマが既に存在します');
+        return;
+    }
+
+    if (existing) {
+        existing.name = name;
+        existing.color = color;
+        existing.oshiIds = oshiIds;
+    } else {
+        appSettings.themes.push({ id: generateEntityId('th'), name, color, oshiIds });
+    }
+
+    document.getElementById('themeEditModal').close();
+    saveSettingsSilently();
+    renderThemeManagerList();
+    updateView();
+    showToast(existing ? 'テーマを更新しました' : `テーマ「${name}」を作成しました`);
+}
+
+/**
+ * テーマを削除する（所属している推し自体は削除しない）。
+ * @param {string} themeId - 削除対象のテーマ ID
+ * @returns {Promise<void>}
+ */
+async function deleteThemeById(themeId) {
+    const theme = getThemes().find(t => t.id === themeId);
+    if (!theme) return;
+    const ok = await showConfirmDialog({
+        title: `テーマ「${theme.name}」を削除しますか？`,
+        sub: 'テーマの定義のみを削除します。所属している推しのデータは削除されません。',
+        confirmLabel: '削除する',
+        danger: true,
+    });
+    if (!ok) return;
+
+    appSettings.themes = getThemes().filter(t => t.id !== themeId);
+    if (appSettings.activeThemeId === themeId) appSettings.activeThemeId = null;
+    saveSettingsSilently();
+    renderThemeManagerList();
+    updateView();
+    showToast('テーマを削除しました');
+}
+
+// --- Theme Export / Import ---
+
+/**
+ * テーマに紐づく推し・イベントタイプをまとめたエクスポート用データを組み立てる。
+ * @param {Object} theme - 対象テーマ
+ * @returns {Object} テーマパッケージのデータ部
+ */
+function buildThemeExportData(theme) {
+    const oshis = getThemeOshis(theme);
+    const usedTypeIds = new Set(
+        oshis.flatMap(o => (o.memorial_dates || []).map(md => md.type_id))
+    );
+    return {
+        version: 1,
+        type: 'theme_package',
+        timestamp: new Date().toISOString(),
+        theme: { name: theme.name, color: theme.color || THEME_DEFAULT_COLOR },
+        oshiList: oshis.map(o => ({
+            name: o.name,
+            color: o.color,
+            memorial_dates: o.memorial_dates || [],
+            tags: o.tags || [],
+            group: o.group || '',
+        })),
+        event_types: (appSettings.event_types || []).filter(t => usedTypeIds.has(t.id)),
+    };
+}
+
+/**
+ * テーマのエクスポート形式（JSON / 画像込みgz）を選択するダイアログを表示する。
+ * @param {string} themeId - 対象テーマの ID
+ * @returns {void}
+ */
+function showThemeExportDialog(themeId) {
+    const theme = getThemes().find(t => t.id === themeId);
+    if (!theme) return;
+    const count = theme.oshiIds.length;
+
+    const dlg = document.createElement('dialog');
+    dlg.className = 'settings-modal';
+    dlg.style.background = 'transparent';
+    dlg.style.padding = '0';
+    dlg.innerHTML = `
+        <div style="padding:24px;min-width:320px;max-width:440px;width:90vw;box-sizing:border-box;background:var(--bg-color);border-radius:var(--border-radius)">
+            <h3 style="margin:0 0 8px;font-size:1rem">テーマ「${escapeHTML(theme.name)}」を書き出す</h3>
+            <p style="margin:0 0 20px;font-size:0.88rem;color:var(--text-secondary)">${count}人の推しデータを書き出します。</p>
+            <div style="display:flex;gap:12px;margin-bottom:20px">
+                <button type="button" id="themeExportJson" style="flex:1;padding:12px 8px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;background:var(--card-bg);cursor:pointer;text-align:center">
+                    <div style="font-size:1.2rem;margin-bottom:4px">📄</div>
+                    <div style="font-weight:600;font-size:0.9rem;margin-bottom:4px">JSON形式</div>
+                    <div style="font-size:0.75rem;color:var(--text-secondary)">推し・記念日・タグ<br>（軽量・共有向け）</div>
+                </button>
+                <button type="button" id="themeExportGz" style="flex:1;padding:12px 8px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;background:var(--card-bg);cursor:pointer;text-align:center">
+                    <div style="font-size:1.2rem;margin-bottom:4px">🗜️</div>
+                    <div style="font-weight:600;font-size:0.9rem;margin-bottom:4px">画像込み (.json.gz)</div>
+                    <div style="font-size:0.75rem;color:var(--text-secondary)">タグが一致する画像も<br>まとめて書き出し</div>
+                </button>
+            </div>
+            <div style="display:flex;justify-content:flex-end">
+                <button type="button" id="themeExportCancel" class="btn-cancel">キャンセル</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(dlg);
+    dlg.showModal();
+
+    const close = () => { dlg.close(); dlg.remove(); };
+    dlg.querySelector('#themeExportCancel').onclick = close;
+    dlg.querySelector('#themeExportJson').onclick = () => { close(); exportThemeAsJson(theme); };
+    dlg.querySelector('#themeExportGz').onclick = () => { close(); exportThemeAsPackage(theme); };
+}
+
+/**
+ * テーマを軽量な JSON ファイルとして書き出す。
+ * @param {Object} theme - 対象テーマ
+ * @returns {void}
+ */
+function exportThemeAsJson(theme) {
+    const data = buildThemeExportData(theme);
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `oshikoyo_theme_${sanitizeFileName(theme.name)}_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(getDownloadToastMessage(`（${data.oshiList.length}人）`), 5000);
+}
+
+/**
+ * テーマを画像込みの gzip パッケージとして書き出す。
+ * テーマ所属推しの名前・タグに一致するタグを持つ画像のみを含める。
+ * @param {Object} theme - 対象テーマ
+ * @returns {Promise<void>}
+ */
+async function exportThemeAsPackage(theme) {
+    showToast('テーマを書き出し中...');
+    const data = buildThemeExportData(theme);
+    const themeTags = getThemeTagSet(theme);
+
+    const dbKeys = await localImageDB.getAllKeys();
+    const orderedKeys = getOrderedImageKeys(dbKeys)
+        .filter(id => getImageTags(id).some(t => themeTags.has(t)));
+
+    const encoder = new TextEncoder();
+    const { readable, writable } = new TransformStream();
+    const compressed = readable.pipeThrough(new CompressionStream('gzip'));
+    const writer = writable.getWriter();
+    const blobPromise = new Response(compressed).blob();
+
+    const header = JSON.stringify(data);
+    await writer.write(encoder.encode(header.slice(0, -1) + ',"images":['));
+    for (let i = 0; i < orderedKeys.length; i++) {
+        const key = orderedKeys[i];
+        const file = await localImageDB.getImage(key);
+        if (!file) continue;
+        const base64 = await blobToBase64(file);
+        const entry = JSON.stringify({
+            name: file.name, type: file.type,
+            lastModified: file.lastModified, data: base64,
+            tags: getImageTags(key),
+        });
+        await writer.write(encoder.encode((i > 0 ? ',' : '') + entry));
+    }
+    await writer.write(encoder.encode(']}'));
+    await writer.close();
+
+    const blob = await blobPromise;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `oshikoyo_theme_${sanitizeFileName(theme.name)}_${new Date().toISOString().slice(0, 10)}.json.gz`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    showToast(getDownloadToastMessage(`（${data.oshiList.length}人 / 画像${orderedKeys.length}枚）`), 5000);
+}
+
+/**
+ * テーマの画像を端末から降ろす（書き出してから専有画像を削除する）。
+ *
+ * テーマ定義と推しのデータは軽量なため残す。削除するのはこのテーマだけが
+ * 参照している「専有画像」に限り、他テーマと共有中の画像には手を触れない。
+ * 書き出しに失敗した場合はデータ喪失を避けるため削除を中止する。
+ *
+ * @param {string} themeId - 対象テーマの ID
+ * @returns {Promise<void>}
+ */
+async function detachTheme(themeId) {
+    const theme = getThemes().find(t => t.id === themeId);
+    if (!theme) return;
+
+    const sizeMap = await localImageDB.getAllSizes();
+    const stat = computeThemeStorage(theme, sizeMap, [...sizeMap.keys()]);
+
+    if (stat.exclusiveKeys.length === 0) {
+        showToast('このテーマが専有している画像はありません。');
+        return;
+    }
+
+    const sharedCount = stat.imageCount - stat.exclusiveKeys.length;
+    const ok = await showConfirmDialog({
+        title: `テーマ「${theme.name}」の画像を端末から降ろしますか？`,
+        sub: `先に画像込みファイル（.json.gz）を書き出し、その後この端末から専有画像 ${stat.exclusiveKeys.length}枚（${formatBytes(stat.exclusiveBytes)}）を削除します。`
+            + (sharedCount > 0 ? `他テーマと共有中の ${sharedCount}枚は削除しません。` : '')
+            + 'テーマと推しの情報は残ります。書き出したファイルを読み込めば画像を元に戻せます。',
+        confirmLabel: '書き出して降ろす',
+        danger: true,
+    });
+    if (!ok) return;
+
+    try {
+        await exportThemeAsPackage(theme);
+    } catch (e) {
+        console.error(e);
+        showToast('書き出しに失敗したため、画像の削除を中止しました: ' + e.message, 6000);
+        return;
+    }
+
+    try {
+        await localImageDB.deleteImages(stat.exclusiveKeys);
+        const removed = new Set(stat.exclusiveKeys);
+        appSettings.localImageOrder = (appSettings.localImageOrder || []).filter(k => !removed.has(k));
+        if (appSettings.localImageMeta) {
+            removed.forEach(key => { delete appSettings.localImageMeta[key]; });
+        }
+        saveSettingsSilently();
+
+        renderThemeManagerList();
+        updateLocalMediaUI();
+        renderLocalImageManager();
+        updateView();
+        showToast(
+            `画像 ${stat.exclusiveKeys.length}枚（${formatBytes(stat.exclusiveBytes)}）を端末から削除しました。書き出したファイルから復元できます。`,
+            6000
+        );
+    } catch (e) {
+        console.error(e);
+        showToast('画像の削除に失敗しました: ' + e.message, 5000);
+    }
+}
+
+/**
+ * ファイル名として安全な文字列に変換する。
+ * @param {string} name - 元の文字列
+ * @returns {string} 変換後の文字列
+ */
+function sanitizeFileName(name) {
+    return String(name).trim().replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 40) || 'theme';
+}
+
+/**
+ * 同名テーマが既に存在する場合の取り込み方法を選択するダイアログを表示する。
+ * @param {string} themeName - 取り込むテーマの名前
+ * @returns {Promise<'merge'|'new'|null>} 統合 / 新規追加 / キャンセル
+ */
+function showThemeImportModeDialog(themeName) {
+    return new Promise((resolve) => {
+        const dlg = document.createElement('dialog');
+        dlg.className = 'settings-modal';
+        dlg.style.background = 'transparent';
+        dlg.style.padding = '0';
+        dlg.innerHTML = `
+            <div style="padding:24px;min-width:320px;max-width:440px;width:90vw;box-sizing:border-box;background:var(--bg-color);color:var(--text-primary);border-radius:var(--border-radius)">
+                <h3 style="margin:0 0 8px;font-size:1rem">同じ名前のテーマがあります</h3>
+                <p style="margin:0 0 20px;font-size:0.88rem;color:var(--text-secondary)">「${escapeHTML(themeName)}」は既に登録されています。どちらの方法で取り込みますか？</p>
+                <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+                    <button type="button" id="themeImportMerge" style="padding:12px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;background:var(--card-bg);cursor:pointer;text-align:left">
+                        <div style="font-weight:600;font-size:0.9rem;margin-bottom:4px">既存のテーマに統合する</div>
+                        <div style="font-size:0.75rem;color:var(--text-secondary)">端末から降ろした画像を戻す場合はこちら</div>
+                    </button>
+                    <button type="button" id="themeImportNew" style="padding:12px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;background:var(--card-bg);cursor:pointer;text-align:left">
+                        <div style="font-weight:600;font-size:0.9rem;margin-bottom:4px">別のテーマとして追加する</div>
+                        <div style="font-size:0.75rem;color:var(--text-secondary)">連番を付けた新しいテーマを作成します</div>
+                    </button>
+                </div>
+                <div style="display:flex;justify-content:flex-end">
+                    <button type="button" id="themeImportCancel" class="btn-cancel">キャンセル</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(dlg);
+        dlg.showModal();
+
+        const close = (value) => { dlg.close(); dlg.remove(); resolve(value); };
+        dlg.querySelector('#themeImportMerge').onclick = () => close('merge');
+        dlg.querySelector('#themeImportNew').onclick = () => close('new');
+        dlg.querySelector('#themeImportCancel').onclick = () => close(null);
+    });
+}
+
+/**
+ * テーマパッケージ（.json / .json.gz）を読み込み、既存データにマージする。
+ * @param {File} file - 読み込むファイル
+ * @returns {Promise<void>}
+ */
+async function handleThemeImport(file) {
+    try {
+        let json;
+        if (file.name.endsWith('.gz')) {
+            const decompressed = file.stream().pipeThrough(new DecompressionStream('gzip'));
+            json = JSON.parse(await new Response(decompressed).text());
+        } else {
+            json = JSON.parse(await file.text());
+        }
+
+        if (!json || json.type !== 'theme_package') {
+            showToast('テーマパッケージ用のファイルではありません。');
+            return;
+        }
+
+        // 同名テーマがある場合は統合するか別テーマにするかを確認する
+        // （端末から降ろした画像を戻すケースでは統合が期待される挙動）
+        const incomingName = (json.theme?.name || '').slice(0, THEME_NAME_MAX);
+        const sameName = getThemes().find(t => t.name === incomingName);
+        let mergeIntoThemeId = null;
+        if (sameName) {
+            const mode = await showThemeImportModeDialog(incomingName);
+            if (mode === null) return;
+            if (mode === 'merge') mergeIntoThemeId = sameName.id;
+        }
+
+        const result = await importThemePackage(json, mergeIntoThemeId);
+        saveSettingsSilently();
+        renderThemeManagerList();
+        renderOshiTable();
+        renderOshiList();
+        if (isMobile()) renderMobileOshiPanel(true);
+        updateView();
+        if (result.addedImages > 0) { updateLocalMediaUI(); renderLocalImageManager(); }
+
+        showToast(
+            `テーマ「${result.themeName}」${mergeIntoThemeId ? 'に統合しました' : 'を取り込みました'}: 推し ${result.addedOshis}人追加 / ${result.reusedOshis}人は既存を再利用`
+            + (result.addedImages + result.skippedImages > 0
+                ? ` / 画像 ${result.addedImages}枚追加・${result.skippedImages}枚スキップ` : ''),
+            6000
+        );
+    } catch (e) {
+        console.error(e);
+        showToast('テーマの取り込みに失敗しました: ' + e.message, 5000);
+    }
+}
+
+/**
+ * テーマパッケージのデータを現在の設定へマージする。
+ * 同名の推しは既存を再利用し、テーマ名が重複する場合は連番を付けて作成する。
+ * @param {Object} json - テーマパッケージのパース済みデータ
+ * @param {string|null} [mergeIntoThemeId] - 指定した場合、新規作成せず既存テーマへ統合する
+ * @returns {Promise<{themeName: string, addedOshis: number, reusedOshis: number, addedImages: number, skippedImages: number}>} 取り込み結果
+ */
+async function importThemePackage(json, mergeIntoThemeId = null) {
+    const mergeTarget = mergeIntoThemeId
+        ? getThemes().find(t => t.id === mergeIntoThemeId) || null
+        : null;
+    const themeName = mergeTarget ? mergeTarget.name : getUniqueThemeName(
+        (json.theme?.name || 'インポートしたテーマ').slice(0, THEME_NAME_MAX)
+    );
+    const themeColor = (typeof json.theme?.color === 'string' && /^#[0-9a-fA-F]{6}$/.test(json.theme.color))
+        ? json.theme.color.toLowerCase() : THEME_DEFAULT_COLOR;
+
+    // イベントタイプのマージ（未知の id のみ追加）
+    if (!Array.isArray(appSettings.event_types)) appSettings.event_types = [...DEFAULT_SETTINGS.event_types];
+    const knownTypeIds = new Set(appSettings.event_types.map(t => t.id));
+    (Array.isArray(json.event_types) ? json.event_types : []).forEach(t => {
+        if (t && typeof t.id === 'string' && typeof t.label === 'string' && !knownTypeIds.has(t.id)) {
+            appSettings.event_types.push({ id: t.id, label: t.label, icon: typeof t.icon === 'string' ? t.icon : 'star' });
+            knownTypeIds.add(t.id);
+        }
+    });
+
+    // 推しのマージ（名前一致は既存を再利用）
+    if (!Array.isArray(appSettings.oshiList)) appSettings.oshiList = [];
+    const byName = new Map(appSettings.oshiList.map(o => [o.name, o]));
+    const memberIds = [];
+    let addedOshis = 0, reusedOshis = 0;
+
+    (Array.isArray(json.oshiList) ? json.oshiList : []).forEach(item => {
+        if (!item || typeof item.name !== 'string' || !item.name) return;
+        const existing = byName.get(item.name);
+        if (existing) {
+            memberIds.push(existing.id);
+            reusedOshis++;
+            return;
+        }
+        const memorial_dates = Array.isArray(item.memorial_dates)
+            ? item.memorial_dates
+                .filter(md => md && typeof md.type_id === 'string' && typeof md.date === 'string')
+                .map(md => ({ type_id: md.type_id, date: md.date, is_annual: typeof md.is_annual === 'boolean' ? md.is_annual : true }))
+            : [];
+        const tags = Array.isArray(item.tags) ? item.tags.filter(t => typeof t === 'string') : [];
+        const newOshi = {
+            id: generateEntityId('os'),
+            name: item.name,
+            color: (typeof item.color === 'string' && /^#[0-9a-fA-F]{6}$/.test(item.color)) ? item.color : '#3b82f6',
+            memorial_dates,
+            tags,
+            group: typeof item.group === 'string' ? item.group : '',
+            avatar: null,
+        };
+        appSettings.oshiList.push(newOshi);
+        byName.set(newOshi.name, newOshi);
+        memberIds.push(newOshi.id);
+        addTagsToMaster(tags);
+        addedOshis++;
+    });
+
+    // 画像のマージ（重複はスキップ）
+    let addedImages = 0, skippedImages = 0;
+    const images = Array.isArray(json.images) ? json.images : [];
+    if (images.length > 0) {
+        const existingImages = await localImageDB.getAllImages();
+        const sigMap = buildBlobSignatureMap(existingImages);
+        const filesToAdd = [];
+        const pendingTags = [];
+
+        for (const item of images) {
+            if (!item || typeof item.data !== 'string') continue;
+            const blob = base64ToBlob(item.data, item.type);
+            if (await isDuplicateBlob(blob, sigMap)) { skippedImages++; continue; }
+            filesToAdd.push(new File([blob], item.name || 'image', {
+                type: item.type, lastModified: item.lastModified || Date.now()
+            }));
+            pendingTags.push(Array.isArray(item.tags) ? item.tags.filter(t => typeof t === 'string') : []);
+            addedImages++;
+        }
+
+        if (filesToAdd.length > 0) {
+            const newKeys = await localImageDB.addImages(filesToAdd);
+            if (!appSettings.localImageMeta) appSettings.localImageMeta = {};
+            newKeys.forEach((key, i) => {
+                if (pendingTags[i].length > 0) appSettings.localImageMeta[key] = { tags: pendingTags[i] };
+            });
+            addTagsToMaster(pendingTags.flat());
+            appSettings.localImageOrder = [...(appSettings.localImageOrder ?? []), ...newKeys];
+        }
+    }
+
+    if (!Array.isArray(appSettings.themes)) appSettings.themes = [];
+    if (mergeTarget) {
+        mergeTarget.oshiIds = [...new Set([...mergeTarget.oshiIds, ...memberIds])];
+    } else {
+        appSettings.themes.push({
+            id: generateEntityId('th'),
+            name: themeName,
+            color: themeColor,
+            oshiIds: [...new Set(memberIds)],
+        });
+    }
+
+    return { themeName, addedOshis, reusedOshis, addedImages, skippedImages };
 }
 
 // --- Oshi Export ---
@@ -2572,6 +3575,8 @@ function handleOshiImportFromModal(files) {
         // プレビューダイアログを表示してから確定
         showOshiCsvPreview(allNewItems, totalDupes, totalErrorRows, () => {
             if (!appSettings.oshiList) appSettings.oshiList = [];
+            // テーマ所属管理のため、取り込む推しにも一意IDを付与する
+            allNewItems.forEach(item => { if (!item.id) item.id = generateEntityId('os'); });
             appSettings.oshiList.push(...allNewItems);
             addTagsToMaster(allNewItems.flatMap(o => o.tags || []));
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appSettings));
@@ -2626,6 +3631,8 @@ function handleFileImport() {
                     });
 
                     addedCount += newItems.length;
+                    // テーマ所属管理のため、取り込む推しにも一意IDを付与する
+                    newItems.forEach(item => { if (!item.id) item.id = generateEntityId('os'); });
                     appSettings.oshiList = [...(appSettings.oshiList || []), ...newItems];
                 }
             } catch (err) {
@@ -3233,15 +4240,26 @@ function validateImportedSettings(data) {
                     memorial_dates.push({ type_id: 'debut', date: item.debutDate, is_annual: true });
             }
             return {
+                id: typeof item.id === 'string' ? item.id : '',
                 name: typeof item.name === 'string' ? item.name : 'Unknown',
                 color: typeof item.color === 'string' ? item.color : '#3b82f6',
                 memorial_dates,
                 tags: Array.isArray(item.tags) ? item.tags.filter(t => typeof t === 'string') : [],
+                group: typeof item.group === 'string' ? item.group : '',
+                avatar: typeof item.avatar === 'string' ? item.avatar : null,
             };
         }).filter(item => item !== null);
+        // ID 欠損・重複を補正してからテーマの参照整合性を検証する
+        validated.oshiList = ensureOshiIds(validated.oshiList);
     } else {
         return null; // Reject if oshiList is missing or not an array
     }
+
+    // Validate themes（存在しない推しIDの参照は normalizeThemes が除去する）
+    validated.themes = normalizeThemes(data.themes, validated.oshiList);
+    validated.activeThemeId = validated.themes.some(t => t.id === data.activeThemeId)
+        ? data.activeThemeId : null;
+    validated.themesMigratedFromGroups = data.themesMigratedFromGroups === true;
 
     // Validate event_types
     if (Array.isArray(data.event_types)) {
@@ -4139,6 +5157,45 @@ function initSettings() {
     document.getElementById('btnOshiCsvTemplate').addEventListener('click', downloadOshiCsvTemplate);
     document.getElementById('btnOshiClearAll').addEventListener('click', handleClearAllOshis);
 
+    // --- Theme Manager ---
+    document.getElementById('btnOpenThemeManager')?.addEventListener('click', openThemeManager);
+    document.getElementById('btnOpenThemeManagerSettings')?.addEventListener('click', openThemeManager);
+    document.getElementById('btnMsOpenThemeManager')?.addEventListener('click', openThemeManager);
+    document.getElementById('btnCloseThemeManager')?.addEventListener('click', () => {
+        document.getElementById('themeManagerModal').close();
+    });
+    document.getElementById('btnThemeCreate')?.addEventListener('click', () => openThemeEditForm(null));
+    document.getElementById('btnThemeImport')?.addEventListener('click', () => {
+        document.getElementById('inputThemeImport').click();
+    });
+    document.getElementById('inputThemeImport')?.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (file) await handleThemeImport(file);
+    });
+    document.getElementById('btnThemeEditCancel')?.addEventListener('click', () => {
+        document.getElementById('themeEditModal').close();
+    });
+    document.getElementById('btnThemeEditSave')?.addEventListener('click', saveThemeFromForm);
+
+    // テーマカラーのピッカーとテキスト入力を相互同期
+    (function initThemeColorInputs() {
+        const textEl = document.getElementById('themeEditColor');
+        const chipEl = document.getElementById('themeColorChip');
+        const pickerEl = document.getElementById('themeColorPicker');
+        if (!textEl || !pickerEl || !chipEl) return;
+        const sync = (hex) => {
+            textEl.value = hex;
+            chipEl.style.backgroundColor = hex;
+            pickerEl.value = hex;
+        };
+        pickerEl.addEventListener('input', () => sync(pickerEl.value));
+        textEl.addEventListener('change', () => {
+            const hex = normalizeHex(textEl.value);
+            sync(hex || THEME_DEFAULT_COLOR);
+        });
+    })();
+
     // --- Settings Event Type Manager ---
     renderEventTypeManager();
     document.getElementById('btnSettingsClearAllEvents')?.addEventListener('click', handleClearAllCustomEvents);
@@ -4473,9 +5530,20 @@ function loadSettings() {
             if (!appSettings.memorialDisplayMode) {
                 appSettings.memorialDisplayMode = 'preferred';
             }
-            // Migration: activeFilter（フォーカスモード）
+            // Migration: activeFilter（旧フォーカスモード。テーマへ移行後も値は保持する）
             if (typeof appSettings.activeFilter !== 'string' && appSettings.activeFilter !== null) {
                 appSettings.activeFilter = null;
+            }
+            // Migration: 推しへの一意IDの付与（テーマの所属管理に必須）
+            appSettings.oshiList = ensureOshiIds(appSettings.oshiList);
+            // Migration: 既存の所属グループからテーマを自動生成
+            if (!Array.isArray(appSettings.themes)) appSettings.themes = [];
+            migrateGroupsToThemes(appSettings);
+            appSettings.themes = normalizeThemes(appSettings.themes, appSettings.oshiList);
+            // 存在しないテーマを指している場合は「すべて」に戻す
+            if (typeof appSettings.activeThemeId !== 'string' ||
+                !appSettings.themes.some(t => t.id === appSettings.activeThemeId)) {
+                appSettings.activeThemeId = null;
             }
             if (!appSettings.imageCompressMode ||
                 !['off', 'standard', 'aggressive'].includes(appSettings.imageCompressMode)) {
@@ -6302,33 +7370,27 @@ function renderTickerBar() {
         eventStr = '　' + parts.join('　');
     }
 
-    // フォーカスモード中: 非表示グループのイベント数をテキストで追記
-    const activeFilter = appSettings.activeFilter;
+    // テーマ選択中: テーマ外の当月イベント件数をテキストで追記
+    const activeTheme = getActiveTheme();
     let hiddenStr = '';
-    if (activeFilter !== null) {
-        const hiddenOshis = (appSettings.oshiList || []).filter(o => (o.group || '') !== activeFilter);
-        // 当月の非表示イベント件数をグループ別に集計
+    if (activeTheme) {
+        const hiddenOshis = (appSettings.oshiList || []).filter(o => !isOshiInTheme(o, activeTheme));
+        // 当月の非表示イベント件数を集計
         const refDate = typeof currentRefDate !== 'undefined' ? currentRefDate : new Date();
         const y = refDate.getFullYear();
         const m = refDate.getMonth() + 1;
-        const groupCounts = new Map();
+        let hiddenCount = 0;
         hiddenOshis.forEach(oshi => {
             if (!oshi.name) return;
-            let count = 0;
             (oshi.memorial_dates || []).forEach(md => {
                 const parsed = parseDateString(md.date);
                 if (!parsed || parsed.month !== m) return;
                 if (!md.is_annual && parsed.year && parsed.year !== y) return;
-                count++;
+                hiddenCount++;
             });
-            if (count > 0) {
-                const grpLabel = oshi.group || '未分類';
-                groupCounts.set(grpLabel, (groupCounts.get(grpLabel) || 0) + count);
-            }
         });
-        if (groupCounts.size > 0) {
-            const hiddenParts = [...groupCounts.entries()].map(([g, n]) => `${g}（${n}件）`);
-            hiddenStr = `　🔕 非表示中: ${hiddenParts.join('、')}`;
+        if (hiddenCount > 0) {
+            hiddenStr = `　🔕 テーマ外: ${hiddenCount}件`;
         }
     }
 
@@ -6360,19 +7422,22 @@ function updateTickerBar() {
     setupTickerBar();
 }
 
-// --- Focus Filter Bar ---
+// --- Theme Bar ---
 
 let filterBarExpanded = false;
 
-function renderFocusFilterBar() {
+/**
+ * カレンダー上部のテーマ切替チップバーを描画する。
+ * テーマが未登録の場合はバー自体を非表示にする。
+ * @returns {void}
+ */
+function renderThemeBar() {
     const bar = document.getElementById('focusFilterBar');
     if (!bar) return;
 
-    const groups = [...new Set(
-        (appSettings.oshiList || []).map(o => o.group).filter(g => g && g.trim())
-    )];
+    const themes = getThemes();
 
-    if (groups.length === 0) {
+    if (themes.length === 0) {
         bar.style.display = 'none';
         bar.innerHTML = '';
         return;
@@ -6382,11 +7447,12 @@ function renderFocusFilterBar() {
     bar.innerHTML = '';
 
     const threshold = document.body.classList.contains('is-mobile-ui') ? 3 : 5;
-    const needsTruncation = groups.length > threshold;
+    const needsTruncation = themes.length > threshold;
+    const activeThemeId = appSettings.activeThemeId;
 
-    // アクティブフィルターが閾値圏外にある場合は強制展開
-    if (needsTruncation && appSettings.activeFilter !== null) {
-        const activeIndex = groups.indexOf(appSettings.activeFilter);
+    // 選択中テーマが閾値圏外にある場合は強制展開
+    if (needsTruncation && activeThemeId !== null) {
+        const activeIndex = themes.findIndex(t => t.id === activeThemeId);
         if (activeIndex >= threshold) {
             filterBarExpanded = true;
         }
@@ -6394,40 +7460,41 @@ function renderFocusFilterBar() {
 
     const allChip = document.createElement('button');
     allChip.type = 'button';
-    allChip.className = 'img-filter-chip' + (appSettings.activeFilter === null ? ' active' : '');
+    allChip.className = 'img-filter-chip' + (activeThemeId === null ? ' active' : '');
     allChip.textContent = 'すべて';
     allChip.addEventListener('click', () => {
-        appSettings.activeFilter = null;
+        appSettings.activeThemeId = null;
         filterBarExpanded = false;
         saveSettingsSilently();
-        renderFocusFilterBar();
         updateView();
     });
     bar.appendChild(allChip);
 
-    // ⚡ Bolt: Cache groups with events today to avoid O(Groups * Oshis) redundant parsing
-    // Impact: ~95% faster when many groups exist, avoiding repetitive getTodayMemorialOshis() calls
-    const todayOshis = getTodayMemorialOshis();
-    const groupsWithTodayEvents = new Set(todayOshis.map(o => o.group));
+    // ⚡ 本日イベントを持つテーマを事前計算し、テーマ数×推し数の再走査を避ける
+    const todayOshiIds = new Set(getTodayMemorialOshis().map(o => o.id));
+    const themesWithTodayEvents = new Set(
+        themes.filter(t => t.oshiIds.some(id => todayOshiIds.has(id))).map(t => t.id)
+    );
 
-    const visibleGroups = (needsTruncation && !filterBarExpanded) ? groups.slice(0, threshold) : groups;
+    const visibleThemes = (needsTruncation && !filterBarExpanded) ? themes.slice(0, threshold) : themes;
 
-    visibleGroups.forEach(group => {
+    visibleThemes.forEach(theme => {
         const chip = document.createElement('button');
         chip.type = 'button';
-        chip.className = 'img-filter-chip' + (appSettings.activeFilter === group ? ' active' : '');
+        const isActive = activeThemeId === theme.id;
+        chip.className = 'img-filter-chip theme-chip' + (isActive ? ' active' : '');
+        chip.style.setProperty('--theme-chip-color', theme.color || THEME_DEFAULT_COLOR);
 
-        const hasTodayEvent = groupsWithTodayEvents.has(group);
-        if (hasTodayEvent && appSettings.activeFilter !== null && appSettings.activeFilter !== group) {
-            chip.innerHTML = escapeHTML(group) + ' <span class="focus-chip-badge" aria-label="本日イベントあり">💡</span>';
+        const hasTodayEvent = themesWithTodayEvents.has(theme.id);
+        if (hasTodayEvent && activeThemeId !== null && !isActive) {
+            chip.innerHTML = escapeHTML(theme.name) + ' <span class="focus-chip-badge" aria-label="本日イベントあり">💡</span>';
         } else {
-            chip.textContent = group;
+            chip.textContent = theme.name;
         }
 
         chip.addEventListener('click', () => {
-            appSettings.activeFilter = appSettings.activeFilter === group ? null : group;
+            appSettings.activeThemeId = isActive ? null : theme.id;
             saveSettingsSilently();
-            renderFocusFilterBar();
             updateView();
         });
         bar.appendChild(chip);
@@ -6442,15 +7509,15 @@ function renderFocusFilterBar() {
             toggleBtn.setAttribute('aria-label', '折りたたむ');
             toggleBtn.addEventListener('click', () => {
                 filterBarExpanded = false;
-                renderFocusFilterBar();
+                renderThemeBar();
             });
         } else {
-            const hiddenCount = groups.length - threshold;
+            const hiddenCount = themes.length - threshold;
             toggleBtn.textContent = `+${hiddenCount} ▼`;
             toggleBtn.setAttribute('aria-label', `他${hiddenCount}件を表示`);
             toggleBtn.addEventListener('click', () => {
                 filterBarExpanded = true;
-                renderFocusFilterBar();
+                renderThemeBar();
             });
         }
         bar.appendChild(toggleBtn);
@@ -7397,7 +8464,16 @@ async function renderMobileGridLibrary() {
         innerGrid.innerHTML = '';
         const orderedKeys = (appSettings.localImageOrder || []).filter(k => keys.includes(k));
         const remaining = keys.filter(k => !orderedKeys.includes(k));
-        const allKeys = [...orderedKeys, ...remaining];
+        let allKeys = [...orderedKeys, ...remaining];
+
+        // テーマ選択中はテーマ所属推しのタグに一致する画像へ絞り込む。
+        // 一致が0件の場合は選択できなくなるのを避けるため全件にフォールバックする。
+        const activeTheme = getActiveTheme();
+        if (activeTheme) {
+            const themeTags = getThemeTagSet(activeTheme);
+            const filtered = allKeys.filter(k => getImageTags(k).some(t => themeTags.has(t)));
+            if (filtered.length > 0) allKeys = filtered;
+        }
 
         for (const key of allKeys) {
             const file = await localImageDB.getImage(key);

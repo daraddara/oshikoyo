@@ -1,7 +1,7 @@
 # 設定パネル構造リファレンス
 
 > **このファイルは自動生成です。編集しないでください。**  
-> 生成: `npm run gen-panels` / 最終更新: 2026-04-13 05:59 JST
+> 生成: `npm run gen-panels` / 最終更新: 2026-08-12 02:55 JST
 
 設定パネルはデスクトップ（`#settingsModal` 内の `#tabPanel*`）と
 モバイル（`#mobileSubPanel-*`）で独立した HTML 要素として並行存在します。
@@ -41,6 +41,8 @@ IDs:
 - `#btnResetLayout`
 - `#oshiCount`
 - `#btnOpenOshiManager`
+- `#themeCount`
+- `#btnOpenThemeManagerSettings`
 
 name 属性:
 - `startOfWeek`
@@ -50,6 +52,8 @@ name 属性:
 
 IDs:
 - `#btnMsResetLayout`
+- `#msThemeCount`
+- `#btnMsOpenThemeManager`
 - `#msHolidayLastSync`
 - `#msBtnSyncHolidays`
 

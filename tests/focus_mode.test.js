@@ -1,5 +1,5 @@
 /**
- * フォーカスモード（group/activeFilter）のユニットテスト
+ * テーマ機能（themes/activeThemeId）と旧フォーカスモードからの移行のユニットテスト
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { extractCode, setupTestEnvironment } from './test-utils.js';
@@ -10,6 +10,7 @@ const parseDateCode  = extractCode('function parseDateString(', '\nfunction ');
 const memorialCode   = extractCode('// --- Memorial Tag Logic ---', '// --- Tag Logic ---');
 const tagLogicCode   = extractCode('// --- Tag Logic ---', '// --- Tag UI ---');
 const settingsCode   = extractCode('function loadSettings()', '\nfunction showToast(');
+const themeCode      = extractCode('// --- Theme Logic ---', '// --- Memorial Tag Logic ---');
 
 // ---------- マイグレーション: group / activeFilter ----------
 
@@ -35,6 +36,9 @@ const DEFAULT_SETTINGS_BASE = {
     memorialDisplayMode: 'preferred',
     imageCompressMode: 'standard',
     activeFilter: null,
+    themes: [],
+    activeThemeId: null,
+    themesMigratedFromGroups: false,
 };
 
 const STORAGE_KEY = 'oshikoyo_settings';
@@ -51,6 +55,7 @@ function makeLoadSettings(savedData) {
         const DEFAULT_SETTINGS = ${JSON.stringify(DEFAULT_SETTINGS_BASE)};
         let appSettings = { ...DEFAULT_SETTINGS };
         const localStorage = mockLS;
+        ${themeCode}
         ${settingsCode}
         return { loadSettings, getAppSettings: () => appSettings };
     `;
@@ -101,109 +106,105 @@ describe('loadSettings マイグレーション — group / activeFilter', () =>
     });
 });
 
-// ---------- getGroupHasTodayEvent / getEffectiveImagePool (group filter) ----------
+// ---------- getEffectiveImagePool (テーマフィルター) ----------
 
-function makeFocusMode(mockAppSettings, fakeToday) {
+function makeFocusMode(mockAppSettings) {
     const code = `
         ${parseDateCode}
         ${tagLogicCode}
+        ${themeCode}
         ${memorialCode}
-
-        function getGroupHasTodayEvent(group) {
-            return getTodayMemorialOshis().some(o => o.group === group);
-        }
-
-        return { getTodayMemorialOshis, getEffectiveImagePool, getGroupHasTodayEvent };
+        return { getTodayMemorialOshis, getEffectiveImagePool, getActiveTheme, getThemeTagSet };
     `;
     return new Function('appSettings', code)(mockAppSettings);
 }
 
-describe('getGroupHasTodayEvent', () => {
-    beforeEach(() => { vi.useFakeTimers(); });
-    afterEach(() => { vi.useRealTimers(); });
-
-    it('今日が記念日の推しが指定グループに属する場合 true を返す', () => {
-        vi.setSystemTime(new Date('2026-03-21'));
-        const oshi = { name: 'A', group: 'グループA', tags: [], memorial_dates: [{ date: '3/21', is_annual: true }] };
-        const { getGroupHasTodayEvent } = makeFocusMode({
-            oshiList: [oshi], localImageMeta: {}, activeFilter: null,
-        });
-        expect(getGroupHasTodayEvent('グループA')).toBe(true);
-    });
-
-    it('今日が記念日の推しが別グループに属する場合 false を返す', () => {
-        vi.setSystemTime(new Date('2026-03-21'));
-        const oshi = { name: 'A', group: 'グループB', tags: [], memorial_dates: [{ date: '3/21', is_annual: true }] };
-        const { getGroupHasTodayEvent } = makeFocusMode({
-            oshiList: [oshi], localImageMeta: {}, activeFilter: null,
-        });
-        expect(getGroupHasTodayEvent('グループA')).toBe(false);
-    });
-
-    it('今日の記念日がない場合 false を返す', () => {
-        vi.setSystemTime(new Date('2026-03-21'));
-        const oshi = { name: 'A', group: 'グループA', tags: [], memorial_dates: [{ date: '4/01', is_annual: true }] };
-        const { getGroupHasTodayEvent } = makeFocusMode({
-            oshiList: [oshi], localImageMeta: {}, activeFilter: null,
-        });
-        expect(getGroupHasTodayEvent('グループA')).toBe(false);
-    });
-});
-
-describe('getEffectiveImagePool — groupフィルター', () => {
+describe('getEffectiveImagePool — テーマフィルター', () => {
     beforeEach(() => { vi.useFakeTimers(); });
     afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
 
-    it('activeFilter=null の場合は既存挙動と変わらない（全pool）', () => {
+    it('activeThemeId=null の場合は既存挙動と変わらない（全pool）', () => {
         vi.setSystemTime(new Date('2026-03-21'));
         const { getEffectiveImagePool } = makeFocusMode({
-            oshiList: [{ name: 'A', group: 'G1', tags: [], memorial_dates: [] }],
+            oshiList: [{ id: 'os1', name: 'A', tags: [], memorial_dates: [] }],
             localImageMeta: {},
-            activeFilter: null,
+            themes: [{ id: 'th1', name: 'T1', color: '#f472b6', oshiIds: ['os1'] }],
+            activeThemeId: null,
         });
         expect(getEffectiveImagePool([1, 2, 3])).toEqual([1, 2, 3]);
     });
 
-    it('activeFilter指定・タグ一致画像あり → 絞り込まれる', () => {
+    it('テーマ選択中・タグ一致画像あり → 絞り込まれる', () => {
         vi.setSystemTime(new Date('2026-03-21'));
-        const oshi = { name: 'A', group: 'G1', tags: [], memorial_dates: [] };
         const meta = {
             1: { tags: ['A'] },
             2: { tags: ['B'] },
         };
         const { getEffectiveImagePool } = makeFocusMode({
-            oshiList: [oshi], localImageMeta: meta, activeFilter: 'G1',
+            oshiList: [
+                { id: 'os1', name: 'A', tags: [], memorial_dates: [] },
+                { id: 'os2', name: 'B', tags: [], memorial_dates: [] },
+            ],
+            localImageMeta: meta,
+            themes: [{ id: 'th1', name: 'T1', color: '#f472b6', oshiIds: ['os1'] }],
+            activeThemeId: 'th1',
         });
         expect(getEffectiveImagePool([1, 2])).toEqual([1]);
     });
 
-    it('activeFilter指定・一致画像なし → フォールバックで全pool', () => {
+    it('テーマ選択中・一致画像なし → フォールバックで全pool', () => {
         vi.setSystemTime(new Date('2026-03-21'));
-        const oshi = { name: 'A', group: 'G1', tags: [], memorial_dates: [] };
         const meta = {
             1: { tags: ['X'] },
             2: { tags: ['Y'] },
         };
         const { getEffectiveImagePool } = makeFocusMode({
-            oshiList: [oshi], localImageMeta: meta, activeFilter: 'G1',
+            oshiList: [{ id: 'os1', name: 'A', tags: [], memorial_dates: [] }],
+            localImageMeta: meta,
+            themes: [{ id: 'th1', name: 'T1', color: '#f472b6', oshiIds: ['os1'] }],
+            activeThemeId: 'th1',
         });
         expect(getEffectiveImagePool([1, 2])).toEqual([1, 2]);
     });
 
-    it('記念日ロジックが先に適用され、groupフィルターが後絞りする', () => {
+    it('存在しないテーマIDを指している場合は絞り込みを行わない', () => {
+        vi.setSystemTime(new Date('2026-03-21'));
+        const { getEffectiveImagePool } = makeFocusMode({
+            oshiList: [{ id: 'os1', name: 'A', tags: [], memorial_dates: [] }],
+            localImageMeta: { 1: { tags: ['A'] }, 2: { tags: ['B'] } },
+            themes: [],
+            activeThemeId: 'th_missing',
+        });
+        expect(getEffectiveImagePool([1, 2])).toEqual([1, 2]);
+    });
+
+    it('推しのタグ経由でも一致する（推し名以外）', () => {
+        vi.setSystemTime(new Date('2026-03-21'));
+        const { getEffectiveImagePool } = makeFocusMode({
+            oshiList: [{ id: 'os1', name: 'A', tags: ['ライブ'], memorial_dates: [] }],
+            localImageMeta: { 1: { tags: ['ライブ'] }, 2: { tags: ['B'] } },
+            themes: [{ id: 'th1', name: 'T1', color: '#f472b6', oshiIds: ['os1'] }],
+            activeThemeId: 'th1',
+        });
+        expect(getEffectiveImagePool([1, 2])).toEqual([1]);
+    });
+
+    it('記念日ロジックが先に適用され、テーマフィルターが後絞りする', () => {
         vi.setSystemTime(new Date('2026-03-21'));
         vi.spyOn(Math, 'random').mockReturnValue(0.5);
-        const oshiA = { name: 'A', group: 'G1', tags: [], memorial_dates: [{ date: '3/21', is_annual: true }] };
-        const oshiB = { name: 'B', group: 'G2', tags: [], memorial_dates: [{ date: '3/21', is_annual: true }] };
+        const oshiA = { id: 'os1', name: 'A', tags: [], memorial_dates: [{ date: '3/21', is_annual: true }] };
+        const oshiB = { id: 'os2', name: 'B', tags: [], memorial_dates: [{ date: '3/21', is_annual: true }] };
         const meta = {
-            1: { tags: ['A'] },  // G1
-            2: { tags: ['B'] },  // G2
+            1: { tags: ['A'] },  // テーマ内
+            2: { tags: ['B'] },  // テーマ外
             3: { tags: ['C'] },  // 無関係
         };
-        // exclusiveで記念日プールは[1,2]、さらにG1フィルターで[1]
+        // exclusiveで記念日プールは[1,2]、さらにテーマフィルターで[1]
         const { getEffectiveImagePool } = makeFocusMode({
             oshiList: [oshiA, oshiB], localImageMeta: meta,
-            memorialDisplayMode: 'exclusive', activeFilter: 'G1',
+            memorialDisplayMode: 'exclusive',
+            themes: [{ id: 'th1', name: 'T1', color: '#f472b6', oshiIds: ['os1'] }],
+            activeThemeId: 'th1',
         });
         expect(getEffectiveImagePool([1, 2, 3])).toEqual([1]);
     });
