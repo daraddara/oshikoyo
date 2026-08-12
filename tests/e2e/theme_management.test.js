@@ -121,6 +121,19 @@ test.describe('テーマ管理', () => {
         await expect(page.locator('#themeManagerList')).toContainText('1人');
     });
 
+    test('テーマ作成: 設定画面を閉じなくても登録数が即時更新されること', async ({ page }) => {
+        await openApp(page, BASE_SETTINGS);
+        await openThemeManager(page);
+
+        await expect(page.locator('#themeCount')).toHaveText('0');
+        await page.locator('#btnThemeCreate').click();
+        await page.locator('#themeEditName').fill('件数更新テーマ');
+        await page.locator('#btnThemeEditSave').click();
+
+        // テーマ管理・設定モーダルを閉じずに、背面の設定画面の件数を確認する。
+        await expect(page.locator('#themeCount')).toHaveText('1');
+    });
+
     test('テーマ作成: 名前が空のまま保存するとエラートーストが出て閉じないこと', async ({ page }) => {
         await openApp(page, BASE_SETTINGS);
         await openThemeManager(page);

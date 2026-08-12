@@ -2557,6 +2557,9 @@ function renderThemeManagerList() {
     const list = document.getElementById('themeManagerList');
     const empty = document.getElementById('themeManagerEmpty');
     if (!list) return;
+    // テーマの作成・削除・インポート直後も、背面で開いている設定画面の
+    // 登録数を即時同期する。設定画面の再オープンに依存させない。
+    renderThemeCount();
     list.innerHTML = '';
 
     const themes = getThemes();
